@@ -16,18 +16,32 @@ import (
 )
 
 const (
-	requestTimeout   = 30 * time.Second
-	httpTimeout      = 10 * time.Second
-	uptimeKeySuffix  = "_24"
-	apiStatusPath    = "/api/status-page/"
-	apiHeartbeatPath = "/api/status-page/heartbeat/"
+	requestTimeout     = 30 * time.Second
+	httpTimeout        = 10 * time.Second
+	uptimeKeySuffix    = "_24"
+	apiStatusPath      = "/api/status-page/"
+	apiHeartbeatPath   = "/api/status-page/heartbeat/"
+	uptimeHistoryHours = 24
 )
 
 type Monitor struct {
-	Name   string  `json:"name"`
-	Uptime float64 `json:"uptime"`
+	Name         string               `json:"name"`
+	Uptime       float64              `json:"uptime"`
+	Status       int                  `json:"status"`
+	Group        string               `json:"group,omitempty"`
+	ResponseTime float64              `json:"response_time"`
+	History      []uptimeHistoryPoint `json:"history"`
+}
+
+type uptimeHistoryPoint struct {
+	Timestamp int64 `json:"timestamp"`
+	Status    int   `json:"status"`
+}
+
+type uptimeHeartbeat struct {
 	Status int     `json:"status"`
-	Group  string  `json:"group,omitempty"`
+	Time   string  `json:"time"`
+	Ping   float64 `json:"ping"`
 }
 
 type UptimeGroupResult struct {
@@ -82,10 +96,8 @@ func fetchGroupData(ctx context.Context, client *http.Client, groupConfig map[st
 	}
 
 	var heartbeatData struct {
-		HeartbeatList map[string][]struct {
-			Status int `json:"status"`
-		} `json:"heartbeatList"`
-		UptimeList map[string]float64 `json:"uptimeList"`
+		HeartbeatList map[string][]uptimeHeartbeat `json:"heartbeatList"`
+		UptimeList    map[string]float64           `json:"uptimeList"`
 	}
 
 	g, gCtx := errgroup.WithContext(ctx)
@@ -100,6 +112,7 @@ func fetchGroupData(ctx context.Context, client *http.Client, groupConfig map[st
 		return result
 	}
 
+	now := time.Now()
 	for _, pg := range statusData.PublicGroupList {
 		if len(pg.MonitorList) == 0 {
 			continue
@@ -107,8 +120,10 @@ func fetchGroupData(ctx context.Context, client *http.Client, groupConfig map[st
 
 		for _, m := range pg.MonitorList {
 			monitor := Monitor{
-				Name:  m.Name,
-				Group: pg.Name,
+				Name:    m.Name,
+				Group:   pg.Name,
+				Status:  -1,
+				History: buildMonitorHistory(nil, now),
 			}
 
 			monitorID := strconv.Itoa(m.ID)
@@ -117,8 +132,12 @@ func fetchGroupData(ctx context.Context, client *http.Client, groupConfig map[st
 				monitor.Uptime = uptime
 			}
 
-			if heartbeats, exists := heartbeatData.HeartbeatList[monitorID]; exists && len(heartbeats) > 0 {
-				monitor.Status = heartbeats[0].Status
+			if heartbeats, exists := heartbeatData.HeartbeatList[monitorID]; exists {
+				monitor.History = buildMonitorHistory(heartbeats, now)
+				if latest, ok := getLatestHeartbeat(heartbeats); ok {
+					monitor.Status = latest.Status
+					monitor.ResponseTime = latest.Ping
+				}
 			}
 
 			result.Monitors = append(result.Monitors, monitor)
@@ -126,6 +145,54 @@ func fetchGroupData(ctx context.Context, client *http.Client, groupConfig map[st
 	}
 
 	return result
+}
+
+func parseUptimeHeartbeatTime(value string) (time.Time, error) {
+	return time.ParseInLocation("2006-01-02 15:04:05.000", value, time.Local)
+}
+
+func getLatestHeartbeat(heartbeats []uptimeHeartbeat) (uptimeHeartbeat, bool) {
+	var latest uptimeHeartbeat
+	var latestTime time.Time
+	found := false
+	for _, heartbeat := range heartbeats {
+		heartbeatTime, err := parseUptimeHeartbeatTime(heartbeat.Time)
+		if err != nil || (found && !heartbeatTime.After(latestTime)) {
+			continue
+		}
+		latest = heartbeat
+		latestTime = heartbeatTime
+		found = true
+	}
+	return latest, found
+}
+
+func buildMonitorHistory(heartbeats []uptimeHeartbeat, now time.Time) []uptimeHistoryPoint {
+	currentHour := now.In(time.Local).Truncate(time.Hour)
+	firstHour := currentHour.Add(-(uptimeHistoryHours - 1) * time.Hour)
+	history := make([]uptimeHistoryPoint, uptimeHistoryHours)
+	latestInHour := make([]time.Time, uptimeHistoryHours)
+	for i := range history {
+		history[i] = uptimeHistoryPoint{
+			Timestamp: firstHour.Add(time.Duration(i) * time.Hour).Unix(),
+			Status:    -1,
+		}
+	}
+
+	for _, heartbeat := range heartbeats {
+		heartbeatTime, err := parseUptimeHeartbeatTime(heartbeat.Time)
+		if err != nil {
+			continue
+		}
+		hourIndex := int(heartbeatTime.Truncate(time.Hour).Sub(firstHour) / time.Hour)
+		if hourIndex < 0 || hourIndex >= uptimeHistoryHours || !heartbeatTime.After(latestInHour[hourIndex]) {
+			continue
+		}
+		latestInHour[hourIndex] = heartbeatTime
+		history[hourIndex].Status = heartbeat.Status
+	}
+
+	return history
 }
 
 func GetUptimeKumaStatus(c *gin.Context) {
