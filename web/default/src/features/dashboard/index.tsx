@@ -46,15 +46,16 @@ import {
   saveChartPreferences,
 } from './lib'
 import {
-  type DashboardSectionId,
   DASHBOARD_DEFAULT_SECTION,
   DASHBOARD_SECTION_IDS,
+  type DashboardSectionId,
 } from './section-registry'
-import {
-  type DashboardChartPreferences,
-  type DashboardFilters,
-  type QuotaDataItem,
-  type UserChartsFilters,
+import type { TokenChartsFilters } from './tokens/types'
+import type {
+  DashboardChartPreferences,
+  DashboardFilters,
+  QuotaDataItem,
+  UserChartsFilters,
 } from './types'
 
 const route = getRouteApi('/_authenticated/dashboard/$section')
@@ -89,6 +90,12 @@ const LazyUserCharts = lazy(() =>
   }))
 )
 
+const LazyTokenCharts = lazy(() =>
+  import('./tokens/token-charts').then((m) => ({
+    default: m.TokenCharts,
+  }))
+)
+
 const LazyFlowCharts = lazy(() =>
   import('./components/flow/flow-charts').then((m) => ({
     default: m.FlowCharts,
@@ -96,11 +103,13 @@ const LazyFlowCharts = lazy(() =>
 )
 
 function LogStatCardsFallback() {
+  const cardKeys = ['quota', 'requests', 'tokens', 'rpm', 'tpm']
+
   return (
     <div className='overflow-hidden rounded-lg border'>
       <div className='divide-border/60 grid grid-cols-2 divide-x sm:grid-cols-3 lg:grid-cols-5'>
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className='px-4 py-3.5 sm:px-5 sm:py-4'>
+        {cardKeys.map((key) => (
+          <div key={key} className='px-4 py-3.5 sm:px-5 sm:py-4'>
             <Skeleton className='h-3.5 w-16' />
             <Skeleton className='mt-2 h-7 w-20' />
             <Skeleton className='mt-1.5 h-3.5 w-28' />
@@ -126,21 +135,24 @@ function ModelChartsFallback() {
 }
 
 function PerformanceOverviewFallback() {
+  const metricKeys = ['requests', 'latency', 'availability']
+  const statusKeys = ['healthy', 'degraded']
+
   return (
     <div className='overflow-hidden rounded-lg border'>
       <div className='flex flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3 sm:px-5'>
         <div className='flex items-center gap-2'>
           <Skeleton className='h-4 w-24' />
         </div>
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className='flex items-center gap-1.5'>
+        {metricKeys.map((key) => (
+          <div key={key} className='flex items-center gap-1.5'>
             <Skeleton className='h-3 w-14' />
             <Skeleton className='h-4 w-16' />
           </div>
         ))}
         <div className='ml-auto flex items-center gap-2'>
-          {Array.from({ length: 2 }).map((_, i) => (
-            <Skeleton key={i} className='h-5 w-28 rounded-full' />
+          {statusKeys.map((key) => (
+            <Skeleton key={key} className='h-5 w-28 rounded-full' />
           ))}
         </div>
       </div>
@@ -160,6 +172,9 @@ const SECTION_META: Record<DashboardSectionId, { titleKey: string }> = {
   },
   users: {
     titleKey: 'User Analytics',
+  },
+  tokens: {
+    titleKey: 'Token Analytics',
   },
 }
 
@@ -188,6 +203,15 @@ export function Dashboard() {
       }
     }
   )
+  const [tokenChartsFilters, setTokenChartsFilters] =
+    useState<TokenChartsFilters>(() => {
+      const granularity = getSavedGranularity()
+      return {
+        timeGranularity: granularity,
+        selectedRange: getDefaultDays(granularity),
+        topUserLimit: 10,
+      }
+    })
   const [flowSensitiveVisible, setFlowSensitiveVisible] = useState(true)
 
   const handleFilterChange = useCallback((filters: DashboardFilters) => {
@@ -220,7 +244,9 @@ export function Dashboard() {
   const visibleSections = useMemo(
     () =>
       DASHBOARD_SECTION_IDS.filter(
-        (section) => section !== 'overview' && (section !== 'users' || isAdmin)
+        (section) =>
+          section !== 'overview' &&
+          (!['users', 'tokens'].includes(section) || isAdmin)
       ),
     [isAdmin]
   )
@@ -368,6 +394,16 @@ export function Dashboard() {
                 <LazyUserCharts
                   filters={userChartsFilters}
                   onFiltersChange={setUserChartsFilters}
+                />
+              </Suspense>
+            </FadeIn>
+          )}
+          {activeSection === 'tokens' && (
+            <FadeIn>
+              <Suspense fallback={<ModelChartsFallback />}>
+                <LazyTokenCharts
+                  filters={tokenChartsFilters}
+                  onFiltersChange={setTokenChartsFilters}
                 />
               </Suspense>
             </FadeIn>
