@@ -17,6 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import dayjs from '@/lib/dayjs'
+import { toIntlLocale } from '@/i18n/languages'
 
 import {
   formatCurrencyFromUSD,
@@ -33,7 +34,8 @@ export function formatNumber(
   locales?: Intl.LocalesArgument
 ): string {
   if (value == null || Number.isNaN(value as number)) return '-'
-  return Intl.NumberFormat(locales, { maximumFractionDigits: 2 }).format(
+  const locale = typeof locales === 'string' ? toIntlLocale(locales) : locales
+  return Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(
     value as number
   )
 }
@@ -43,7 +45,8 @@ export function formatCompactNumber(
   locales?: Intl.LocalesArgument
 ): string {
   if (value == null || Number.isNaN(value as number)) return '-'
-  return Intl.NumberFormat(locales, {
+  const locale = typeof locales === 'string' ? toIntlLocale(locales) : locales
+  return Intl.NumberFormat(locale, {
     notation: 'compact',
     maximumFractionDigits: 1,
   }).format(value as number)
