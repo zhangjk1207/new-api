@@ -2,13 +2,14 @@ package controller
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/setting/console_setting"
 
 	"github.com/gin-gonic/gin"
@@ -34,8 +35,9 @@ type Monitor struct {
 }
 
 type uptimeHistoryPoint struct {
-	Timestamp int64 `json:"timestamp"`
-	Status    int   `json:"status"`
+	Timestamp    int64   `json:"timestamp"`
+	Status       int     `json:"status"`
+	ResponseTime float64 `json:"response_time"`
 }
 
 type uptimeHeartbeat struct {
@@ -65,7 +67,7 @@ func getAndDecode(ctx context.Context, client *http.Client, url string, dest int
 		return errors.New("non-200 status")
 	}
 
-	return json.NewDecoder(resp.Body).Decode(dest)
+	return common.DecodeJson(resp.Body, dest)
 }
 
 func fetchGroupData(ctx context.Context, client *http.Client, groupConfig map[string]interface{}) UptimeGroupResult {
@@ -168,29 +170,27 @@ func getLatestHeartbeat(heartbeats []uptimeHeartbeat) (uptimeHeartbeat, bool) {
 }
 
 func buildMonitorHistory(heartbeats []uptimeHeartbeat, now time.Time) []uptimeHistoryPoint {
-	currentHour := now.In(time.Local).Truncate(time.Hour)
-	firstHour := currentHour.Add(-(uptimeHistoryHours - 1) * time.Hour)
-	history := make([]uptimeHistoryPoint, uptimeHistoryHours)
-	latestInHour := make([]time.Time, uptimeHistoryHours)
-	for i := range history {
-		history[i] = uptimeHistoryPoint{
-			Timestamp: firstHour.Add(time.Duration(i) * time.Hour).Unix(),
-			Status:    -1,
-		}
-	}
+	firstHeartbeatTime := now.Add(-uptimeHistoryHours * time.Hour)
+	history := make([]uptimeHistoryPoint, 0, len(heartbeats))
 
 	for _, heartbeat := range heartbeats {
 		heartbeatTime, err := parseUptimeHeartbeatTime(heartbeat.Time)
 		if err != nil {
 			continue
 		}
-		hourIndex := int(heartbeatTime.Truncate(time.Hour).Sub(firstHour) / time.Hour)
-		if hourIndex < 0 || hourIndex >= uptimeHistoryHours || !heartbeatTime.After(latestInHour[hourIndex]) {
+		if heartbeatTime.Before(firstHeartbeatTime) || heartbeatTime.After(now) {
 			continue
 		}
-		latestInHour[hourIndex] = heartbeatTime
-		history[hourIndex].Status = heartbeat.Status
+		history = append(history, uptimeHistoryPoint{
+			Timestamp:    heartbeatTime.Unix(),
+			Status:       heartbeat.Status,
+			ResponseTime: heartbeat.Ping,
+		})
 	}
+
+	sort.Slice(history, func(i, j int) bool {
+		return history[i].Timestamp < history[j].Timestamp
+	})
 
 	return history
 }

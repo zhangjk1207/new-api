@@ -14,6 +14,21 @@ GNU Affero General Public License for more details.
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
+import type { ServiceHeartbeatPoint } from '../types'
+
+export function getTimelineSlots(
+  history: ServiceHeartbeatPoint[],
+  visibleBeatCount: number
+): Array<ServiceHeartbeatPoint | null> {
+  const recentHistory = history.slice(-visibleBeatCount)
+  const missingBeatCount = Math.max(0, visibleBeatCount - recentHistory.length)
+
+  return [
+    ...Array<ServiceHeartbeatPoint | null>(missingBeatCount).fill(null),
+    ...recentHistory,
+  ]
+}
+
 export function getTimelineStatusClass(status: number): string {
   if (status === 1) return 'bg-emerald-500'
   if (status === 0) return 'bg-red-500'

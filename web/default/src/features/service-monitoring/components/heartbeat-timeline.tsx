@@ -15,6 +15,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
 import dayjs from 'dayjs'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import {
@@ -25,6 +26,7 @@ import {
 import { cn } from '@/lib/utils'
 
 import {
+  getTimelineSlots,
   getTimelineStatusClass,
   getTimelineStatusLabelKey,
 } from '../lib/monitor-status'
@@ -34,27 +36,57 @@ type HeartbeatTimelineProps = {
   history: ServiceHeartbeatPoint[]
 }
 
+const MINIMUM_VISIBLE_BEAT_COUNT = 24
+const BEAT_WIDTH = 18
+
 export function HeartbeatTimeline(props: HeartbeatTimelineProps) {
   const { t } = useTranslation()
+  const timelineRef = useRef<HTMLDivElement>(null)
+  const [visibleBeatCount, setVisibleBeatCount] = useState(
+    MINIMUM_VISIBLE_BEAT_COUNT
+  )
+  const slots = getTimelineSlots(props.history, visibleBeatCount)
+
+  useEffect(() => {
+    const timeline = timelineRef.current
+    if (!timeline) return
+
+    const updateVisibleBeatCount = () => {
+      const width = timeline.getBoundingClientRect().width
+      setVisibleBeatCount(
+        Math.max(MINIMUM_VISIBLE_BEAT_COUNT, Math.floor(width / BEAT_WIDTH))
+      )
+    }
+
+    const observer = new ResizeObserver(updateVisibleBeatCount)
+    observer.observe(timeline)
+    updateVisibleBeatCount()
+
+    return () => observer.disconnect()
+  }, [])
 
   return (
     <div
-      className='grid h-3 min-w-52 grid-cols-[repeat(24,minmax(0,1fr))] gap-px'
+      ref={timelineRef}
+      className='grid h-3 min-w-52 auto-cols-fr grid-flow-col gap-px'
       role='img'
       aria-label={t('24h service timeline')}
     >
-      {props.history.map((point) => {
-        const timeLabel = dayjs(point.timestamp * 1000).format('MM-DD HH:00')
-        const statusLabel = t(getTimelineStatusLabelKey(point.status))
+      {slots.map((point, index) => {
+        const timeLabel = point
+          ? dayjs(point.timestamp * 1000).format('MM-DD HH:mm:ss')
+          : t('No data')
+        const status = point?.status ?? -1
+        const statusLabel = t(getTimelineStatusLabelKey(status))
 
         return (
-          <Tooltip key={point.timestamp}>
+          <Tooltip key={point?.timestamp ?? `empty-${index}`}>
             <TooltipTrigger
               render={
                 <span
                   className={cn(
                     'block min-w-0 rounded-[2px] transition-opacity hover:opacity-80',
-                    getTimelineStatusClass(point.status)
+                    getTimelineStatusClass(status)
                   )}
                   aria-label={`${timeLabel}: ${statusLabel}`}
                 />
@@ -63,6 +95,11 @@ export function HeartbeatTimeline(props: HeartbeatTimelineProps) {
             <TooltipContent className='font-mono text-xs'>
               <div>{timeLabel}</div>
               <div className='text-muted-foreground'>{statusLabel}</div>
+              {point && point.response_time > 0 && (
+                <div className='text-muted-foreground'>
+                  {Math.round(point.response_time)} ms
+                </div>
+              )}
             </TooltipContent>
           </Tooltip>
         )

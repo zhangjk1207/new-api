@@ -92,7 +92,7 @@ export function ServiceMonitoringPage() {
   const monitoringQuery = useQuery({
     queryKey: ['service-monitoring'],
     queryFn: getServiceMonitoring,
-    refetchInterval: 60_000,
+    refetchInterval: 30_000,
   })
   const groups = monitoringQuery.data ?? []
   let content: ReactNode

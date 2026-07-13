@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestBuildMonitorHistoryUsesLatestHeartbeatForEachHour(t *testing.T) {
+func TestBuildMonitorHistoryKeepsIndividualHeartbeats(t *testing.T) {
 	now := time.Date(2026, time.July, 13, 10, 59, 0, 0, time.Local)
 	heartbeats := []uptimeHeartbeat{
 		{Status: 0, Time: "2026-07-13 09:05:00.000", Ping: 100},
@@ -18,20 +18,26 @@ func TestBuildMonitorHistoryUsesLatestHeartbeatForEachHour(t *testing.T) {
 
 	history := buildMonitorHistory(heartbeats, now)
 
-	require.Len(t, history, uptimeHistoryHours)
-	assert.Equal(t, -1, history[0].Status)
-	assert.Equal(t, 0, history[uptimeHistoryHours-2].Status)
-	assert.Equal(t, 1, history[uptimeHistoryHours-1].Status)
-	assert.Equal(t, now.Truncate(time.Hour).Unix(), history[uptimeHistoryHours-1].Timestamp)
+	require.Len(t, history, 3)
+	assert.Equal(t, time.Date(2026, time.July, 13, 9, 5, 0, 0, time.Local).Unix(), history[0].Timestamp)
+	assert.Equal(t, 0, history[0].Status)
+	assert.Equal(t, 100.0, history[0].ResponseTime)
+	assert.Equal(t, time.Date(2026, time.July, 13, 10, 55, 0, 0, time.Local).Unix(), history[2].Timestamp)
+	assert.Equal(t, 1, history[2].Status)
+	assert.Equal(t, 80.0, history[2].ResponseTime)
 }
 
-func TestBuildMonitorHistoryMarksHoursWithoutHeartbeatsAsUnknown(t *testing.T) {
+func TestBuildMonitorHistoryExcludesHeartbeatsOutsideTheLastDay(t *testing.T) {
 	now := time.Date(2026, time.July, 13, 10, 59, 0, 0, time.Local)
-
-	history := buildMonitorHistory(nil, now)
-
-	require.Len(t, history, uptimeHistoryHours)
-	for _, point := range history {
-		assert.Equal(t, -1, point.Status)
+	heartbeats := []uptimeHeartbeat{
+		{Status: 1, Time: "2026-07-12 10:58:59.000", Ping: 10},
+		{Status: 1, Time: "2026-07-12 10:59:00.000", Ping: 20},
+		{Status: 1, Time: "2026-07-13 10:58:00.000", Ping: 30},
 	}
+
+	history := buildMonitorHistory(heartbeats, now)
+
+	require.Len(t, history, 2)
+	assert.Equal(t, 20.0, history[0].ResponseTime)
+	assert.Equal(t, 30.0, history[1].ResponseTime)
 }
