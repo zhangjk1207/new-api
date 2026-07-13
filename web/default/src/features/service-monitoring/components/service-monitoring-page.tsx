@@ -53,12 +53,22 @@ function formatResponseTime(responseTime: number): string {
   return `${Math.round(responseTime)} ms`
 }
 
+function formatTokensPerSecond(tokensPerSecond: number | undefined): string {
+  if (tokensPerSecond === undefined) return '-'
+  return Math.round(tokensPerSecond).toLocaleString()
+}
+
+function formatMaxConcurrency(maxConcurrency: number | undefined): string {
+  if (maxConcurrency === undefined) return '-'
+  return maxConcurrency.toLocaleString()
+}
+
 function MonitorRow(props: { monitor: ServiceMonitor }) {
   const { t } = useTranslation()
   const statusLabel = t(getTimelineStatusLabelKey(props.monitor.status))
 
   return (
-    <div className='border-border/40 grid min-w-[720px] grid-cols-[minmax(12rem,1.2fr)_minmax(13rem,1.8fr)_5rem_5.5rem] items-center gap-4 border-b px-4 py-3 last:border-b-0 sm:px-6'>
+    <div className='border-border/40 grid min-w-[900px] grid-cols-[minmax(12rem,1.2fr)_minmax(13rem,1.8fr)_5.5rem_5.5rem_5rem_5.5rem] items-center gap-4 border-b px-4 py-3 last:border-b-0 sm:px-6'>
       <div className='flex min-w-0 items-center gap-2.5'>
         <span
           className={cn(
@@ -77,6 +87,12 @@ function MonitorRow(props: { monitor: ServiceMonitor }) {
         </div>
       </div>
       <HeartbeatTimeline history={props.monitor.history} />
+      <div className='text-right font-mono text-sm tabular-nums'>
+        {formatTokensPerSecond(props.monitor.tokens_per_second)}
+      </div>
+      <div className='text-right font-mono text-sm tabular-nums'>
+        {formatMaxConcurrency(props.monitor.max_concurrency)}
+      </div>
       <div className='text-right font-mono text-sm tabular-nums'>
         {(props.monitor.uptime * 100).toFixed(2)}%
       </div>
@@ -112,10 +128,12 @@ export function ServiceMonitoringPage() {
   } else {
     content = (
       <div className='border-border/60 overflow-x-auto border-y'>
-        <div className='min-w-[720px]'>
-          <div className='border-border/60 bg-muted/30 text-muted-foreground grid grid-cols-[minmax(12rem,1.2fr)_minmax(13rem,1.8fr)_5rem_5.5rem] gap-4 border-b px-4 py-2 text-xs font-medium sm:px-6'>
+        <div className='min-w-[900px]'>
+          <div className='border-border/60 bg-muted/30 text-muted-foreground grid grid-cols-[minmax(12rem,1.2fr)_minmax(13rem,1.8fr)_5.5rem_5.5rem_5rem_5.5rem] gap-4 border-b px-4 py-2 text-xs font-medium sm:px-6'>
             <span>{t('Model')}</span>
             <span>{t('24h service timeline')}</span>
+            <span className='text-right'>{t('Tokens/s')}</span>
+            <span className='text-right'>{t('Concurrency')}</span>
             <span className='text-right'>{t('Uptime')}</span>
             <span className='text-right'>{t('Last response')}</span>
           </div>
@@ -137,7 +155,7 @@ export function ServiceMonitoringPage() {
   }
 
   return (
-    <main className='mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8'>
+    <main className='mx-auto h-full w-full max-w-7xl space-y-6 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8'>
       <header className='flex items-center justify-between gap-4'>
         <div className='flex min-w-0 items-center gap-3'>
           <Activity className='text-muted-foreground size-5 shrink-0' />

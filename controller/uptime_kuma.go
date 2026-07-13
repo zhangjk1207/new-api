@@ -3,16 +3,22 @@ package controller
 import (
 	"context"
 	"errors"
+	"io"
+	"math"
 	"net/http"
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/QuantumNous/new-api/common"
+	"github.com/QuantumNous/new-api/model"
 	"github.com/QuantumNous/new-api/setting/console_setting"
 
 	"github.com/gin-gonic/gin"
+	clientmodel "github.com/prometheus/client_model/go"
+	"github.com/prometheus/common/expfmt"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -23,15 +29,18 @@ const (
 	apiStatusPath      = "/api/status-page/"
 	apiHeartbeatPath   = "/api/status-page/heartbeat/"
 	uptimeHistoryHours = 24
+	metricsPath        = "/metrics"
 )
 
 type Monitor struct {
-	Name         string               `json:"name"`
-	Uptime       float64              `json:"uptime"`
-	Status       int                  `json:"status"`
-	Group        string               `json:"group,omitempty"`
-	ResponseTime float64              `json:"response_time"`
-	History      []uptimeHistoryPoint `json:"history"`
+	Name            string               `json:"name"`
+	Uptime          float64              `json:"uptime"`
+	Status          int                  `json:"status"`
+	Group           string               `json:"group,omitempty"`
+	ResponseTime    float64              `json:"response_time"`
+	TokensPerSecond *float64             `json:"tokens_per_second,omitempty"`
+	MaxConcurrency  *int                 `json:"max_concurrency,omitempty"`
+	History         []uptimeHistoryPoint `json:"history"`
 }
 
 type uptimeHistoryPoint struct {
@@ -49,6 +58,24 @@ type uptimeHeartbeat struct {
 type UptimeGroupResult struct {
 	CategoryName string    `json:"categoryName"`
 	Monitors     []Monitor `json:"monitors"`
+}
+
+type vllmMetrics struct {
+	TokenCount      float64
+	TokensPerSecond *float64
+	MaxConcurrency  *int
+}
+
+type tokenSample struct {
+	TokenCount float64
+	Collected  time.Time
+}
+
+var uptimeKumaTokenSamples = struct {
+	sync.Mutex
+	values map[string]tokenSample
+}{
+	values: make(map[string]tokenSample),
 }
 
 func getAndDecode(ctx context.Context, client *http.Client, url string, dest interface{}) error {
@@ -114,6 +141,14 @@ func fetchGroupData(ctx context.Context, client *http.Client, groupConfig map[st
 		return result
 	}
 
+	monitorNames := make(map[string]struct{})
+	for _, pg := range statusData.PublicGroupList {
+		for _, monitor := range pg.MonitorList {
+			monitorNames[monitor.Name] = struct{}{}
+		}
+	}
+	metricsByMonitorName := fetchMonitorMetrics(ctx, client, monitorNames)
+
 	now := time.Now()
 	for _, pg := range statusData.PublicGroupList {
 		if len(pg.MonitorList) == 0 {
@@ -141,12 +176,144 @@ func fetchGroupData(ctx context.Context, client *http.Client, groupConfig map[st
 					monitor.ResponseTime = latest.Ping
 				}
 			}
+			if metrics, exists := metricsByMonitorName[m.Name]; exists {
+				monitor.TokensPerSecond = metrics.TokensPerSecond
+				monitor.MaxConcurrency = metrics.MaxConcurrency
+			}
 
 			result.Monitors = append(result.Monitors, monitor)
 		}
 	}
 
 	return result
+}
+
+func fetchMonitorMetrics(ctx context.Context, client *http.Client, monitorNames map[string]struct{}) map[string]vllmMetrics {
+	metricsByMonitorName := make(map[string]vllmMetrics)
+	if len(monitorNames) == 0 {
+		return metricsByMonitorName
+	}
+
+	var channels []model.Channel
+	if err := model.DB.Select("name", "base_url").Find(&channels).Error; err != nil {
+		return metricsByMonitorName
+	}
+
+	baseURLByMonitorName := make(map[string]string)
+	monitorNamesByBaseURL := make(map[string][]string)
+	for _, channel := range channels {
+		if _, monitored := monitorNames[channel.Name]; !monitored {
+			continue
+		}
+		baseURL := strings.TrimSuffix(channel.GetBaseURL(), "/")
+		if baseURL == "" {
+			continue
+		}
+		baseURLByMonitorName[channel.Name] = baseURL
+		monitorNamesByBaseURL[baseURL] = append(monitorNamesByBaseURL[baseURL], channel.Name)
+	}
+
+	metricsByBaseURL := make(map[string]vllmMetrics)
+	var mu sync.Mutex
+	var g errgroup.Group
+	for baseURL := range monitorNamesByBaseURL {
+		baseURL := baseURL
+		g.Go(func() error {
+			metrics, err := fetchVLLMMetrics(ctx, client, baseURL)
+			if err != nil {
+				return nil
+			}
+			mu.Lock()
+			metricsByBaseURL[baseURL] = metrics
+			mu.Unlock()
+			return nil
+		})
+	}
+	g.Wait()
+
+	for monitorName, baseURL := range baseURLByMonitorName {
+		if metrics, exists := metricsByBaseURL[baseURL]; exists {
+			metricsByMonitorName[monitorName] = metrics
+		}
+	}
+
+	return metricsByMonitorName
+}
+
+func fetchVLLMMetrics(ctx context.Context, client *http.Client, baseURL string) (vllmMetrics, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, baseURL+metricsPath, nil)
+	if err != nil {
+		return vllmMetrics{}, err
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return vllmMetrics{}, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return vllmMetrics{}, errors.New("non-200 metrics status")
+	}
+
+	metrics, err := parseVLLMMetrics(resp.Body)
+	if err != nil {
+		return vllmMetrics{}, err
+	}
+
+	now := time.Now()
+	uptimeKumaTokenSamples.Lock()
+	if previous, exists := uptimeKumaTokenSamples.values[baseURL]; exists {
+		if tokensPerSecond, ok := calculateTokensPerSecond(previous.TokenCount, previous.Collected, metrics.TokenCount, now); ok {
+			metrics.TokensPerSecond = &tokensPerSecond
+		}
+	}
+	uptimeKumaTokenSamples.values[baseURL] = tokenSample{TokenCount: metrics.TokenCount, Collected: now}
+	uptimeKumaTokenSamples.Unlock()
+
+	return metrics, nil
+}
+
+func parseVLLMMetrics(reader io.Reader) (vllmMetrics, error) {
+	decoder := expfmt.NewDecoder(reader, expfmt.FmtText)
+	metrics := vllmMetrics{}
+	for {
+		family := &clientmodel.MetricFamily{}
+		err := decoder.Decode(family)
+		if errors.Is(err, io.EOF) {
+			return metrics, nil
+		}
+		if err != nil {
+			return vllmMetrics{}, err
+		}
+
+		switch family.GetName() {
+		case "vllm:prompt_tokens_total", "vllm:generation_tokens_total":
+			for _, metric := range family.Metric {
+				metrics.TokenCount += metric.GetCounter().GetValue()
+			}
+		case "vllm:cache_config_info":
+			for _, metric := range family.Metric {
+				for _, label := range metric.Label {
+					if label.GetName() != "kv_cache_max_concurrency" {
+						continue
+					}
+					value, err := strconv.ParseFloat(label.GetValue(), 64)
+					if err != nil || value < 0 {
+						continue
+					}
+					rounded := int(math.Round(value))
+					metrics.MaxConcurrency = &rounded
+				}
+			}
+		}
+	}
+}
+
+func calculateTokensPerSecond(previousCount float64, previousTime time.Time, currentCount float64, currentTime time.Time) (float64, bool) {
+	duration := currentTime.Sub(previousTime).Seconds()
+	if duration <= 0 || currentCount < previousCount {
+		return 0, false
+	}
+	return (currentCount - previousCount) / duration, true
 }
 
 func parseUptimeHeartbeatTime(value string) (time.Time, error) {
