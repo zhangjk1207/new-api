@@ -36,6 +36,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useTheme } from '@/context/theme-provider'
+import { toIntlLocale } from '@/i18n/languages'
 import { formatNumber, formatQuota } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { VCHART_OPTION } from '@/lib/vchart'
@@ -92,11 +93,14 @@ export function OperationsDashboard() {
   )
   const trendData = data.trend.map((item) => ({
     ...item,
-    time: new Intl.DateTimeFormat(i18n.resolvedLanguage, {
-      hour: '2-digit',
-      minute: '2-digit',
-      hourCycle: 'h23',
-    }).format(new Date(item.timestamp * 1000)),
+    time: new Intl.DateTimeFormat(
+      toIntlLocale(i18n.resolvedLanguage || i18n.language),
+      {
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23',
+      }
+    ).format(new Date(item.timestamp * 1000)),
   }))
 
   return (
