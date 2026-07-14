@@ -27,19 +27,12 @@ import {
   formatBytes,
   formatUsagePercent,
 } from '@/features/host-monitoring/lib/format'
+import {
+  buildHostTrendTooltip,
+  formatHostMonitorTime,
+} from '@/features/host-monitoring/lib/host-trend-tooltip'
 import { toIntlLocale } from '@/i18n/languages'
 import { VCHART_OPTION } from '@/lib/vchart'
-
-function formatMonitorTime(timestamp: number, locale?: string) {
-  return Intl.DateTimeFormat(locale, {
-    timeZone: 'Asia/Shanghai',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).format(new Date(timestamp * 1000))
-}
 
 function HostTrendChart(props: {
   title: string
@@ -66,28 +59,18 @@ function HostTrendChart(props: {
             line: { style: { stroke: props.color, lineWidth: 2 } },
             point: { style: { fill: props.color } },
             legends: { visible: false },
-            tooltip: {
-              mark: {
-                title: {
-                  value: (datum: { timestamp: number }) =>
-                    formatMonitorTime(datum.timestamp, locale),
-                },
-                content: [
-                  {
-                    key: props.title,
-                    value: (datum: { value: number }) =>
-                      props.valueFormatter(datum.value),
-                  },
-                ],
-              },
-            },
+            tooltip: buildHostTrendTooltip(
+              props.title,
+              props.valueFormatter,
+              locale
+            ),
             axes: [
               {
                 orient: 'bottom',
                 type: 'band',
                 label: {
                   formatMethod: (value: number) =>
-                    formatMonitorTime(value, locale),
+                    formatHostMonitorTime(value, locale),
                 },
               },
               {
