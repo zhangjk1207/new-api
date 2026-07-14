@@ -14,31 +14,38 @@ GNU Affero General Public License for more details.
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
-import type { ServiceMonitor } from '@/features/service-monitoring/types'
+import type { OperationsDashboardData } from '../api'
 
 function escapeCsvCell(value: string | number): string {
   const text = String(value)
   return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
 }
 
-export function buildMonitoringCsv(monitors: ServiceMonitor[]): string {
+export function buildOperationsDashboardCsv(
+  data: OperationsDashboardData
+): string {
   const rows = [
-    [
-      'Channel',
-      'Status',
-      'Success Rate',
-      'Response Time (ms)',
-      'Tokens/s',
-      'Max Concurrency',
-    ],
-    ...monitors.map((monitor) => [
-      monitor.name,
-      monitor.status === 1 ? 'Operational' : 'Down',
-      (monitor.uptime * 100).toFixed(2),
-      Math.round(monitor.response_time),
-      Math.round(monitor.tokens_per_second ?? 0),
-      monitor.max_concurrency ?? 0,
+    ['Metric', 'Value'],
+    ['Active Users', data.metrics.active_users],
+    ['Enabled Channels', data.metrics.enabled_channels],
+    ['Healthy Channels', data.metrics.healthy_channels],
+    ['Active Models', data.metrics.active_models],
+    ['Tokens/s', data.metrics.tokens_per_second.toFixed(2)],
+    ['Max Concurrency', data.metrics.max_concurrency],
+    ['15m Success Rate', data.metrics.success_rate_15m.toFixed(2)],
+    ['P95 Latency (ms)', data.metrics.p95_latency_ms.toFixed(2)],
+    [],
+    ['Model', 'Requests', 'Success Rate', 'Average Latency (ms)', 'Tokens/s'],
+    ...data.models.map((model) => [
+      model.name,
+      model.request_count,
+      model.success_rate.toFixed(2),
+      model.avg_latency_ms.toFixed(0),
+      model.tokens_per_second.toFixed(2),
     ]),
+    [],
+    ['Alert', 'Name', 'Value'],
+    ...data.alerts.map((alert) => [alert.type, alert.name, alert.value]),
   ]
   return rows.map((row) => row.map(escapeCsvCell).join(',')).join('\n')
 }

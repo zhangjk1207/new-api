@@ -18,13 +18,19 @@ import { useQuery } from '@tanstack/react-query'
 import { VChart } from '@visactor/react-vchart'
 import {
   Activity,
+  AlertTriangle,
+  Boxes,
+  CheckCircle2,
   Download,
   Gauge,
+  Network,
   RefreshCw,
   Server,
+  ShieldCheck,
   Sparkles,
+  Timer,
+  Users,
 } from 'lucide-react'
-import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { SectionPageLayout } from '@/components/layout'
@@ -36,13 +42,13 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useTheme } from '@/context/theme-provider'
-import { formatNumber } from '@/lib/format'
+import { formatNumber, formatPercent } from '@/lib/format'
+import { toIntlLocale } from '@/i18n/languages'
 import { cn } from '@/lib/utils'
 import { VCHART_OPTION } from '@/lib/vchart'
 
 import { getOperationsDashboard } from './api'
-import { buildOperationsDashboardData } from './lib/dashboard-data'
-import { buildMonitoringCsv } from './lib/monitoring-export'
+import { buildOperationsDashboardCsv } from './lib/monitoring-export'
 
 function MetricCard(props: {
   title: string
@@ -82,22 +88,18 @@ export function OperationsDashboard() {
     refetchInterval: 30_000,
     staleTime: 15_000,
   })
-  const data = useMemo(
-    () =>
-      buildOperationsDashboardData({
-        quotaData: query.data?.quotaData ?? [],
-        performance: query.data?.performance ?? [],
-        monitors: query.data?.monitors ?? [],
-      }),
-    [query.data]
-  )
-  const capacityData = data.monitors.map((monitor) => ({
-    name: monitor.name,
-    tokens: monitor.tokens_per_second ?? 0,
-    concurrency: monitor.max_concurrency ?? 0,
-  }))
+  const data = query.data
+  const metrics = data?.metrics
+  const locale = toIntlLocale(i18n.resolvedLanguage || i18n.language)
+  const timeFormatter = new Intl.DateTimeFormat(locale, {
+    timeZone: 'Asia/Shanghai',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  })
   const handleExport = () => {
-    const blob = new Blob([`\ufeff${buildMonitoringCsv(data.monitors)}`], {
+    if (!data) return
+    const blob = new Blob([`\ufeff${buildOperationsDashboardCsv(data)}`], {
       type: 'text/csv;charset=utf-8',
     })
     const url = URL.createObjectURL(blob)
@@ -121,7 +123,7 @@ export function OperationsDashboard() {
                 variant='outline'
                 size='icon'
                 onClick={handleExport}
-                disabled={data.monitors.length === 0}
+                disabled={!data}
                 aria-label={t('Download')}
               >
                 <Download className='size-4' />
@@ -151,53 +153,77 @@ export function OperationsDashboard() {
       </SectionPageLayout.Actions>
       <SectionPageLayout.Content>
         <div className='mx-auto max-w-[1600px] space-y-4 pb-4'>
-          <div className='grid gap-3 sm:grid-cols-2 xl:grid-cols-4'>
+          <div className='grid gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-8'>
             <MetricCard
-              title={t('Channels')}
-              value={`${data.summary.healthyChannels}/${data.summary.totalChannels}`}
-              detail={t('Service Monitoring')}
-              icon={Server}
+              title={t('Active users')}
+              value={formatNumber(metrics?.active_users, locale)}
+              detail={t('Last 24 hours')}
+              icon={Users}
+              accent='bg-blue-500'
+            />
+            <MetricCard
+              title={t('Enabled channels')}
+              value={formatNumber(metrics?.enabled_channels, locale)}
+              detail={t('Channels')}
+              icon={Network}
+              accent='bg-teal-500'
+            />
+            <MetricCard
+              title={t('Healthy channels')}
+              value={formatNumber(metrics?.healthy_channels, locale)}
+              detail={`${formatNumber(metrics?.healthy_channels, locale)}/${formatNumber(metrics?.enabled_channels, locale)}`}
+              icon={ShieldCheck}
               accent='bg-emerald-500'
             />
             <MetricCard
+              title={t('Active models')}
+              value={formatNumber(metrics?.active_models, locale)}
+              detail={t('Last 24 hours')}
+              icon={Boxes}
+              accent='bg-indigo-500'
+            />
+            <MetricCard
               title={t('Tokens/s')}
-              value={formatNumber(
-                Math.round(data.summary.tokensPerSecond),
-                i18n.resolvedLanguage
-              )}
+              value={formatNumber(metrics?.tokens_per_second, locale)}
               detail={t('Service Monitoring')}
               icon={Sparkles}
               accent='bg-violet-500'
             />
             <MetricCard
               title={t('Concurrency')}
-              value={formatNumber(
-                data.summary.maxConcurrency,
-                i18n.resolvedLanguage
-              )}
+              value={formatNumber(metrics?.max_concurrency, locale)}
               detail={t('Service Monitoring')}
               icon={Gauge}
               accent='bg-amber-500'
             />
             <MetricCard
-              title={t('Latency')}
-              value={`${Math.round(data.summary.avgLatency)} ms`}
-              detail={`${data.summary.successRate.toFixed(1)}% ${t('Success rate')}`}
-              icon={Activity}
+              title={t('15m success rate')}
+              value={formatPercent(metrics?.success_rate_15m)}
+              detail={t('Health checks')}
+              icon={CheckCircle2}
               accent='bg-sky-500'
+            />
+            <MetricCard
+              title={t('P95 latency')}
+              value={metrics ? `${Math.round(metrics.p95_latency_ms)} ms` : '-'}
+              detail={t('Health checks')}
+              icon={Timer}
+              accent='bg-rose-500'
             />
           </div>
 
-          <div className='grid gap-4 xl:grid-cols-[minmax(0,1.65fr)_minmax(20rem,0.85fr)]'>
+          <div className='grid gap-4 xl:grid-cols-[minmax(0,1.7fr)_minmax(20rem,0.8fr)]'>
             <section className='bg-card overflow-hidden rounded-lg border'>
               <div className='flex items-center justify-between border-b px-4 py-3 sm:px-5'>
                 <div>
-                  <h3 className='text-sm font-semibold'>{t('Tokens/s')}</h3>
+                  <h3 className='text-sm font-semibold'>
+                    {t('Traffic & latency')}
+                  </h3>
                   <p className='text-muted-foreground mt-0.5 text-xs'>
-                    {t('Concurrency')}
+                    {t('Last 24 hours')}
                   </p>
                 </div>
-                <Gauge className='text-muted-foreground size-4' />
+                <Activity className='text-muted-foreground size-4' />
               </div>
               <div className='h-[300px] p-2 sm:h-[340px]'>
                 {query.isLoading ? (
@@ -209,19 +235,37 @@ export function OperationsDashboard() {
                       type: 'common',
                       background: 'transparent',
                       theme: resolvedTheme === 'dark' ? 'dark' : 'light',
-                      data: [{ id: 'capacity', values: capacityData }],
+                      data: [{ id: 'traffic', values: data?.traffic ?? [] }],
                       series: [
                         {
-                          type: 'bar',
-                          dataIndex: 'capacity',
-                          xField: 'name',
-                          yField: 'tokens',
-                          bar: { style: { fill: '#8b5cf6' } },
+                          type: 'line',
+                          dataIndex: 'traffic',
+                          xField: 'timestamp',
+                          yField: 'request_count',
+                          line: { style: { stroke: '#0ea5e9', lineWidth: 2 } },
+                          point: { style: { fill: '#0ea5e9' } },
+                        },
+                        {
+                          type: 'line',
+                          dataIndex: 'traffic',
+                          xField: 'timestamp',
+                          yField: 'avg_latency_ms',
+                          yAxisIndex: 1,
+                          line: { style: { stroke: '#f97316', lineWidth: 2 } },
+                          point: { style: { fill: '#f97316' } },
                         },
                       ],
                       axes: [
-                        { orient: 'bottom', type: 'band' },
+                        {
+                          orient: 'bottom',
+                          type: 'band',
+                          label: {
+                            formatMethod: (value: number) =>
+                              timeFormatter.format(new Date(value * 1000)),
+                          },
+                        },
                         { orient: 'left', type: 'linear' },
+                        { orient: 'right', type: 'linear' },
                       ],
                     }}
                   />
@@ -231,48 +275,48 @@ export function OperationsDashboard() {
 
             <section className='bg-card overflow-hidden rounded-lg border'>
               <div className='flex items-center justify-between border-b px-4 py-3 sm:px-5'>
-                <h3 className='text-sm font-semibold'>{t('Channels')}</h3>
-                <Server className='text-muted-foreground size-4' />
+                <div>
+                  <h3 className='text-sm font-semibold'>
+                    {t('Attention required')}
+                  </h3>
+                  <p className='text-muted-foreground mt-0.5 text-xs'>
+                    {data?.alerts.length ?? 0} {t('Alerts')}
+                  </p>
+                </div>
+                <AlertTriangle className='text-muted-foreground size-4' />
               </div>
               <div className='divide-y'>
-                {data.monitors.map((monitor, index) => (
+                {data?.alerts.slice(0, 8).map((alert) => (
                   <div
-                    key={monitor.name}
+                    key={`${alert.type}-${alert.name}`}
                     className='flex items-center gap-3 px-4 py-3 sm:px-5'
                   >
-                    <span className='text-muted-foreground w-4 text-xs font-medium'>
-                      {index + 1}
-                    </span>
+                    <AlertTriangle className='size-4 shrink-0 text-amber-500' />
                     <div className='min-w-0 flex-1'>
-                      <p className='truncate font-mono text-xs'>
-                        {monitor.name}
+                      <p className='truncate text-sm font-medium'>
+                        {alert.name}
                       </p>
-                      <div className='bg-muted mt-1 h-1.5 overflow-hidden rounded-full'>
-                        <div
-                          className='h-full rounded-full bg-sky-500'
-                          style={{
-                            width: `${Math.max(8, (monitor.uptime ?? 0) * 100)}%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                    <div className='text-right font-mono text-xs tabular-nums'>
-                      <p>
-                        {formatNumber(
-                          monitor.max_concurrency ?? 0,
-                          i18n.resolvedLanguage
-                        )}
-                      </p>
-                      <p className='text-muted-foreground mt-0.5'>
-                        {Math.round(monitor.tokens_per_second ?? 0)}{' '}
-                        {t('Tokens/s')}
+                      <p className='text-muted-foreground mt-0.5 text-xs'>
+                        {alert.type === 'channel_down' &&
+                          t('Channel unavailable')}
+                        {alert.type === 'channel_no_data' && t('No health data')}
+                        {alert.type === 'channel_slow' && t('High latency')}
+                        {alert.type === 'model_low_success' &&
+                          t('Low success rate')}
                       </p>
                     </div>
+                    {alert.value > 0 && (
+                      <span className='font-mono text-xs tabular-nums'>
+                        {alert.type === 'channel_slow'
+                          ? `${alert.value} ms`
+                          : formatPercent(alert.value)}
+                      </span>
+                    )}
                   </div>
                 ))}
-                {!query.isLoading && data.monitors.length === 0 && (
+                {!query.isLoading && (!data || data.alerts.length === 0) && (
                   <p className='text-muted-foreground px-5 py-10 text-center text-sm'>
-                    {t('No data')}
+                    {t('No issues detected')}
                   </p>
                 )}
               </div>
@@ -282,40 +326,45 @@ export function OperationsDashboard() {
           <section className='bg-card overflow-hidden rounded-lg border'>
             <div className='flex items-center justify-between border-b px-4 py-3 sm:px-5'>
               <div>
-                <h3 className='text-sm font-semibold'>
-                  {t('Service Monitoring')}
-                </h3>
+                <h3 className='text-sm font-semibold'>{t('Model performance')}</h3>
                 <p className='text-muted-foreground mt-0.5 text-xs'>
-                  {t('Latency')}: {Math.round(data.summary.avgLatency)} ms
+                  {t('Last 24 hours')}
                 </p>
               </div>
               <Server className='text-muted-foreground size-4' />
             </div>
-            <div className='grid divide-y sm:grid-cols-2 sm:divide-x sm:divide-y-0 xl:grid-cols-4'>
-              {data.monitors.map((monitor) => (
-                <div key={monitor.name} className='min-w-0 px-4 py-3 sm:px-5'>
-                  <div className='flex items-center gap-2'>
-                    <span
-                      className={cn(
-                        'size-2 shrink-0 rounded-full',
-                        monitor.status === 1 ? 'bg-emerald-500' : 'bg-red-500'
-                      )}
-                    />
-                    <p className='truncate text-sm font-medium'>
-                      {monitor.name}
+            <div className='divide-y'>
+              {data?.models.map((model) => (
+                <div
+                  key={model.name}
+                  className='grid gap-3 px-4 py-3 sm:grid-cols-[minmax(12rem,1fr)_minmax(12rem,1.5fr)_5rem_5rem_5rem] sm:items-center sm:px-5'
+                >
+                  <div className='min-w-0'>
+                    <p className='truncate font-mono text-xs'>{model.name}</p>
+                    <p className='text-muted-foreground mt-0.5 text-xs'>
+                      {formatNumber(model.request_count, locale)} {t('Requests')}
                     </p>
                   </div>
-                  <div className='text-muted-foreground mt-2 flex justify-between font-mono text-xs tabular-nums'>
-                    <span>{(monitor.uptime * 100).toFixed(1)}%</span>
-                    <span>
-                      {monitor.response_time > 0
-                        ? `${Math.round(monitor.response_time)} ms`
-                        : '-'}
-                    </span>
+                  <div className='bg-muted h-1.5 overflow-hidden rounded-full'>
+                    <div
+                      className='h-full rounded-full bg-violet-500'
+                      style={{
+                        width: `${Math.max(4, Math.min(100, model.tokens_per_second))}%`,
+                      }}
+                    />
                   </div>
+                  <p className='font-mono text-xs tabular-nums'>
+                    {formatNumber(model.tokens_per_second, locale)} {t('Tokens/s')}
+                  </p>
+                  <p className='font-mono text-xs tabular-nums'>
+                    {formatPercent(model.success_rate)}
+                  </p>
+                  <p className='font-mono text-xs tabular-nums'>
+                    {Math.round(model.avg_latency_ms)} ms
+                  </p>
                 </div>
               ))}
-              {!query.isLoading && data.monitors.length === 0 && (
+              {!query.isLoading && (!data || data.models.length === 0) && (
                 <p className='text-muted-foreground col-span-full px-5 py-10 text-center text-sm'>
                   {t('No data')}
                 </p>

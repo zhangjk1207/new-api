@@ -14,20 +14,44 @@ GNU Affero General Public License for more details.
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
-import { getPerfMetricsSummary } from '@/features/performance-metrics/api'
-import { getServiceMonitoring } from '@/features/service-monitoring/api'
+import { api } from '@/lib/api'
 
-export async function getOperationsDashboard() {
-  const [performanceResponse, monitoringGroups] = await Promise.all([
-    getPerfMetricsSummary(24),
-    getServiceMonitoring(),
-  ])
-
-  return {
-    quotaData: [],
-    performance: performanceResponse.success
-      ? performanceResponse.data.models
-      : [],
-    monitors: monitoringGroups.flatMap((group) => group.monitors),
+export type OperationsDashboardData = {
+  updated_at: number
+  metrics: {
+    active_users: number
+    enabled_channels: number
+    healthy_channels: number
+    active_models: number
+    tokens_per_second: number
+    max_concurrency: number
+    success_rate_15m: number
+    p95_latency_ms: number
   }
+  traffic: {
+    timestamp: number
+    request_count: number
+    avg_latency_ms: number
+    success_rate: number
+  }[]
+  models: {
+    name: string
+    request_count: number
+    success_rate: number
+    avg_latency_ms: number
+    tokens_per_second: number
+  }[]
+  alerts: {
+    type: string
+    name: string
+    value: number
+  }[]
+}
+
+export async function getOperationsDashboard(): Promise<OperationsDashboardData> {
+  const response = await api.get<{
+    success: boolean
+    data: OperationsDashboardData
+  }>('/api/operations-dashboard/summary')
+  return response.data.data
 }
