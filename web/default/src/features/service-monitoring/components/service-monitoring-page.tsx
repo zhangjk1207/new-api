@@ -134,21 +134,14 @@ export function ServiceMonitoringPage() {
             <span>{t('24h service timeline')}</span>
             <span className='text-right'>{t('Tokens/s')}</span>
             <span className='text-right'>{t('Concurrency')}</span>
-            <span className='text-right'>{t('Uptime')}</span>
+            <span className='text-right'>{t('Success rate')}</span>
             <span className='text-right'>{t('Last response')}</span>
           </div>
-          {groups.map((group) => (
-            <section key={group.categoryName}>
-              <div className='border-border/60 bg-muted/20 border-b px-4 py-2 sm:px-6'>
-                <h2 className='text-muted-foreground text-xs font-semibold'>
-                  {group.categoryName}
-                </h2>
-              </div>
-              {group.monitors.map((monitor) => (
-                <MonitorRow key={monitor.name} monitor={monitor} />
-              ))}
-            </section>
-          ))}
+          {groups
+            .flatMap((group) => group.monitors)
+            .map((monitor) => (
+              <MonitorRow key={monitor.name} monitor={monitor} />
+            ))}
         </div>
       </div>
     )

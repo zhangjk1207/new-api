@@ -14,7 +14,6 @@ GNU Affero General Public License for more details.
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
-import dayjs from 'dayjs'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -27,6 +26,7 @@ import {
 import { cn } from '@/lib/utils'
 
 import {
+  formatBeijingTime,
   getTimelineSlots,
   getTimelineStatusClass,
   getTimelineStatusLabelKey,
@@ -76,7 +76,7 @@ export function HeartbeatTimeline(props: HeartbeatTimelineProps) {
       >
         {slots.map((point, index) => {
           const timeLabel = point
-            ? dayjs(point.timestamp * 1000).format('MM-DD HH:mm:ss')
+            ? formatBeijingTime(point.timestamp)
             : t('No data')
           const status = point?.status ?? -1
           const statusLabel = t(getTimelineStatusLabelKey(status))

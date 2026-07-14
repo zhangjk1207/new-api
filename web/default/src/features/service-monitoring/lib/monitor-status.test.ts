@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict'
 import { describe, test } from 'node:test'
 
-import { getTimelineSlots, getTimelineStatusClass } from './monitor-status'
+import {
+  formatBeijingTime,
+  getTimelineSlots,
+  getTimelineStatusClass,
+} from './monitor-status'
 
 describe('service monitoring timeline status', () => {
   test('maps known Kuma statuses and missing data to stable color classes', () => {
@@ -28,5 +32,11 @@ describe('service monitoring timeline status', () => {
       { timestamp: 2, status: 0, response_time: 0 },
       { timestamp: 3, status: 1, response_time: 24 },
     ])
+  })
+
+  test('formats Kuma UTC timestamps in Beijing time', () => {
+    const timestamp = Date.UTC(2026, 6, 14, 2, 48, 35) / 1000
+
+    assert.equal(formatBeijingTime(timestamp), '2026-07-14 10:48:35')
   })
 })

@@ -44,3 +44,19 @@ export function getTimelineStatusLabelKey(status: number): string {
   if (status === 3) return 'Maintenance'
   return 'No data'
 }
+
+export function formatBeijingTime(timestamp: number): string {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(new Date(timestamp * 1000))
+  const valueByType = new Map(parts.map((part) => [part.type, part.value]))
+
+  return `${valueByType.get('year')}-${valueByType.get('month')}-${valueByType.get('day')} ${valueByType.get('hour')}:${valueByType.get('minute')}:${valueByType.get('second')}`
+}

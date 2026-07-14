@@ -30,6 +30,7 @@ const (
 	apiHeartbeatPath   = "/api/status-page/heartbeat/"
 	uptimeHistoryHours = 24
 	metricsPath        = "/metrics"
+	uptimeCacheTTL     = 15 * time.Second
 )
 
 type Monitor struct {
@@ -77,6 +78,14 @@ var uptimeKumaTokenSamples = struct {
 }{
 	values: make(map[string]tokenSample),
 }
+
+var uptimeKumaStatusCache = struct {
+	sync.Mutex
+	results     []UptimeGroupResult
+	refreshedAt time.Time
+	ready       bool
+	refreshing  bool
+}{}
 
 func getAndDecode(ctx context.Context, client *http.Client, url string, dest interface{}) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
@@ -141,14 +150,6 @@ func fetchGroupData(ctx context.Context, client *http.Client, groupConfig map[st
 		return result
 	}
 
-	monitorNames := make(map[string]struct{})
-	for _, pg := range statusData.PublicGroupList {
-		for _, monitor := range pg.MonitorList {
-			monitorNames[monitor.Name] = struct{}{}
-		}
-	}
-	metricsByMonitorName := fetchMonitorMetrics(ctx, client, monitorNames)
-
 	now := time.Now()
 	for _, pg := range statusData.PublicGroupList {
 		if len(pg.MonitorList) == 0 {
@@ -176,11 +177,6 @@ func fetchGroupData(ctx context.Context, client *http.Client, groupConfig map[st
 					monitor.ResponseTime = latest.Ping
 				}
 			}
-			if metrics, exists := metricsByMonitorName[m.Name]; exists {
-				monitor.TokensPerSecond = metrics.TokensPerSecond
-				monitor.MaxConcurrency = metrics.MaxConcurrency
-			}
-
 			result.Monitors = append(result.Monitors, monitor)
 		}
 	}
@@ -188,23 +184,15 @@ func fetchGroupData(ctx context.Context, client *http.Client, groupConfig map[st
 	return result
 }
 
-func fetchMonitorMetrics(ctx context.Context, client *http.Client, monitorNames map[string]struct{}) map[string]vllmMetrics {
+func fetchMonitorMetrics(ctx context.Context, client *http.Client, channels []model.Channel) map[string]vllmMetrics {
 	metricsByMonitorName := make(map[string]vllmMetrics)
-	if len(monitorNames) == 0 {
-		return metricsByMonitorName
-	}
-
-	var channels []model.Channel
-	if err := model.DB.Select("name", "base_url").Find(&channels).Error; err != nil {
+	if len(channels) == 0 {
 		return metricsByMonitorName
 	}
 
 	baseURLByMonitorName := make(map[string]string)
 	monitorNamesByBaseURL := make(map[string][]string)
 	for _, channel := range channels {
-		if _, monitored := monitorNames[channel.Name]; !monitored {
-			continue
-		}
 		baseURL := strings.TrimSuffix(channel.GetBaseURL(), "/")
 		if baseURL == "" {
 			continue
@@ -317,7 +305,7 @@ func calculateTokensPerSecond(previousCount float64, previousTime time.Time, cur
 }
 
 func parseUptimeHeartbeatTime(value string) (time.Time, error) {
-	return time.ParseInLocation("2006-01-02 15:04:05.000", value, time.Local)
+	return time.ParseInLocation("2006-01-02 15:04:05.000", value, time.UTC)
 }
 
 func getLatestHeartbeat(heartbeats []uptimeHeartbeat) (uptimeHeartbeat, bool) {
@@ -362,19 +350,57 @@ func buildMonitorHistory(heartbeats []uptimeHeartbeat, now time.Time) []uptimeHi
 	return history
 }
 
-func GetUptimeKumaStatus(c *gin.Context) {
-	groups := console_setting.GetUptimeKumaGroups()
-	if len(groups) == 0 {
-		c.JSON(http.StatusOK, gin.H{"success": true, "message": "", "data": []UptimeGroupResult{}})
-		return
+func getEnabledMonitoringChannels() ([]model.Channel, error) {
+	var channels []model.Channel
+	err := model.DB.Where("status = ?", common.ChannelStatusEnabled).Find(&channels).Error
+	return channels, err
+}
+
+func reconcileEnabledChannelMonitors(channels []model.Channel, kumaMonitors map[string]Monitor, metricsByMonitorName map[string]vllmMetrics, now time.Time) []Monitor {
+	monitors := make([]Monitor, 0, len(channels))
+	for _, channel := range channels {
+		if channel.Status != common.ChannelStatusEnabled {
+			continue
+		}
+
+		monitor, exists := kumaMonitors[channel.Name]
+		if !exists {
+			monitor = Monitor{
+				Name:    channel.Name,
+				Status:  -1,
+				History: buildMonitorHistory(nil, now),
+			}
+		}
+		monitor.Name = channel.Name
+		monitor.Group = channel.Group
+		if metrics, exists := metricsByMonitorName[channel.Name]; exists {
+			monitor.TokensPerSecond = metrics.TokensPerSecond
+			monitor.MaxConcurrency = metrics.MaxConcurrency
+		}
+		monitors = append(monitors, monitor)
 	}
 
-	ctx, cancel := context.WithTimeout(c.Request.Context(), requestTimeout)
-	defer cancel()
+	sort.Slice(monitors, func(i, j int) bool {
+		return monitors[i].Name < monitors[j].Name
+	})
+	return monitors
+}
+
+func fetchUptimeKumaStatus(ctx context.Context) []UptimeGroupResult {
+	groups := console_setting.GetUptimeKumaGroups()
+	if len(groups) == 0 {
+		return []UptimeGroupResult{}
+	}
+
+	channels, err := getEnabledMonitoringChannels()
+	if err != nil {
+		common.SysError("failed to load enabled channels for service monitoring: " + err.Error())
+		return []UptimeGroupResult{}
+	}
 
 	client := &http.Client{Timeout: httpTimeout}
 	results := make([]UptimeGroupResult, len(groups))
-
+	metricsByMonitorName := make(map[string]vllmMetrics)
 	g, gCtx := errgroup.WithContext(ctx)
 	for i, group := range groups {
 		i, group := i, group
@@ -383,7 +409,65 @@ func GetUptimeKumaStatus(c *gin.Context) {
 			return nil
 		})
 	}
-
+	g.Go(func() error {
+		metricsByMonitorName = fetchMonitorMetrics(gCtx, client, channels)
+		return nil
+	})
 	g.Wait()
+
+	kumaMonitors := make(map[string]Monitor)
+	for _, result := range results {
+		for _, monitor := range result.Monitors {
+			if _, exists := kumaMonitors[monitor.Name]; !exists {
+				kumaMonitors[monitor.Name] = monitor
+			}
+		}
+	}
+
+	return []UptimeGroupResult{{
+		Monitors: reconcileEnabledChannelMonitors(channels, kumaMonitors, metricsByMonitorName, time.Now()),
+	}}
+}
+
+func refreshUptimeKumaStatusCache() {
+	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
+	defer cancel()
+	results := fetchUptimeKumaStatus(ctx)
+
+	uptimeKumaStatusCache.Lock()
+	uptimeKumaStatusCache.results = results
+	uptimeKumaStatusCache.refreshedAt = time.Now()
+	uptimeKumaStatusCache.ready = true
+	uptimeKumaStatusCache.refreshing = false
+	uptimeKumaStatusCache.Unlock()
+}
+
+func getCachedUptimeKumaStatus() ([]UptimeGroupResult, bool) {
+	uptimeKumaStatusCache.Lock()
+	defer uptimeKumaStatusCache.Unlock()
+
+	if uptimeKumaStatusCache.ready && time.Since(uptimeKumaStatusCache.refreshedAt) < uptimeCacheTTL {
+		return uptimeKumaStatusCache.results, true
+	}
+	if uptimeKumaStatusCache.ready {
+		if !uptimeKumaStatusCache.refreshing {
+			uptimeKumaStatusCache.refreshing = true
+			go refreshUptimeKumaStatusCache()
+		}
+		return uptimeKumaStatusCache.results, true
+	}
+	if uptimeKumaStatusCache.refreshing {
+		return nil, true
+	}
+	uptimeKumaStatusCache.refreshing = true
+	return nil, false
+}
+
+func GetUptimeKumaStatus(c *gin.Context) {
+	results, cached := getCachedUptimeKumaStatus()
+	if !cached {
+		refreshUptimeKumaStatusCache()
+		results, _ = getCachedUptimeKumaStatus()
+	}
 	c.JSON(http.StatusOK, gin.H{"success": true, "message": "", "data": results})
 }
