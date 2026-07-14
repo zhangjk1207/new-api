@@ -472,6 +472,7 @@ export const STATIC_I18N_KEYS = [
   'Dashboard',
   'System data statistics',
   'Flow',
+  'Model Call Details',
   'Flow Filters',
   'Filter the traffic flow view by time range and user.',
   'Requests',

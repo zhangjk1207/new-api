@@ -114,6 +114,12 @@ const LazyTokenCharts = lazy(() =>
   }))
 )
 
+const LazyModelCallDetails = lazy(() =>
+  import('./tokens/model-call-details').then((m) => ({
+    default: m.ModelCallDetails,
+  }))
+)
+
 const LazyFlowCharts = lazy(() =>
   import('./components/flow/flow-charts').then((m) => ({
     default: m.FlowCharts,
@@ -199,6 +205,9 @@ const SECTION_META: Record<DashboardSectionId, { titleKey: string }> = {
   tokens: {
     titleKey: 'Token Analytics',
   },
+  'model-details': {
+    titleKey: 'Model Call Details',
+  },
 }
 
 export function Dashboard() {
@@ -269,7 +278,7 @@ export function Dashboard() {
       DASHBOARD_SECTION_IDS.filter(
         (section) =>
           section !== 'overview' &&
-          (!['users', 'tokens'].includes(section) || isAdmin)
+          (!['users', 'tokens', 'model-details'].includes(section) || isAdmin)
       ),
     [isAdmin]
   )
@@ -425,6 +434,16 @@ export function Dashboard() {
             <FadeIn>
               <Suspense fallback={<ModelChartsFallback />}>
                 <LazyTokenCharts
+                  filters={tokenChartsFilters}
+                  onFiltersChange={setTokenChartsFilters}
+                />
+              </Suspense>
+            </FadeIn>
+          )}
+          {activeSection === 'model-details' && (
+            <FadeIn>
+              <Suspense fallback={<ModelChartsFallback />}>
+                <LazyModelCallDetails
                   filters={tokenChartsFilters}
                   onFiltersChange={setTokenChartsFilters}
                 />
