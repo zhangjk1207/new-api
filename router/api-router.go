@@ -24,6 +24,16 @@ func SetApiRouter(router *gin.Engine) {
 		apiRouter.GET("/status", controller.GetStatus)
 		apiRouter.GET("/uptime/status", middleware.UserAuth(), controller.GetServiceMonitoringStatus)
 		apiRouter.GET("/operations-dashboard/summary", middleware.AdminAuth(), controller.GetOperationsDashboardSummary)
+		hostMonitoringRoute := apiRouter.Group("/host-monitors")
+		hostMonitoringRoute.Use(middleware.AdminAuth())
+		{
+			hostMonitoringRoute.GET("", controller.ListHostMonitors)
+			hostMonitoringRoute.POST("", controller.CreateHostMonitor)
+			hostMonitoringRoute.PUT("/:id", controller.UpdateHostMonitor)
+			hostMonitoringRoute.DELETE("/:id", controller.DeleteHostMonitor)
+			hostMonitoringRoute.POST("/:id/test", controller.TestHostMonitor)
+		}
+		apiRouter.GET("/host-monitoring/summary", middleware.AdminAuth(), controller.GetHostMonitoringSummary)
 		apiRouter.GET("/models", middleware.UserAuth(), controller.DashboardListModels)
 		apiRouter.GET("/status/test", middleware.AdminAuth(), controller.TestStatus)
 		apiRouter.GET("/notice", controller.GetNotice)

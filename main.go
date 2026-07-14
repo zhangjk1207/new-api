@@ -28,6 +28,7 @@ import (
 	"github.com/QuantumNous/new-api/router"
 	"github.com/QuantumNous/new-api/service"
 	"github.com/QuantumNous/new-api/service/authz"
+	hostmonitor "github.com/QuantumNous/new-api/service/host_monitor"
 	_ "github.com/QuantumNous/new-api/setting/performance_setting"
 	"github.com/QuantumNous/new-api/setting/ratio_setting"
 
@@ -347,6 +348,7 @@ func InitResources() error {
 	}
 
 	perfmetrics.Init()
+	hostmonitor.Init()
 
 	// 启动系统监控
 	common.StartSystemMonitor()
