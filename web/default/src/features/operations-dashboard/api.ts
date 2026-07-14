@@ -14,28 +14,17 @@ GNU Affero General Public License for more details.
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
-import { getUserQuotaDates } from '@/features/dashboard/api'
 import { getPerfMetricsSummary } from '@/features/performance-metrics/api'
 import { getServiceMonitoring } from '@/features/service-monitoring/api'
 
 export async function getOperationsDashboard() {
-  const endTimestamp = Math.floor(Date.now() / 1000)
-  const startTimestamp = endTimestamp - 24 * 60 * 60
-  const [quotaResponse, performanceResponse, monitoringGroups] =
-    await Promise.all([
-      getUserQuotaDates(
-        {
-          start_timestamp: startTimestamp,
-          end_timestamp: endTimestamp,
-        },
-        true
-      ),
-      getPerfMetricsSummary(24),
-      getServiceMonitoring(),
-    ])
+  const [performanceResponse, monitoringGroups] = await Promise.all([
+    getPerfMetricsSummary(24),
+    getServiceMonitoring(),
+  ])
 
   return {
-    quotaData: quotaResponse.success ? quotaResponse.data : [],
+    quotaData: [],
     performance: performanceResponse.success
       ? performanceResponse.data.models
       : [],

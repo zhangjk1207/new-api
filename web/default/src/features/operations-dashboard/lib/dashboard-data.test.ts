@@ -57,8 +57,24 @@ describe('operations dashboard data', () => {
         },
       ],
       monitors: [
-        { name: 'one', status: 1, uptime: 1, response_time: 12, history: [] },
-        { name: 'two', status: 0, uptime: 0.5, response_time: 0, history: [] },
+        {
+          name: 'one',
+          status: 1,
+          uptime: 1,
+          response_time: 12,
+          tokens_per_second: 24.5,
+          max_concurrency: 4,
+          history: [],
+        },
+        {
+          name: 'two',
+          status: 0,
+          uptime: 0.5,
+          response_time: 0,
+          tokens_per_second: 8.5,
+          max_concurrency: 2,
+          history: [],
+        },
       ],
     })
 
@@ -69,6 +85,8 @@ describe('operations dashboard data', () => {
     assert.equal(data.summary.avgLatency, 105)
     assert.equal(data.summary.healthyChannels, 1)
     assert.equal(data.summary.totalChannels, 2)
+    assert.equal(data.summary.tokensPerSecond, 33)
+    assert.equal(data.summary.maxConcurrency, 6)
     assert.deepEqual(data.trend, [
       { timestamp: 100, requests: 5, tokens: 200, quota: 1000 },
       { timestamp: 200, requests: 3, tokens: 100, quota: 500 },

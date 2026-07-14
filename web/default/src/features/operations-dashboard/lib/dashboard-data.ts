@@ -68,6 +68,14 @@ export function buildOperationsDashboardData(input: OperationsDashboardInput) {
   const healthyChannels = input.monitors.filter(
     (monitor) => monitor.status === 1
   ).length
+  const tokensPerSecond = input.monitors.reduce(
+    (total, monitor) => total + (monitor.tokens_per_second ?? 0),
+    0
+  )
+  const maxConcurrency = input.monitors.reduce(
+    (total, monitor) => total + (monitor.max_concurrency ?? 0),
+    0
+  )
 
   return {
     summary: {
@@ -78,6 +86,8 @@ export function buildOperationsDashboardData(input: OperationsDashboardInput) {
       avgLatency: weighted('avg_latency_ms'),
       healthyChannels,
       totalChannels: input.monitors.length,
+      tokensPerSecond,
+      maxConcurrency,
     },
     trend: [...trendByTimestamp.values()].sort(
       (a, b) => a.timestamp - b.timestamp
