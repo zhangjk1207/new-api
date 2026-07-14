@@ -16,7 +16,14 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
 import { useQuery } from '@tanstack/react-query'
 import { VChart } from '@visactor/react-vchart'
-import { Activity, Gauge, RefreshCw, Server, Sparkles } from 'lucide-react'
+import {
+  Activity,
+  Download,
+  Gauge,
+  RefreshCw,
+  Server,
+  Sparkles,
+} from 'lucide-react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -35,6 +42,7 @@ import { VCHART_OPTION } from '@/lib/vchart'
 
 import { getOperationsDashboard } from './api'
 import { buildOperationsDashboardData } from './lib/dashboard-data'
+import { buildMonitoringCsv } from './lib/monitoring-export'
 
 function MetricCard(props: {
   title: string
@@ -88,6 +96,17 @@ export function OperationsDashboard() {
     tokens: monitor.tokens_per_second ?? 0,
     concurrency: monitor.max_concurrency ?? 0,
   }))
+  const handleExport = () => {
+    const blob = new Blob([`\ufeff${buildMonitoringCsv(data.monitors)}`], {
+      type: 'text/csv;charset=utf-8',
+    })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = `operations-monitoring-${new Date().toISOString().slice(0, 10)}.csv`
+    anchor.click()
+    URL.revokeObjectURL(url)
+  }
 
   return (
     <SectionPageLayout>
@@ -95,6 +114,22 @@ export function OperationsDashboard() {
         {t('Operations Dashboard')}
       </SectionPageLayout.Title>
       <SectionPageLayout.Actions>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                variant='outline'
+                size='icon'
+                onClick={handleExport}
+                disabled={data.monitors.length === 0}
+                aria-label={t('Download')}
+              >
+                <Download className='size-4' />
+              </Button>
+            }
+          />
+          <TooltipContent>{t('Download')}</TooltipContent>
+        </Tooltip>
         <Tooltip>
           <TooltipTrigger
             render={
