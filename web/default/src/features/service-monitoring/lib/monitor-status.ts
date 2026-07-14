@@ -16,17 +16,32 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
 import type { ServiceHeartbeatPoint } from '../types'
 
+const TIMELINE_HOUR_COUNT = 24
+const TIMELINE_HOUR_SECONDS = 60 * 60
+
 export function getTimelineSlots(
   history: ServiceHeartbeatPoint[],
-  visibleBeatCount: number
+  now = Math.floor(Date.now() / 1000)
 ): Array<ServiceHeartbeatPoint | null> {
-  const recentHistory = history.slice(-visibleBeatCount)
-  const missingBeatCount = Math.max(0, visibleBeatCount - recentHistory.length)
+  const currentHour = Math.floor(now / TIMELINE_HOUR_SECONDS) * TIMELINE_HOUR_SECONDS
+  const firstHour = currentHour - (TIMELINE_HOUR_COUNT - 1) * TIMELINE_HOUR_SECONDS
+  const slots = Array<ServiceHeartbeatPoint | null>(TIMELINE_HOUR_COUNT).fill(
+    null
+  )
 
-  return [
-    ...Array<ServiceHeartbeatPoint | null>(missingBeatCount).fill(null),
-    ...recentHistory,
-  ]
+  for (const point of history) {
+    if (point.timestamp < firstHour || point.timestamp > now) continue
+
+    const slotIndex = Math.floor(
+      (point.timestamp - firstHour) / TIMELINE_HOUR_SECONDS
+    )
+    const existing = slots[slotIndex]
+    if (!existing || point.timestamp > existing.timestamp) {
+      slots[slotIndex] = point
+    }
+  }
+
+  return slots
 }
 
 export function getTimelineStatusClass(status: number): string {

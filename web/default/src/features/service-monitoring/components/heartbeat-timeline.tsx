@@ -14,7 +14,6 @@ GNU Affero General Public License for more details.
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
-import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import {
@@ -37,40 +36,14 @@ type HeartbeatTimelineProps = {
   history: ServiceHeartbeatPoint[]
 }
 
-const MINIMUM_VISIBLE_BEAT_COUNT = 24
-const BEAT_WIDTH = 18
-
 export function HeartbeatTimeline(props: HeartbeatTimelineProps) {
   const { t } = useTranslation()
-  const timelineRef = useRef<HTMLDivElement>(null)
-  const [visibleBeatCount, setVisibleBeatCount] = useState(
-    MINIMUM_VISIBLE_BEAT_COUNT
-  )
-  const slots = getTimelineSlots(props.history, visibleBeatCount)
-
-  useEffect(() => {
-    const timeline = timelineRef.current
-    if (!timeline) return
-
-    const updateVisibleBeatCount = () => {
-      const width = timeline.getBoundingClientRect().width
-      setVisibleBeatCount(
-        Math.max(MINIMUM_VISIBLE_BEAT_COUNT, Math.floor(width / BEAT_WIDTH))
-      )
-    }
-
-    const observer = new ResizeObserver(updateVisibleBeatCount)
-    observer.observe(timeline)
-    updateVisibleBeatCount()
-
-    return () => observer.disconnect()
-  }, [])
+  const slots = getTimelineSlots(props.history)
 
   return (
     <TooltipProvider delay={100}>
       <div
-        ref={timelineRef}
-        className='grid h-3 min-w-52 auto-cols-fr grid-flow-col gap-px'
+        className='grid h-3 min-w-52 grid-cols-[repeat(24,minmax(0,1fr))] gap-px'
         role='img'
         aria-label={t('24h service timeline')}
       >

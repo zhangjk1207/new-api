@@ -16,22 +16,29 @@ describe('service monitoring timeline status', () => {
     assert.equal(getTimelineStatusClass(-1), 'bg-muted-foreground/30')
   })
 
-  test('keeps the newest individual heartbeats and pads the beginning', () => {
+  test('maps the last 24 hours into one slot per hour', () => {
+    const now = Date.UTC(2026, 6, 14, 10, 30, 0) / 1000
     const slots = getTimelineSlots(
       [
-        { timestamp: 1, status: 1, response_time: 12 },
-        { timestamp: 2, status: 0, response_time: 0 },
-        { timestamp: 3, status: 1, response_time: 24 },
+        { timestamp: now - 23 * 60 * 60 + 5 * 60, status: 1, response_time: 12 },
+        { timestamp: now - 90 * 60, status: 1, response_time: 18 },
+        { timestamp: now - 70 * 60, status: 0, response_time: 24 },
       ],
-      4
+      now
     )
 
-    assert.deepEqual(slots, [
-      null,
-      { timestamp: 1, status: 1, response_time: 12 },
-      { timestamp: 2, status: 0, response_time: 0 },
-      { timestamp: 3, status: 1, response_time: 24 },
-    ])
+    assert.equal(slots.length, 24)
+    assert.deepEqual(slots[0], {
+      timestamp: now - 23 * 60 * 60 + 5 * 60,
+      status: 1,
+      response_time: 12,
+    })
+    assert.deepEqual(slots[22], {
+      timestamp: now - 70 * 60,
+      status: 0,
+      response_time: 24,
+    })
+    assert.equal(slots[23], null)
   })
 
   test('formats Kuma UTC timestamps in Beijing time', () => {
