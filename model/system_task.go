@@ -18,6 +18,7 @@ const (
 
 	SystemTaskTypeLogCleanup     = "log_cleanup"
 	SystemTaskTypeChannelTest    = "channel_test"
+	SystemTaskTypeChannelHealth  = "channel_health_check"
 	SystemTaskTypeModelUpdate    = "model_update"
 	SystemTaskTypeMidjourneyPoll = "midjourney_poll"
 	SystemTaskTypeAsyncTaskPoll  = "async_task_poll"

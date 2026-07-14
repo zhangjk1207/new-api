@@ -19,6 +19,7 @@ import (
 // service.StartSystemTaskRunner.
 func RegisterScheduledSystemTasks() {
 	service.RegisterSystemTaskHandler(channelTestHandler{})
+	service.RegisterSystemTaskHandler(channelHealthCheckHandler{})
 	service.RegisterSystemTaskHandler(modelUpdateHandler{})
 	service.RegisterSystemTaskHandler(midjourneyPollHandler{})
 	service.RegisterSystemTaskHandler(asyncTaskPollHandler{})
@@ -62,6 +63,25 @@ func (channelTestHandler) Run(ctx context.Context, task *model.SystemTask, runne
 		return
 	}
 	summary, err := runChannelTestTask(ctx, payload.Mode, payload.Notify, service.NewSystemTaskProgressReporter(task, runnerID))
+	if err != nil {
+		finishSystemTaskHandler(task, runnerID, model.SystemTaskStatusFailed, nil, err)
+		return
+	}
+	finishSystemTaskHandler(task, runnerID, model.SystemTaskStatusSucceeded, summary, nil)
+}
+
+type channelHealthCheckHandler struct{}
+
+func (channelHealthCheckHandler) Type() string { return model.SystemTaskTypeChannelHealth }
+
+func (channelHealthCheckHandler) Enabled() bool { return true }
+
+func (channelHealthCheckHandler) Interval() time.Duration { return time.Minute }
+
+func (channelHealthCheckHandler) NewPayload() any { return nil }
+
+func (channelHealthCheckHandler) Run(ctx context.Context, task *model.SystemTask, runnerID string) {
+	summary, err := service.RunChannelHealthCheck(ctx)
 	if err != nil {
 		finishSystemTaskHandler(task, runnerID, model.SystemTaskStatusFailed, nil, err)
 		return
