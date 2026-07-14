@@ -43,6 +43,7 @@ import { Route as AuthenticatedSystemSettingsIndexRouteImport } from './routes/_
 import { Route as AuthenticatedSystemInfoIndexRouteImport } from './routes/_authenticated/system-info/index'
 import { Route as AuthenticatedSubscriptionsIndexRouteImport } from './routes/_authenticated/subscriptions/index'
 import { Route as AuthenticatedServiceMonitoringIndexRouteImport } from './routes/_authenticated/service-monitoring/index'
+import { Route as AuthenticatedResourceMonitoringIndexRouteImport } from './routes/_authenticated/resource-monitoring/index'
 import { Route as AuthenticatedRedemptionCodesIndexRouteImport } from './routes/_authenticated/redemption-codes/index'
 import { Route as AuthenticatedProfileIndexRouteImport } from './routes/_authenticated/profile/index'
 import { Route as AuthenticatedPlaygroundIndexRouteImport } from './routes/_authenticated/playground/index'
@@ -245,6 +246,12 @@ const AuthenticatedServiceMonitoringIndexRoute =
   AuthenticatedServiceMonitoringIndexRouteImport.update({
     id: '/service-monitoring/',
     path: '/service-monitoring/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedResourceMonitoringIndexRoute =
+  AuthenticatedResourceMonitoringIndexRouteImport.update({
+    id: '/resource-monitoring/',
+    path: '/resource-monitoring/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedRedemptionCodesIndexRoute =
@@ -452,6 +459,7 @@ export interface FileRoutesByFullPath {
   '/playground/': typeof AuthenticatedPlaygroundIndexRoute
   '/profile/': typeof AuthenticatedProfileIndexRoute
   '/redemption-codes/': typeof AuthenticatedRedemptionCodesIndexRoute
+  '/resource-monitoring/': typeof AuthenticatedResourceMonitoringIndexRoute
   '/service-monitoring/': typeof AuthenticatedServiceMonitoringIndexRoute
   '/subscriptions/': typeof AuthenticatedSubscriptionsIndexRoute
   '/system-info/': typeof AuthenticatedSystemInfoIndexRoute
@@ -513,6 +521,7 @@ export interface FileRoutesByTo {
   '/playground': typeof AuthenticatedPlaygroundIndexRoute
   '/profile': typeof AuthenticatedProfileIndexRoute
   '/redemption-codes': typeof AuthenticatedRedemptionCodesIndexRoute
+  '/resource-monitoring': typeof AuthenticatedResourceMonitoringIndexRoute
   '/service-monitoring': typeof AuthenticatedServiceMonitoringIndexRoute
   '/subscriptions': typeof AuthenticatedSubscriptionsIndexRoute
   '/system-info': typeof AuthenticatedSystemInfoIndexRoute
@@ -578,6 +587,7 @@ export interface FileRoutesById {
   '/_authenticated/playground/': typeof AuthenticatedPlaygroundIndexRoute
   '/_authenticated/profile/': typeof AuthenticatedProfileIndexRoute
   '/_authenticated/redemption-codes/': typeof AuthenticatedRedemptionCodesIndexRoute
+  '/_authenticated/resource-monitoring/': typeof AuthenticatedResourceMonitoringIndexRoute
   '/_authenticated/service-monitoring/': typeof AuthenticatedServiceMonitoringIndexRoute
   '/_authenticated/subscriptions/': typeof AuthenticatedSubscriptionsIndexRoute
   '/_authenticated/system-info/': typeof AuthenticatedSystemInfoIndexRoute
@@ -642,6 +652,7 @@ export interface FileRouteTypes {
     | '/playground/'
     | '/profile/'
     | '/redemption-codes/'
+    | '/resource-monitoring/'
     | '/service-monitoring/'
     | '/subscriptions/'
     | '/system-info/'
@@ -703,6 +714,7 @@ export interface FileRouteTypes {
     | '/playground'
     | '/profile'
     | '/redemption-codes'
+    | '/resource-monitoring'
     | '/service-monitoring'
     | '/subscriptions'
     | '/system-info'
@@ -767,6 +779,7 @@ export interface FileRouteTypes {
     | '/_authenticated/playground/'
     | '/_authenticated/profile/'
     | '/_authenticated/redemption-codes/'
+    | '/_authenticated/resource-monitoring/'
     | '/_authenticated/service-monitoring/'
     | '/_authenticated/subscriptions/'
     | '/_authenticated/system-info/'
@@ -1050,6 +1063,13 @@ declare module '@tanstack/react-router' {
       path: '/service-monitoring'
       fullPath: '/service-monitoring/'
       preLoaderRoute: typeof AuthenticatedServiceMonitoringIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/resource-monitoring/': {
+      id: '/_authenticated/resource-monitoring/'
+      path: '/resource-monitoring'
+      fullPath: '/resource-monitoring/'
+      preLoaderRoute: typeof AuthenticatedResourceMonitoringIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/redemption-codes/': {
@@ -1350,6 +1370,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPlaygroundIndexRoute: typeof AuthenticatedPlaygroundIndexRoute
   AuthenticatedProfileIndexRoute: typeof AuthenticatedProfileIndexRoute
   AuthenticatedRedemptionCodesIndexRoute: typeof AuthenticatedRedemptionCodesIndexRoute
+  AuthenticatedResourceMonitoringIndexRoute: typeof AuthenticatedResourceMonitoringIndexRoute
   AuthenticatedServiceMonitoringIndexRoute: typeof AuthenticatedServiceMonitoringIndexRoute
   AuthenticatedSubscriptionsIndexRoute: typeof AuthenticatedSubscriptionsIndexRoute
   AuthenticatedSystemInfoIndexRoute: typeof AuthenticatedSystemInfoIndexRoute
@@ -1376,6 +1397,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProfileIndexRoute: AuthenticatedProfileIndexRoute,
   AuthenticatedRedemptionCodesIndexRoute:
     AuthenticatedRedemptionCodesIndexRoute,
+  AuthenticatedResourceMonitoringIndexRoute:
+    AuthenticatedResourceMonitoringIndexRoute,
   AuthenticatedServiceMonitoringIndexRoute:
     AuthenticatedServiceMonitoringIndexRoute,
   AuthenticatedSubscriptionsIndexRoute: AuthenticatedSubscriptionsIndexRoute,
