@@ -105,7 +105,9 @@ export function OperationsDashboard() {
 
   return (
     <SectionPageLayout>
-      <SectionPageLayout.Title>{t('Operations')}</SectionPageLayout.Title>
+      <SectionPageLayout.Title>
+        {t('Operations Dashboard')}
+      </SectionPageLayout.Title>
       <SectionPageLayout.Actions>
         <Tooltip>
           <TooltipTrigger

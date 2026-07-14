@@ -83,7 +83,7 @@ export function useSidebarData(): SidebarData {
             icon: LayoutDashboard,
           },
           {
-            title: t('Operations'),
+            title: t('Operations Dashboard'),
             url: '/operations',
             icon: ChartNoAxesCombined,
             requiredRole: ROLE.ADMIN,
