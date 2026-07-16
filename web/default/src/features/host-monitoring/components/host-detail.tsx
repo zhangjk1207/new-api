@@ -60,7 +60,7 @@ function HostTrendChart(props: {
             xField: 'timestamp',
             yField: 'value',
             line: { style: { stroke: props.color, lineWidth: 2 } },
-            point: { style: { fill: props.color } },
+            point: { visible: false },
             legends: { visible: false },
             tooltip: buildHostTrendTooltip(
               props.title,
