@@ -81,6 +81,16 @@ export function formatQuota(quota: number): string {
 }
 
 /**
+ * Format a display-currency amount for a read-only numeric input without
+ * exposing insignificant residue from converting integer quota units.
+ */
+export function formatQuotaInputAmount(amount: number): string {
+  if (!Number.isFinite(amount)) return '0'
+  const fractionDigits = Math.abs(amount) >= 0.01 ? 2 : 6
+  return String(Number(amount.toFixed(fractionDigits)))
+}
+
+/**
  * Parse quota from the current display input back to quota units.
  */
 export function parseQuotaFromDollars(amount: number): number {

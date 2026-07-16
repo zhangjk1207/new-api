@@ -70,7 +70,11 @@ import {
   normalizeAdminPermissions,
 } from '@/lib/admin-permissions'
 import { getCurrencyDisplay, getCurrencyLabel } from '@/lib/currency'
-import { formatQuota, parseQuotaFromDollars } from '@/lib/format'
+import {
+  formatQuota,
+  formatQuotaInputAmount,
+  parseQuotaFromDollars,
+} from '@/lib/format'
 import { ROLE } from '@/lib/roles'
 import { useAuthStore } from '@/stores/auth-store'
 
@@ -405,7 +409,7 @@ export function UsersMutateDrawer({
                               value={
                                 tokensOnly
                                   ? String(field.value || 0)
-                                  : (field.value || 0).toFixed(6)
+                                  : formatQuotaInputAmount(field.value || 0)
                               }
                               readOnly
                               className='flex-1'
