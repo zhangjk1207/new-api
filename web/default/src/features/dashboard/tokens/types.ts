@@ -21,8 +21,12 @@ import type { TimeGranularity } from '@/lib/time'
 export interface UserModelTokenStat {
   user_id: number
   username: string
+  token_id: number
+  token_name: string
   model_name: string
   created_at: number
+  prompt_tokens: number
+  completion_tokens: number
   token_used: number
   count: number
 }
@@ -31,6 +35,11 @@ export interface TokenChartsFilters {
   timeGranularity: TimeGranularity
   selectedRange: number
   topUserLimit: number
+  startTime?: Date
+  endTime?: Date
+  username?: string
+  tokenName?: string
+  modelName?: string
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -39,7 +48,11 @@ export type TokenChartSpec = Record<string, any>
 export interface TokenUsageDetail {
   userId: number
   username: string
+  tokenId: number
+  tokenName: string
   modelName: string
+  promptTokens: number
+  completionTokens: number
   tokenUsed: number
   count: number
 }

@@ -15,7 +15,13 @@ func GetUserModelTokenStats(c *gin.Context) {
 		return
 	}
 
-	stats, err := model.GetUserModelTokenStats(startTimestamp, endTimestamp)
+	stats, err := model.GetUserModelTokenStats(model.UserModelTokenStatsFilter{
+		StartTime: startTimestamp,
+		EndTime:   endTimestamp,
+		Username:  c.Query("username"),
+		TokenName: c.Query("token_name"),
+		ModelName: c.Query("model_name"),
+	})
 	if err != nil {
 		common.ApiError(c, err)
 		return

@@ -85,9 +85,9 @@ export function processTokenChartData(
     trend: emptySpec(
       'area',
       'tokenTrendData',
-      t('Model Token Trend'),
+      t('Total Token Trend'),
       'token_used',
-      'Model',
+      '',
       t
     ),
     details: [],
@@ -117,18 +117,48 @@ export function processTokenChartData(
   const otherModel = t('Other')
 
   const userModelTotals = new Map<string, number>()
-  const detailTotals = new Map<string, { tokenUsed: number; count: number }>()
-  const timeModelTotals = new Map<string, Map<string, number>>()
+  const detailTotals = new Map<
+    string,
+    {
+      promptTokens: number
+      completionTokens: number
+      tokenUsed: number
+      count: number
+    }
+  >()
+  const timeTokenTotals = new Map<
+    string,
+    { promptTokens: number; completionTokens: number }
+  >()
   const timePoints = new Set<string>()
   for (const row of data) {
     const username = row.username || t('Unknown')
     const modelName = row.model_name || t('Unknown')
-    const detailKey = `${row.user_id}\u0000${username}\u0000${modelName}`
-    const detail = detailTotals.get(detailKey) || { tokenUsed: 0, count: 0 }
+    const tokenName = row.token_name || t('Unknown')
+    const detailKey = `${row.user_id}\u0000${username}\u0000${row.token_id}\u0000${tokenName}\u0000${modelName}`
+    const detail = detailTotals.get(detailKey) || {
+      promptTokens: 0,
+      completionTokens: 0,
+      tokenUsed: 0,
+      count: 0,
+    }
     detailTotals.set(detailKey, {
+      promptTokens: detail.promptTokens + (Number(row.prompt_tokens) || 0),
+      completionTokens:
+        detail.completionTokens + (Number(row.completion_tokens) || 0),
       tokenUsed: detail.tokenUsed + (Number(row.token_used) || 0),
       count: detail.count + (Number(row.count) || 0),
     })
+
+    const time = formatChartTime(Number(row.created_at), timeGranularity)
+    timePoints.add(time)
+    let timeTokens = timeTokenTotals.get(time)
+    if (!timeTokens) {
+      timeTokens = { promptTokens: 0, completionTokens: 0 }
+      timeTokenTotals.set(time, timeTokens)
+    }
+    timeTokens.promptTokens += Number(row.prompt_tokens) || 0
+    timeTokens.completionTokens += Number(row.completion_tokens) || 0
 
     if (!topUserSet.has(username)) continue
 
@@ -139,15 +169,6 @@ export function processTokenChartData(
       userModelKey,
       (userModelTotals.get(userModelKey) || 0) + tokens
     )
-
-    const time = formatChartTime(Number(row.created_at), timeGranularity)
-    timePoints.add(time)
-    let models = timeModelTotals.get(time)
-    if (!models) {
-      models = new Map()
-      timeModelTotals.set(time, models)
-    }
-    models.set(model, (models.get(model) || 0) + tokens)
   }
 
   const rankValues = [...userModelTotals.entries()].map(([key, tokens]) => {
@@ -158,13 +179,13 @@ export function processTokenChartData(
   if (rankValues.some((row) => row.Model === otherModel)) {
     chartModels.push(otherModel)
   }
-  const trendValues = [...timePoints].sort().flatMap((Time) =>
-    chartModels.map((Model) => ({
+  const trendValues = [...timePoints].sort().map((Time) => {
+    const tokens = timeTokenTotals.get(Time)
+    return {
       Time,
-      Model,
-      token_used: timeModelTotals.get(Time)?.get(Model) || 0,
-    }))
-  )
+      token_used: (tokens?.promptTokens || 0) + (tokens?.completionTokens || 0),
+    }
+  })
   const color = {
     type: 'ordinal',
     domain: chartModels,
@@ -172,11 +193,16 @@ export function processTokenChartData(
   }
   const details = [...detailTotals.entries()]
     .map(([key, totals]) => {
-      const [userId, username, modelName] = key.split('\u0000')
+      const [userId, username, tokenId, tokenName, modelName] =
+        key.split('\u0000')
       return {
         userId: Number(userId),
         username,
+        tokenId: Number(tokenId),
+        tokenName,
         modelName,
+        promptTokens: totals.promptTokens,
+        completionTokens: totals.completionTokens,
         tokenUsed: totals.tokenUsed,
         count: totals.count,
       }
@@ -208,15 +234,14 @@ export function processTokenChartData(
       data: [{ id: 'tokenTrendData', values: trendValues }],
       xField: 'Time',
       yField: 'token_used',
-      seriesField: 'Model',
-      stack: true,
-      title: { visible: true, text: t('Model Token Trend') },
-      legends: { visible: true, selectMode: 'single' },
+      title: { visible: true, text: t('Total Token Trend') },
+      legends: { visible: false },
       axes: [
         { orient: 'bottom', type: 'band' },
         { orient: 'left', type: 'linear' },
       ],
-      color,
+      line: { style: { stroke: '#3B82F6', lineWidth: 2 } },
+      area: { style: { fill: '#3B82F6', fillOpacity: 0.12 } },
       background: { fill: 'transparent' },
       animation: true,
     },

@@ -29,6 +29,23 @@ export type GPUMetric = {
   power_watts: number
 }
 
+export type GPUUtilizationHistory = {
+  index: number
+  name: string
+  uuid: string
+  points: {
+    timestamp: number
+    utilization_percent: number
+  }[]
+}
+
+export type VLLMLoadHistoryPoint = {
+  timestamp: number
+  output_tokens_per_second: number
+  running_requests: number
+  waiting_requests: number
+}
+
 export type HostMonitor = {
   id: number
   name: string
@@ -57,7 +74,21 @@ export type HostMonitoringHost = HostMonitor & {
   memory_total_bytes: number
   memory_used_bytes: number
   gpus: GPUMetric[]
+  gpu_history: GPUUtilizationHistory[]
+  vllm_history: VLLMLoadHistoryPoint[]
   channels: { id: number; name: string; models: string }[]
+  vllm_instances: {
+    channel_id: number
+    channel_name: string
+    endpoint: string
+    running_requests: number
+    waiting_requests: number
+    output_tokens_per_second?: number
+    decode_tokens_per_second?: number
+    ttft_milliseconds?: number
+    kv_cache_usage_percent?: number
+    prefix_cache_hit_rate?: number
+  }[]
   history: {
     timestamp: number
     cpu_percent: number

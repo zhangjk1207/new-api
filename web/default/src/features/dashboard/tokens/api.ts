@@ -23,6 +23,9 @@ import type { UserModelTokenStat } from './types'
 export async function getUserModelTokenStats(params: {
   start_timestamp: number
   end_timestamp: number
+  username?: string
+  token_name?: string
+  model_name?: string
 }) {
   const res = await api.get<{ success: boolean; data: UserModelTokenStat[] }>(
     '/api/data/user-model-tokens',

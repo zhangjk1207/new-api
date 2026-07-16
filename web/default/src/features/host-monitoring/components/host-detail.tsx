@@ -27,11 +27,14 @@ import {
   formatBytes,
   formatUsagePercent,
 } from '@/features/host-monitoring/lib/format'
+import { buildGPUUtilizationData } from '@/features/host-monitoring/lib/gpu-utilization-data'
 import {
   buildHostTrendTooltip,
   formatHostMonitorTime,
 } from '@/features/host-monitoring/lib/host-trend-tooltip'
+import { buildVLLMLoadTrendData } from '@/features/host-monitoring/lib/vllm-load-trend-data'
 import { toIntlLocale } from '@/i18n/languages'
+import { formatNumber } from '@/lib/format'
 import { VCHART_OPTION } from '@/lib/vchart'
 
 function HostTrendChart(props: {
@@ -86,6 +89,215 @@ function HostTrendChart(props: {
   )
 }
 
+function GPUUtilizationTrendChart(props: {
+  data: ReturnType<typeof buildGPUUtilizationData>
+}) {
+  const { t, i18n } = useTranslation()
+  const { resolvedTheme } = useTheme()
+  const locale = toIntlLocale(i18n.resolvedLanguage || i18n.language)
+  if (props.data.length === 0) {
+    return (
+      <div className='text-muted-foreground flex h-80 items-center justify-center text-sm'>
+        {t('No data')}
+      </div>
+    )
+  }
+  return (
+    <div className='h-80'>
+      <VChart
+        option={VCHART_OPTION}
+        spec={{
+          type: 'area',
+          background: 'transparent',
+          theme: resolvedTheme === 'dark' ? 'dark' : 'light',
+          data: [{ id: 'gpu-utilization', values: props.data }],
+          xField: 'timestamp',
+          yField: 'utilization_percent',
+          seriesField: 'gpu',
+          stack: false,
+          area: { style: { fillOpacity: 0.16 } },
+          line: { style: { lineWidth: 2 } },
+          point: { style: { size: 2 } },
+          legends: {
+            visible: true,
+            orient: 'right',
+            selectMode: 'multiple',
+          },
+          tooltip: {
+            mark: {
+              title: {
+                value: (datum: { timestamp: number }) =>
+                  formatHostMonitorTime(datum.timestamp, locale),
+              },
+              content: [
+                {
+                  key: (datum: { gpu: string }) => datum.gpu,
+                  value: (datum: { utilization_percent: number }) =>
+                    formatUsagePercent(datum.utilization_percent, locale),
+                },
+              ],
+            },
+            dimension: {
+              title: {
+                value: (datum: { timestamp: number }) =>
+                  formatHostMonitorTime(datum.timestamp, locale),
+              },
+              content: [
+                {
+                  key: (datum: { gpu: string }) => datum.gpu,
+                  value: (datum: { utilization_percent: number }) =>
+                    formatUsagePercent(datum.utilization_percent, locale),
+                },
+              ],
+            },
+          },
+          axes: [
+            {
+              orient: 'bottom',
+              type: 'band',
+              label: {
+                formatMethod: (value: number) =>
+                  formatHostMonitorTime(value, locale),
+              },
+            },
+            {
+              orient: 'left',
+              type: 'linear',
+              label: {
+                formatMethod: (value: number) =>
+                  formatUsagePercent(value, locale),
+              },
+            },
+          ],
+        }}
+      />
+    </div>
+  )
+}
+
+function VLLMLoadTrendChart(props: {
+  history: HostMonitoringHost['vllm_history']
+}) {
+  const { t, i18n } = useTranslation()
+  const { resolvedTheme } = useTheme()
+  const locale = toIntlLocale(i18n.resolvedLanguage || i18n.language)
+  const outputTokensLabel = t('Output tokens/s')
+  const runningRequestsLabel = t('Running requests')
+  const waitingRequestsLabel = t('Waiting requests')
+  const data = buildVLLMLoadTrendData(props.history, {
+    outputTokens: outputTokensLabel,
+    runningRequests: runningRequestsLabel,
+    waitingRequests: waitingRequestsLabel,
+  })
+  if (data.throughput.length === 0) {
+    return (
+      <div className='text-muted-foreground flex h-72 items-center justify-center text-sm'>
+        {t('No vLLM metrics')}
+      </div>
+    )
+  }
+  const formatThroughput = (value: number) =>
+    `${formatNumber(value, locale)} token/s`
+  const formatRequests = (value: number) => formatNumber(value, locale)
+  const formatValue = (datum: { series: string; value: number }) =>
+    datum.series === outputTokensLabel
+      ? formatThroughput(datum.value)
+      : formatRequests(datum.value)
+
+  return (
+    <div className='h-72'>
+      <VChart
+        option={VCHART_OPTION}
+        spec={{
+          type: 'common',
+          background: 'transparent',
+          theme: resolvedTheme === 'dark' ? 'dark' : 'light',
+          data: [
+            { id: 'throughput', values: data.throughput },
+            { id: 'requests', values: data.requests },
+          ],
+          series: [
+            {
+              id: 'throughput',
+              type: 'line',
+              dataId: 'throughput',
+              xField: 'timestamp',
+              yField: 'value',
+              seriesField: 'series',
+              line: { style: { lineWidth: 2 } },
+              point: { style: { size: 2 } },
+            },
+            {
+              id: 'requests',
+              type: 'line',
+              dataId: 'requests',
+              xField: 'timestamp',
+              yField: 'value',
+              seriesField: 'series',
+              line: { style: { lineWidth: 2 } },
+              point: { style: { size: 2 } },
+            },
+          ],
+          legends: {
+            visible: true,
+            orient: 'top',
+            selectMode: 'multiple',
+          },
+          tooltip: {
+            mark: {
+              title: {
+                value: (datum: { timestamp: number }) =>
+                  formatHostMonitorTime(datum.timestamp, locale),
+              },
+              content: [
+                {
+                  key: (datum: { series: string }) => datum.series,
+                  value: formatValue,
+                },
+              ],
+            },
+            dimension: {
+              title: {
+                value: (datum: { timestamp: number }) =>
+                  formatHostMonitorTime(datum.timestamp, locale),
+              },
+              content: [
+                {
+                  key: (datum: { series: string }) => datum.series,
+                  value: formatValue,
+                },
+              ],
+            },
+          },
+          axes: [
+            {
+              orient: 'bottom',
+              type: 'band',
+              seriesId: ['throughput', 'requests'],
+              label: {
+                formatMethod: (value: number) =>
+                  formatHostMonitorTime(value, locale),
+              },
+            },
+            {
+              orient: 'left',
+              type: 'linear',
+              seriesId: 'throughput',
+              label: { formatMethod: formatThroughput },
+            },
+            {
+              orient: 'right',
+              type: 'linear',
+              seriesId: 'requests',
+              label: { formatMethod: formatRequests },
+            },
+          ],
+        }}
+      />
+    </div>
+  )
+}
+
 export function HostDetail(props: { host: HostMonitoringHost }) {
   const { t, i18n } = useTranslation()
   const locale = toIntlLocale(i18n.resolvedLanguage || i18n.language)
@@ -100,6 +312,7 @@ export function HostDetail(props: { host: HostMonitoringHost }) {
         ? (point.memory_used_bytes / point.memory_total_bytes) * 100
         : 0,
   }))
+  const gpuUtilizationData = buildGPUUtilizationData(props.host.gpu_history)
 
   return (
     <section className='bg-card overflow-hidden rounded-lg border'>
@@ -145,6 +358,63 @@ export function HostDetail(props: { host: HostMonitoringHost }) {
           data={memoryHistory}
           valueFormatter={(value) => formatUsagePercent(value, locale)}
         />
+      </div>
+      <div className='border-t px-4 py-4 sm:px-5'>
+        <h4 className='text-sm font-medium'>{t('GPU utilization')}</h4>
+        <div className='mt-3'>
+          <GPUUtilizationTrendChart data={gpuUtilizationData} />
+        </div>
+      </div>
+      <div className='border-t px-4 py-4 sm:px-5'>
+        <h4 className='text-sm font-medium'>{t('vLLM engine')}</h4>
+        <div className='mt-3'>
+          <VLLMLoadTrendChart history={props.host.vllm_history} />
+        </div>
+      </div>
+      <div className='border-t px-4 py-4 sm:px-5'>
+        <h4 className='text-sm font-medium'>{t('vLLM instances')}</h4>
+        <div className='mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3'>
+          {props.host.vllm_instances.map((instance) => (
+            <article
+              key={`${instance.channel_id}-${instance.endpoint}`}
+              className='rounded-lg border p-3'
+            >
+              <p className='truncate text-sm font-medium'>
+                {instance.channel_name}
+              </p>
+              <p className='text-muted-foreground mt-0.5 truncate font-mono text-xs'>
+                {instance.endpoint}
+              </p>
+              <div className='text-muted-foreground mt-3 space-y-1.5 text-xs'>
+                <p className='flex items-center justify-between gap-2'>
+                  <span>{t('Output tokens/s')}</span>
+                  <span className='font-mono'>
+                    {instance.output_tokens_per_second === undefined
+                      ? '-'
+                      : formatNumber(instance.output_tokens_per_second, locale)}
+                  </span>
+                </p>
+                <p className='flex items-center justify-between gap-2'>
+                  <span>{t('Running requests')}</span>
+                  <span className='font-mono'>
+                    {formatNumber(instance.running_requests, locale)}
+                  </span>
+                </p>
+                <p className='flex items-center justify-between gap-2'>
+                  <span>{t('Waiting requests')}</span>
+                  <span className='font-mono'>
+                    {formatNumber(instance.waiting_requests, locale)}
+                  </span>
+                </p>
+              </div>
+            </article>
+          ))}
+          {props.host.vllm_instances.length === 0 ? (
+            <p className='text-muted-foreground py-4 text-sm'>
+              {t('No vLLM metrics')}
+            </p>
+          ) : null}
+        </div>
       </div>
       <div className='border-t px-4 py-4 sm:px-5'>
         <h4 className='text-sm font-medium'>{t('GPUs')}</h4>

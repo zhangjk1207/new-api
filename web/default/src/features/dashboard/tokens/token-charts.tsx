@@ -53,7 +53,7 @@ let themeManagerPromise: Promise<
 const TOP_USER_LIMIT_OPTIONS = [5, 10, 20, 50]
 const TOKEN_CHARTS = [
   { key: 'rank', titleKey: 'User Model Token Ranking' },
-  { key: 'trend', titleKey: 'Model Token Trend' },
+  { key: 'trend', titleKey: 'Total Token Trend' },
 ] as const
 
 interface TokenChartsProps {
@@ -71,16 +71,27 @@ export function TokenCharts(props: TokenChartsProps) {
   const { timeGranularity, selectedRange, topUserLimit } = props.filters
 
   const timeRange = useMemo(() => {
+    if (props.filters.startTime && props.filters.endTime) {
+      return {
+        start_timestamp: Math.floor(props.filters.startTime.getTime() / 1000),
+        end_timestamp: Math.floor(props.filters.endTime.getTime() / 1000),
+      }
+    }
     const { start, end } = getRollingDateRange(selectedRange)
     return {
       start_timestamp: Math.floor(start.getTime() / 1000),
       end_timestamp: Math.floor(end.getTime() / 1000),
     }
-  }, [selectedRange])
+  }, [props.filters.endTime, props.filters.startTime, selectedRange])
 
   const handleRangeChange = useCallback(
     (days: number) => {
-      props.onFiltersChange({ ...props.filters, selectedRange: days })
+      props.onFiltersChange({
+        ...props.filters,
+        selectedRange: days,
+        startTime: undefined,
+        endTime: undefined,
+      })
     },
     [props]
   )
@@ -119,8 +130,21 @@ export function TokenCharts(props: TokenChartsProps) {
   }, [resolvedTheme])
 
   const { data, isLoading } = useQuery({
-    queryKey: ['dashboard', 'user-model-tokens', timeRange],
-    queryFn: () => getUserModelTokenStats(timeRange),
+    queryKey: [
+      'dashboard',
+      'user-model-tokens',
+      timeRange,
+      props.filters.username,
+      props.filters.tokenName,
+      props.filters.modelName,
+    ],
+    queryFn: () =>
+      getUserModelTokenStats({
+        ...timeRange,
+        username: props.filters.username,
+        token_name: props.filters.tokenName,
+        model_name: props.filters.modelName,
+      }),
     select: (response) => (response.success ? response.data : []),
     staleTime: 60_000,
   })
@@ -236,16 +260,35 @@ export function TokenCharts(props: TokenChartsProps) {
               <TableHeader>
                 <TableRow>
                   <TableHead>{t('User')}</TableHead>
+                  <TableHead>{t('API Key')}</TableHead>
                   <TableHead>{t('Model')}</TableHead>
+                  <TableHead className='text-right'>
+                    {t('Input Tokens')}
+                  </TableHead>
+                  <TableHead className='text-right'>
+                    {t('Output Tokens')}
+                  </TableHead>
                   <TableHead className='text-right'>{t('Tokens')}</TableHead>
                   <TableHead className='text-right'>{t('Requests')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {chartData.details.map((row) => (
-                  <TableRow key={`${row.userId}-${row.modelName}`}>
+                  <TableRow
+                    key={`${row.userId}-${row.tokenId}-${row.modelName}`}
+                  >
                     <TableCell>{row.username}</TableCell>
+                    <TableCell className='font-mono'>{row.tokenName}</TableCell>
                     <TableCell className='font-mono'>{row.modelName}</TableCell>
+                    <TableCell className='text-right font-mono'>
+                      {formatNumber(row.promptTokens, i18n.resolvedLanguage)}
+                    </TableCell>
+                    <TableCell className='text-right font-mono'>
+                      {formatNumber(
+                        row.completionTokens,
+                        i18n.resolvedLanguage
+                      )}
+                    </TableCell>
                     <TableCell className='text-right font-mono'>
                       {formatNumber(row.tokenUsed, i18n.resolvedLanguage)}
                     </TableCell>
@@ -257,7 +300,7 @@ export function TokenCharts(props: TokenChartsProps) {
                 {!isLoading && chartData.details.length === 0 && (
                   <TableRow>
                     <TableCell
-                      colSpan={4}
+                      colSpan={7}
                       className='text-muted-foreground text-center'
                     >
                       {t('No data available')}

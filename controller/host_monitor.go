@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 	"net/url"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -53,17 +54,39 @@ type hostMonitoringHistoryPoint struct {
 	Online           bool    `json:"online"`
 }
 
+type hostMonitoringGPUHistoryPoint struct {
+	Timestamp          int64   `json:"timestamp"`
+	UtilizationPercent float64 `json:"utilization_percent"`
+}
+
+type hostMonitoringGPUHistorySeries struct {
+	Index  int                             `json:"index"`
+	Name   string                          `json:"name"`
+	UUID   string                          `json:"uuid"`
+	Points []hostMonitoringGPUHistoryPoint `json:"points"`
+}
+
+type hostMonitoringVLLMHistoryPoint struct {
+	Timestamp             int64   `json:"timestamp"`
+	OutputTokensPerSecond float64 `json:"output_tokens_per_second"`
+	RunningRequests       float64 `json:"running_requests"`
+	WaitingRequests       int     `json:"waiting_requests"`
+}
+
 type hostMonitoringHost struct {
 	hostMonitorResponse
-	Online           bool                         `json:"online"`
-	LastCollectedAt  int64                        `json:"last_collected_at"`
-	CPUPercent       float64                      `json:"cpu_percent"`
-	MemoryTotalBytes int64                        `json:"memory_total_bytes"`
-	MemoryUsedBytes  int64                        `json:"memory_used_bytes"`
-	GPUs             []hostmonitor.GPUMetric      `json:"gpus"`
-	Channels         []hostMonitoringChannel      `json:"channels"`
-	History          []hostMonitoringHistoryPoint `json:"history"`
-	ErrorMessage     string                       `json:"error_message,omitempty"`
+	Online           bool                             `json:"online"`
+	LastCollectedAt  int64                            `json:"last_collected_at"`
+	CPUPercent       float64                          `json:"cpu_percent"`
+	MemoryTotalBytes int64                            `json:"memory_total_bytes"`
+	MemoryUsedBytes  int64                            `json:"memory_used_bytes"`
+	GPUs             []hostmonitor.GPUMetric          `json:"gpus"`
+	Channels         []hostMonitoringChannel          `json:"channels"`
+	VLLMInstances    []vllmMonitoringInstance         `json:"vllm_instances"`
+	History          []hostMonitoringHistoryPoint     `json:"history"`
+	GPUHistory       []hostMonitoringGPUHistorySeries `json:"gpu_history"`
+	VLLMHistory      []hostMonitoringVLLMHistoryPoint `json:"vllm_history"`
+	ErrorMessage     string                           `json:"error_message,omitempty"`
 }
 
 type hostMonitoringMetrics struct {
@@ -253,6 +276,18 @@ func buildHostMonitoringSummary(now time.Time) (hostMonitoringSummary, error) {
 	if err != nil {
 		return summary, err
 	}
+	vllmChannelIDs := make([]int, 0, len(channels))
+	for _, channel := range channels {
+		vllmChannelIDs = append(vllmChannelIDs, channel.Id)
+	}
+	vllmAggregates, err := model.ListVLLMMetricAggregatesSince(vllmChannelIDs, now.Add(-vllmMonitoringHistoryHours*time.Hour).Unix())
+	if err != nil {
+		return summary, err
+	}
+	vllmSummary, err := buildVLLMMonitoringSummary(now)
+	if err != nil {
+		return summary, err
+	}
 	staleBefore := now.Add(-hostMonitoringStaleAfter).Unix()
 	var cpuTotal float64
 	var memoryPercentTotal float64
@@ -266,12 +301,42 @@ func buildHostMonitoringSummary(now time.Time) (hostMonitoringSummary, error) {
 			hostMonitorResponse: newHostMonitorResponse(host),
 			GPUs:                make([]hostmonitor.GPUMetric, 0),
 			Channels:            channelReferencesForHost(host.Address, channels),
+			VLLMInstances:       vllmInstancesForHost(host.Address, vllmSummary.Instances),
 			History:             make([]hostMonitoringHistoryPoint, 0),
+			GPUHistory:          make([]hostMonitoringGPUHistorySeries, 0),
+			VLLMHistory:         make([]hostMonitoringVLLMHistoryPoint, 0),
 		}
+		item.VLLMHistory = vllmHistoryForChannels(item.Channels, vllmAggregates)
 		hostSamples := samplesByHost[host.Id]
+		gpuHistoryByUUID := make(map[string]*hostMonitoringGPUHistorySeries)
 		for _, sample := range hostSamples {
 			item.History = append(item.History, hostMonitoringHistoryPoint{Timestamp: sample.CollectedAt, CPUPercent: sample.CPUPercent, MemoryTotalBytes: sample.MemoryTotalBytes, MemoryUsedBytes: sample.MemoryUsedBytes, Online: sample.Online})
+			if sample.GPUsJSON == "" {
+				continue
+			}
+			var gpus []hostmonitor.GPUMetric
+			if err := common.Unmarshal([]byte(sample.GPUsJSON), &gpus); err != nil {
+				return summary, err
+			}
+			for _, gpu := range gpus {
+				key := gpu.UUID
+				if key == "" {
+					key = fmt.Sprintf("%d:%s", gpu.Index, gpu.Name)
+				}
+				series := gpuHistoryByUUID[key]
+				if series == nil {
+					series = &hostMonitoringGPUHistorySeries{Index: gpu.Index, Name: gpu.Name, UUID: gpu.UUID, Points: make([]hostMonitoringGPUHistoryPoint, 0)}
+					gpuHistoryByUUID[key] = series
+				}
+				series.Points = append(series.Points, hostMonitoringGPUHistoryPoint{Timestamp: sample.CollectedAt, UtilizationPercent: gpu.UtilizationPercent})
+			}
 		}
+		for _, series := range gpuHistoryByUUID {
+			item.GPUHistory = append(item.GPUHistory, *series)
+		}
+		sort.Slice(item.GPUHistory, func(i, j int) bool {
+			return item.GPUHistory[i].Index < item.GPUHistory[j].Index
+		})
 		if len(hostSamples) > 0 {
 			latest := hostSamples[len(hostSamples)-1]
 			item.LastCollectedAt = latest.CollectedAt
@@ -328,4 +393,47 @@ func channelReferencesForHost(address string, channels []model.Channel) []hostMo
 		refs = append(refs, hostMonitoringChannel{Id: channel.Id, Name: channel.Name, Models: channel.Models})
 	}
 	return refs
+}
+
+func vllmInstancesForHost(address string, instances []vllmMonitoringInstance) []vllmMonitoringInstance {
+	matched := make([]vllmMonitoringInstance, 0)
+	for _, instance := range instances {
+		endpoint, err := url.Parse(instance.Endpoint)
+		if err != nil || !strings.EqualFold(endpoint.Hostname(), address) {
+			continue
+		}
+		matched = append(matched, instance)
+	}
+	return matched
+}
+
+func vllmHistoryForChannels(channels []hostMonitoringChannel, aggregates []model.VLLMMetricAggregate) []hostMonitoringVLLMHistoryPoint {
+	channelIDs := make(map[int]struct{}, len(channels))
+	for _, channel := range channels {
+		channelIDs[channel.Id] = struct{}{}
+	}
+	historyByTimestamp := make(map[int64]*hostMonitoringVLLMHistoryPoint)
+	for _, aggregate := range aggregates {
+		if _, exists := channelIDs[aggregate.ChannelID]; !exists || aggregate.SampleCount == 0 {
+			continue
+		}
+		point := historyByTimestamp[aggregate.BucketAt]
+		if point == nil {
+			point = &hostMonitoringVLLMHistoryPoint{Timestamp: aggregate.BucketAt}
+			historyByTimestamp[aggregate.BucketAt] = point
+		}
+		point.RunningRequests += aggregate.AverageRunningRequests
+		point.WaitingRequests += aggregate.MaxWaitingRequests
+		if aggregate.OutputTokensPerSecondCount > 0 {
+			point.OutputTokensPerSecond += aggregate.OutputTokensPerSecondTotal / float64(aggregate.OutputTokensPerSecondCount)
+		}
+	}
+	history := make([]hostMonitoringVLLMHistoryPoint, 0, len(historyByTimestamp))
+	for _, point := range historyByTimestamp {
+		history = append(history, *point)
+	}
+	sort.Slice(history, func(i, j int) bool {
+		return history[i].Timestamp < history[j].Timestamp
+	})
+	return history
 }

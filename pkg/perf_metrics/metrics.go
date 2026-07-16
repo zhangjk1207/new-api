@@ -198,6 +198,80 @@ func QuerySummaryAll(hours int, groups []string) (SummaryAllResult, error) {
 	return SummaryAllResult{Models: models}, nil
 }
 
+func QueryTrafficSummaryAllAt(hours int, groups []string, now time.Time) ([]TrafficSummaryPoint, error) {
+	if hours <= 0 {
+		hours = 24
+	}
+	if hours > 24*30 {
+		hours = 24 * 30
+	}
+	if now.IsZero() {
+		now = time.Now()
+	}
+	endTs := now.Unix()
+	startTs := endTs - int64(hours)*3600
+	allowedGroups := allowedGroupSet(groups)
+
+	rows, err := model.GetPerfMetricsSummaryBucketsAll(startTs, endTs, groups)
+	if err != nil {
+		return nil, err
+	}
+	totalsByBucket := make(map[int64]counters, len(rows))
+	for _, row := range rows {
+		mergeTrafficBucket(totalsByBucket, row.BucketTs, counters{
+			requestCount:   row.RequestCount,
+			successCount:   row.SuccessCount,
+			totalLatencyMs: row.TotalLatencyMs,
+		})
+	}
+
+	hotBuckets.Range(func(key, value any) bool {
+		bucket := key.(bucketKey)
+		if bucket.bucketTs < startTs || bucket.bucketTs > endTs {
+			return true
+		}
+		if allowedGroups != nil {
+			if _, ok := allowedGroups[bucket.group]; !ok {
+				return true
+			}
+		}
+		mergeTrafficBucket(totalsByBucket, bucket.bucketTs, value.(*atomicBucket).snapshot())
+		return true
+	})
+
+	bucketSeconds := perf_metrics_setting.GetBucketSeconds()
+	if bucketSeconds <= 0 {
+		bucketSeconds = 3600
+	}
+	startBucket := bucketStart(startTs)
+	endBucket := bucketStart(endTs)
+	points := make([]TrafficSummaryPoint, 0, (endBucket-startBucket)/bucketSeconds+1)
+	for timestamp := startBucket; timestamp <= endBucket; timestamp += bucketSeconds {
+		total := totalsByBucket[timestamp]
+		point := TrafficSummaryPoint{
+			Timestamp:    timestamp,
+			RequestCount: total.requestCount,
+		}
+		if total.requestCount > 0 {
+			point.SuccessRate = float64(total.successCount) / float64(total.requestCount) * 100
+			point.AvgLatencyMs = float64(total.totalLatencyMs) / float64(total.requestCount)
+		}
+		points = append(points, point)
+	}
+	return points, nil
+}
+
+func mergeTrafficBucket(totalsByBucket map[int64]counters, bucketTs int64, value counters) {
+	if value.requestCount == 0 {
+		return
+	}
+	current := totalsByBucket[bucketTs]
+	current.requestCount += value.requestCount
+	current.successCount += value.successCount
+	current.totalLatencyMs += value.totalLatencyMs
+	totalsByBucket[bucketTs] = current
+}
+
 func mergeModelTotals(totals map[string]counters, modelName string, value counters) {
 	if value.requestCount == 0 {
 		return

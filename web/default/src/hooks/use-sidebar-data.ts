@@ -19,6 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 import {
   Activity,
   ChartNoAxesCombined,
+  ClipboardList,
   Cpu,
   Box,
   CreditCard,
@@ -93,6 +94,12 @@ export function useSidebarData(): SidebarData {
             title: t('Resource Monitoring'),
             url: '/resource-monitoring',
             icon: Cpu,
+            requiredRole: ROLE.ADMIN,
+          },
+          {
+            title: t('Conversation Audit'),
+            url: '/conversation-audit',
+            icon: ClipboardList,
             requiredRole: ROLE.ADMIN,
           },
           {

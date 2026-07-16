@@ -27,8 +27,9 @@ export type ServiceMonitor = {
   status: number
   group?: string
   response_time: number
-  tokens_per_second?: number
-  max_concurrency?: number
+  output_tokens_per_second?: number
+  running_requests?: number
+  waiting_requests?: number
   history: ServiceHeartbeatPoint[]
 }
 

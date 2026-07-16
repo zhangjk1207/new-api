@@ -12,7 +12,7 @@ import (
 
 func TestGetNativeServiceMonitoringUsesLocalHealthChecks(t *testing.T) {
 	db := setupModelListControllerTestDB(t)
-	require.NoError(t, db.AutoMigrate(&model.ChannelHealthCheck{}))
+	require.NoError(t, db.AutoMigrate(&model.ChannelHealthCheck{}, &model.VLLMMetricSample{}, &model.VLLMMetricAggregate{}))
 
 	baseURL := "http://127.0.0.1:8000"
 	require.NoError(t, db.Create(&model.Channel{
@@ -36,6 +36,11 @@ func TestGetNativeServiceMonitoringUsesLocalHealthChecks(t *testing.T) {
 		{ChannelID: 1, Status: 1, ResponseTime: 15, CheckedAt: now - 60},
 		{ChannelID: 2, Status: 1, ResponseTime: 10, CheckedAt: now - 60},
 	}).Error)
+	outputRate := 30.0
+	require.NoError(t, db.Create(&model.VLLMMetricSample{
+		ChannelID: 1, Endpoint: baseURL, RunningRequests: 3, WaitingRequests: 1,
+		OutputTokensPerSecond: &outputRate, CollectedAt: now - 10,
+	}).Error)
 
 	results, err := getNativeServiceMonitoring(time.Unix(now, 0))
 
@@ -47,5 +52,11 @@ func TestGetNativeServiceMonitoringUsesLocalHealthChecks(t *testing.T) {
 	assert.Equal(t, 1, monitor.Status)
 	assert.Equal(t, 15.0, monitor.ResponseTime)
 	assert.Equal(t, 0.5, monitor.Uptime)
+	require.NotNil(t, monitor.OutputTokensPerSecond)
+	assert.InDelta(t, 30, *monitor.OutputTokensPerSecond, 0.001)
+	require.NotNil(t, monitor.RunningRequests)
+	assert.Equal(t, 3, *monitor.RunningRequests)
+	require.NotNil(t, monitor.WaitingRequests)
+	assert.Equal(t, 1, *monitor.WaitingRequests)
 	require.Len(t, monitor.History, 2)
 }

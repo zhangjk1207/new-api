@@ -28,6 +28,7 @@ import (
 	"github.com/QuantumNous/new-api/router"
 	"github.com/QuantumNous/new-api/service"
 	"github.com/QuantumNous/new-api/service/authz"
+	conversationaudit "github.com/QuantumNous/new-api/service/conversation_audit"
 	hostmonitor "github.com/QuantumNous/new-api/service/host_monitor"
 	_ "github.com/QuantumNous/new-api/setting/performance_setting"
 	"github.com/QuantumNous/new-api/setting/ratio_setting"
@@ -340,6 +341,7 @@ func InitResources() error {
 	if err != nil {
 		return err
 	}
+	conversationaudit.Init()
 
 	// Initialize Redis
 	err = common.InitRedisClient()
@@ -349,6 +351,7 @@ func InitResources() error {
 
 	perfmetrics.Init()
 	hostmonitor.Init()
+	service.InitVLLMMetrics()
 
 	// 启动系统监控
 	common.StartSystemMonitor()

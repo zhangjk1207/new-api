@@ -53,14 +53,16 @@ function formatResponseTime(responseTime: number): string {
   return `${Math.round(responseTime)} ms`
 }
 
-function formatTokensPerSecond(tokensPerSecond: number | undefined): string {
+function formatOutputTokensPerSecond(
+  tokensPerSecond: number | undefined
+): string {
   if (tokensPerSecond === undefined) return '-'
   return Math.round(tokensPerSecond).toLocaleString()
 }
 
-function formatMaxConcurrency(maxConcurrency: number | undefined): string {
-  if (maxConcurrency === undefined) return '-'
-  return maxConcurrency.toLocaleString()
+function formatRequests(value: number | undefined): string {
+  if (value === undefined) return '-'
+  return value.toLocaleString()
 }
 
 function MonitorRow(props: { monitor: ServiceMonitor }) {
@@ -68,7 +70,7 @@ function MonitorRow(props: { monitor: ServiceMonitor }) {
   const statusLabel = t(getTimelineStatusLabelKey(props.monitor.status))
 
   return (
-    <div className='border-border/40 grid min-w-[900px] grid-cols-[minmax(12rem,1.2fr)_minmax(13rem,1.8fr)_5.5rem_5.5rem_5rem_5.5rem] items-center gap-4 border-b px-4 py-3 last:border-b-0 sm:px-6'>
+    <div className='border-border/40 grid min-w-[1020px] grid-cols-[minmax(12rem,1.2fr)_minmax(13rem,1.8fr)_6rem_5.5rem_5.5rem_5rem_5.5rem] items-center gap-4 border-b px-4 py-3 last:border-b-0 sm:px-6'>
       <div className='flex min-w-0 items-center gap-2.5'>
         <span
           className={cn(
@@ -88,10 +90,13 @@ function MonitorRow(props: { monitor: ServiceMonitor }) {
       </div>
       <HeartbeatTimeline history={props.monitor.history} />
       <div className='text-right font-mono text-sm tabular-nums'>
-        {formatTokensPerSecond(props.monitor.tokens_per_second)}
+        {formatOutputTokensPerSecond(props.monitor.output_tokens_per_second)}
       </div>
       <div className='text-right font-mono text-sm tabular-nums'>
-        {formatMaxConcurrency(props.monitor.max_concurrency)}
+        {formatRequests(props.monitor.running_requests)}
+      </div>
+      <div className='text-right font-mono text-sm tabular-nums'>
+        {formatRequests(props.monitor.waiting_requests)}
       </div>
       <div className='text-right font-mono text-sm tabular-nums'>
         {(props.monitor.uptime * 100).toFixed(2)}%
@@ -128,12 +133,13 @@ export function ServiceMonitoringPage() {
   } else {
     content = (
       <div className='border-border/60 overflow-x-auto border-y'>
-        <div className='min-w-[900px]'>
-          <div className='border-border/60 bg-muted/30 text-muted-foreground grid grid-cols-[minmax(12rem,1.2fr)_minmax(13rem,1.8fr)_5.5rem_5.5rem_5rem_5.5rem] gap-4 border-b px-4 py-2 text-xs font-medium sm:px-6'>
+        <div className='min-w-[1020px]'>
+          <div className='border-border/60 bg-muted/30 text-muted-foreground grid grid-cols-[minmax(12rem,1.2fr)_minmax(13rem,1.8fr)_6rem_5.5rem_5.5rem_5rem_5.5rem] gap-4 border-b px-4 py-2 text-xs font-medium sm:px-6'>
             <span>{t('Model')}</span>
             <span>{t('24h service timeline')}</span>
-            <span className='text-right'>{t('Tokens/s')}</span>
-            <span className='text-right'>{t('Concurrency')}</span>
+            <span className='text-right'>{t('Output tokens/s')}</span>
+            <span className='text-right'>{t('Running requests')}</span>
+            <span className='text-right'>{t('Waiting requests')}</span>
             <span className='text-right'>{t('Success rate')}</span>
             <span className='text-right'>{t('Last response')}</span>
           </div>

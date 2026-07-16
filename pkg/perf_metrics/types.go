@@ -60,6 +60,13 @@ type SummaryAllResult struct {
 	Models []ModelSummary `json:"models"`
 }
 
+type TrafficSummaryPoint struct {
+	Timestamp    int64   `json:"timestamp"`
+	RequestCount int64   `json:"request_count"`
+	AvgLatencyMs float64 `json:"avg_latency_ms"`
+	SuccessRate  float64 `json:"success_rate"`
+}
+
 type bucketKey struct {
 	model    string
 	group    string

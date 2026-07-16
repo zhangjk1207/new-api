@@ -51,6 +51,7 @@ import {
   DASHBOARD_SECTION_IDS,
   type DashboardSectionId,
 } from './section-registry'
+import { TokenAnalyticsFilter } from './tokens/token-analytics-filter'
 import type { TokenChartsFilters } from './tokens/types'
 import type {
   DashboardChartPreferences,
@@ -345,7 +346,14 @@ export function Dashboard() {
         />
       </>
     ) : null
-  const sectionActions = modelActions ?? flowActions
+  const tokenActions =
+    activeSection === 'tokens' ? (
+      <TokenAnalyticsFilter
+        currentFilters={tokenChartsFilters}
+        onFiltersChange={setTokenChartsFilters}
+      />
+    ) : null
+  const sectionActions = modelActions ?? flowActions ?? tokenActions
 
   return (
     <SectionPageLayout>

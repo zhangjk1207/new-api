@@ -14,14 +14,15 @@ import (
 const serviceMonitoringHistoryHours = 24
 
 type Monitor struct {
-	Name            string               `json:"name"`
-	Uptime          float64              `json:"uptime"`
-	Status          int                  `json:"status"`
-	Group           string               `json:"group,omitempty"`
-	ResponseTime    float64              `json:"response_time"`
-	TokensPerSecond *float64             `json:"tokens_per_second,omitempty"`
-	MaxConcurrency  *int                 `json:"max_concurrency,omitempty"`
-	History         []uptimeHistoryPoint `json:"history"`
+	Name                  string               `json:"name"`
+	Uptime                float64              `json:"uptime"`
+	Status                int                  `json:"status"`
+	Group                 string               `json:"group,omitempty"`
+	ResponseTime          float64              `json:"response_time"`
+	OutputTokensPerSecond *float64             `json:"output_tokens_per_second,omitempty"`
+	RunningRequests       *int                 `json:"running_requests,omitempty"`
+	WaitingRequests       *int                 `json:"waiting_requests,omitempty"`
+	History               []uptimeHistoryPoint `json:"history"`
 }
 
 type uptimeHistoryPoint struct {
@@ -62,6 +63,14 @@ func getNativeServiceMonitoring(now time.Time) ([]UptimeGroupResult, error) {
 	for _, check := range checks {
 		checksByChannelID[check.ChannelID] = append(checksByChannelID[check.ChannelID], check)
 	}
+	vllmSummary, vllmErr := buildVLLMMonitoringSummary(now)
+	if vllmErr != nil {
+		common.SysError("load vLLM service monitoring metrics failed: " + vllmErr.Error())
+	}
+	vllmInstancesByChannelID := make(map[int]vllmMonitoringInstance, len(vllmSummary.Instances))
+	for _, instance := range vllmSummary.Instances {
+		vllmInstancesByChannelID[instance.ChannelID] = instance
+	}
 	monitors := make([]Monitor, 0, len(channels))
 	for _, channel := range channels {
 		monitor := Monitor{
@@ -86,9 +95,14 @@ func getNativeServiceMonitoring(now time.Time) ([]UptimeGroupResult, error) {
 			latest := channelChecks[len(channelChecks)-1]
 			monitor.Status = latest.Status
 			monitor.ResponseTime = float64(latest.ResponseTime)
-			monitor.TokensPerSecond = latest.TokensPerSecond
-			monitor.MaxConcurrency = latest.MaxConcurrency
 			monitor.Uptime = float64(upCount) / float64(len(channelChecks))
+		}
+		if instance, exists := vllmInstancesByChannelID[channel.Id]; exists {
+			monitor.OutputTokensPerSecond = instance.OutputTokensPerSecond
+			runningRequests := instance.RunningRequests
+			waitingRequests := instance.WaitingRequests
+			monitor.RunningRequests = &runningRequests
+			monitor.WaitingRequests = &waitingRequests
 		}
 		monitors = append(monitors, monitor)
 	}
