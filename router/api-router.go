@@ -24,6 +24,12 @@ func SetApiRouter(router *gin.Engine) {
 		apiRouter.GET("/status", controller.GetStatus)
 		apiRouter.GET("/uptime/status", middleware.UserAuth(), controller.GetServiceMonitoringStatus)
 		apiRouter.GET("/operations-dashboard/summary", middleware.AdminAuth(), controller.GetOperationsDashboardSummary)
+		conversationAuditRoute := apiRouter.Group("/conversation-audits")
+		conversationAuditRoute.Use(middleware.AdminAuth())
+		{
+			conversationAuditRoute.GET("", controller.ListConversationAudits)
+			conversationAuditRoute.GET("/:request_id", controller.GetConversationAudit)
+		}
 		apiRouter.GET("/models", middleware.UserAuth(), controller.DashboardListModels)
 		apiRouter.GET("/status/test", middleware.AdminAuth(), controller.TestStatus)
 		apiRouter.GET("/notice", controller.GetNotice)

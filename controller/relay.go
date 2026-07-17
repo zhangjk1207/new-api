@@ -21,6 +21,7 @@ import (
 	relayconstant "github.com/QuantumNous/new-api/relay/constant"
 	"github.com/QuantumNous/new-api/relay/helper"
 	"github.com/QuantumNous/new-api/service"
+	conversationaudit "github.com/QuantumNous/new-api/service/conversation_audit"
 	"github.com/QuantumNous/new-api/setting"
 	"github.com/QuantumNous/new-api/setting/operation_setting"
 	"github.com/QuantumNous/new-api/types"
@@ -72,8 +73,9 @@ func Relay(c *gin.Context, relayFormat types.RelayFormat) {
 	//originalModel := common.GetContextKeyString(c, constant.ContextKeyOriginalModel)
 
 	var (
-		newAPIError *types.NewAPIError
-		ws          *websocket.Conn
+		newAPIError         *types.NewAPIError
+		ws                  *websocket.Conn
+		conversationCapture *conversationaudit.Capture
 	)
 
 	if relayFormat == types.RelayFormatOpenAIRealtime {
@@ -104,6 +106,13 @@ func Relay(c *gin.Context, relayFormat types.RelayFormat) {
 				})
 			}
 		}
+		if conversationCapture != nil {
+			relayError := ""
+			if newAPIError != nil {
+				relayError = newAPIError.Error()
+			}
+			conversationCapture.Finalize(c.Writer.Status(), relayError)
+		}
 	}()
 
 	request, err := helper.GetAndValidateRequest(c, relayFormat)
@@ -122,6 +131,8 @@ func Relay(c *gin.Context, relayFormat types.RelayFormat) {
 		newAPIError = types.NewError(err, types.ErrorCodeGenRelayInfoFailed)
 		return
 	}
+	conversationCapture = conversationaudit.Start(c, relayInfo)
+	c.Writer = conversationaudit.WrapResponseWriter(c.Writer, conversationCapture)
 
 	needSensitiveCheck := setting.ShouldCheckPromptSensitive()
 	needCountToken := constant.CountToken
