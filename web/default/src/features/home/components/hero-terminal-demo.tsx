@@ -201,7 +201,7 @@ export function HeroTerminalDemo(props: HeroTerminalDemoProps) {
         {/* Tab strip */}
         <div
           className={cn(
-            'flex items-center gap-1 border-b px-2 sm:gap-1.5 sm:px-3',
+            'flex min-w-0 items-center gap-0 overflow-x-auto border-b px-1 sm:gap-1.5 sm:overflow-visible sm:px-3',
             'border-border/50 dark:border-white/[0.05]'
           )}
         >
@@ -214,7 +214,7 @@ export function HeroTerminalDemo(props: HeroTerminalDemoProps) {
                 type='button'
                 onClick={() => handleSelect(index)}
                 className={cn(
-                  'relative -mb-px flex items-center gap-1.5 border-b-2 px-2.5 py-2.5 text-[11px] font-medium tracking-wide transition-colors sm:px-3 sm:text-xs',
+                  'relative -mb-px flex shrink-0 items-center gap-0.5 whitespace-nowrap border-b-2 px-2 py-2.5 text-[11px] font-medium tracking-wide transition-colors sm:gap-1.5 sm:px-3 sm:text-xs',
                   isActive
                     ? `${tone.activeBorder} ${tone.activeText}`
                     : 'text-foreground/40 hover:text-foreground/70 border-transparent'
@@ -224,7 +224,7 @@ export function HeroTerminalDemo(props: HeroTerminalDemoProps) {
               </button>
             )
           })}
-          <div className='ml-auto flex items-center gap-2 pr-2 sm:pr-3'>
+          <div className='ml-auto hidden shrink-0 items-center gap-2 pr-2 sm:flex sm:pr-3'>
             <span className='inline-block size-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.45)]' />
             <span className='text-foreground/40 font-mono text-[10px] tracking-wider uppercase'>
               routed
