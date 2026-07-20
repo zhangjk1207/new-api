@@ -17,11 +17,12 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { Link } from '@tanstack/react-router'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, BookOpen } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { AnimateInView } from '@/components/animate-in-view'
 import { Button } from '@/components/ui/button'
+import { useStatus } from '@/hooks/use-status'
 
 interface CTAProps {
   className?: string
@@ -30,53 +31,61 @@ interface CTAProps {
 
 export function CTA(props: CTAProps) {
   const { t } = useTranslation()
-
-  if (props.isAuthenticated) {
-    return null
-  }
+  const { status } = useStatus()
+  const docsUrl =
+    (status?.docs_link as string | undefined) || 'https://docs.newapi.pro'
+  const primaryRoute = props.isAuthenticated ? '/dashboard' : '/sign-up'
+  const primaryLabel = props.isAuthenticated
+    ? t('Go to Dashboard')
+    : t('Get Started')
+  const isExternalDocsUrl = docsUrl.startsWith('http')
 
   return (
-    <section className='relative z-10 overflow-hidden px-6 py-24 md:py-32'>
-      {/* Gradient mesh background */}
-      <div
-        aria-hidden
-        className='absolute inset-0 -z-10 opacity-20 dark:opacity-[0.08]'
-        style={{
-          background: [
-            'radial-gradient(ellipse 50% 50% at 30% 50%, oklch(0.7 0.15 250 / 70%) 0%, transparent 70%)',
-            'radial-gradient(ellipse 40% 40% at 70% 40%, oklch(0.65 0.12 200 / 50%) 0%, transparent 70%)',
-          ].join(', '),
-        }}
-      />
-
+    <section className='bg-primary relative z-10 px-6 py-16 text-primary-foreground sm:py-20 lg:py-24'>
       <AnimateInView
         className='mx-auto max-w-2xl text-center'
         animation='scale-in'
       >
-        <h2 className='text-2xl leading-tight font-bold tracking-tight md:text-4xl'>
-          {t('Ready to simplify')}
-          <br />
-          <span className='bg-gradient-to-r from-blue-400 via-violet-400 to-purple-500 bg-clip-text text-transparent'>
-            {t('your AI integration?')}
-          </span>
+        <h2 className='text-2xl leading-tight font-bold sm:text-3xl'>
+          {t('Keep every model capability reliable for every business scenario')}
         </h2>
-        <p className='text-muted-foreground/80 mx-auto mt-5 max-w-md text-sm leading-relaxed md:text-base'>
+        <p className='text-primary-foreground/80 mx-auto mt-4 max-w-xl text-sm leading-6 sm:text-base'>
           {t(
-            'Deploy your own gateway and start routing requests through your configured upstream services.'
+            'Connect, route, monitor, and govern model services through one dependable platform.'
           )}
         </p>
-        <div className='mt-8 flex items-center justify-center gap-3'>
-          <Button className='group rounded-lg' render={<Link to='/sign-up' />}>
-            {t('Get Started')}
-            <ArrowRight className='ml-1 size-3.5 transition-transform duration-200 group-hover:translate-x-0.5' />
-          </Button>
+        <div className='mt-8 flex flex-wrap justify-center gap-3'>
           <Button
-            variant='outline'
-            className='border-border/50 hover:border-border hover:bg-muted/50 rounded-lg'
-            render={<Link to='/pricing' />}
+            className='group h-11 bg-primary-foreground px-5 text-primary hover:bg-primary-foreground/90'
+            render={<Link to={primaryRoute} />}
           >
-            {t('View Pricing')}
+            {primaryLabel}
+            <ArrowRight
+              className='ml-1.5 size-4 transition-transform duration-200 group-hover:translate-x-0.5'
+              aria-hidden='true'
+            />
           </Button>
+          {isExternalDocsUrl ? (
+            <Button
+              variant='outline'
+              className='h-11 border-primary-foreground/50 bg-transparent px-5 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground'
+              render={
+                <a href={docsUrl} target='_blank' rel='noopener noreferrer' />
+              }
+            >
+              <BookOpen className='size-4' aria-hidden='true' />
+              {t('Docs')}
+            </Button>
+          ) : (
+            <Button
+              variant='outline'
+              className='h-11 border-primary-foreground/50 bg-transparent px-5 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground'
+              render={<Link to={docsUrl} />}
+            >
+              <BookOpen className='size-4' aria-hidden='true' />
+              {t('Docs')}
+            </Button>
+          )}
         </div>
       </AnimateInView>
     </section>
