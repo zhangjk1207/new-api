@@ -439,7 +439,7 @@ const homepageKeys = {
     'Platform call success rate': 'Успешность вызовов платформы',
     '{{healthy}} / {{total}} services healthy': '{{healthy}} / {{total}} сервисов исправны',
     'Platform operation overview': 'Обзор работы платформы',
-    'Retry operation overview': 'Повторить загрузку оперативного обзора',
+    'Retry operation overview': 'Перезагрузить обзор работы платформы',
     'Request trend': 'Динамика запросов',
     'Request trend for the last 24 hours': 'Динамика запросов за 24 часа',
     'Request trend data': 'Данные динамики запросов',
