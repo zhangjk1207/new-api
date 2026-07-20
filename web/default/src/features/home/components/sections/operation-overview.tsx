@@ -154,7 +154,11 @@ export function OperationOverview() {
               }}
             >
               <RefreshCw
-                className={retrying ? 'animate-spin' : undefined}
+                className={
+                  retrying
+                    ? 'animate-spin motion-reduce:animate-none'
+                    : undefined
+                }
                 aria-hidden='true'
               />
             </Button>

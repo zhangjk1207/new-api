@@ -16,25 +16,45 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { useCallback, useEffect, useRef } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { PublicLayout } from '@/components/layout'
 import { Footer } from '@/components/layout/components/footer'
 import { RichContent } from '@/components/rich-content'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useTheme } from '@/context/theme-provider'
 import { isLikelyHtml } from '@/lib/content-format'
 import { useAuthStore } from '@/stores/auth-store'
 
-import {
-  CTA,
-  Features,
-  Hero,
-  HowItWorks,
-  OperationOverview,
-  Stats,
-} from './components'
+import { CTA, Features, Hero, HowItWorks, Stats } from './components'
 import { useHomePageContent } from './hooks'
+
+const OperationOverview = lazy(() =>
+  import('./components/sections/operation-overview').then(
+    ({ OperationOverview }) => ({ default: OperationOverview })
+  )
+)
+
+function OperationOverviewSkeleton() {
+  return (
+    <section
+      className='border-border/60 bg-muted/20 relative z-10 border-y px-6 py-16 sm:py-20 lg:py-24'
+      aria-hidden='true'
+    >
+      <div className='mx-auto max-w-6xl'>
+        <Skeleton className='mb-10 h-16 w-48' />
+        <div className='border-border/60 grid border-y sm:grid-cols-2 lg:grid-cols-4'>
+          <Skeleton className='h-28 rounded-none border-b sm:border-r lg:border-b-0' />
+          <Skeleton className='h-28 rounded-none border-b lg:border-r lg:border-b-0' />
+          <Skeleton className='h-28 rounded-none border-b sm:border-r sm:border-b-0 lg:border-r' />
+          <Skeleton className='h-28 rounded-none' />
+        </div>
+        <Skeleton className='mt-10 h-72 rounded-lg' />
+      </div>
+    </section>
+  )
+}
 
 export function Home() {
   const { i18n, t } = useTranslation()
@@ -132,7 +152,11 @@ export function Home() {
       <Hero isAuthenticated={isAuthenticated} />
       <Stats />
       <Features />
-      {isAuthenticated && <OperationOverview />}
+      {isAuthenticated && (
+        <Suspense fallback={<OperationOverviewSkeleton />}>
+          <OperationOverview />
+        </Suspense>
+      )}
       <HowItWorks />
       <CTA isAuthenticated={isAuthenticated} />
       <Footer />

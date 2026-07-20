@@ -53,48 +53,66 @@ export function OperationOverviewChart(props: OperationOverviewChartProps) {
     )
   } else {
     chartContent = (
-      <VChart
-        option={VCHART_OPTION}
-        spec={{
-          type: 'bar',
-          background: 'transparent',
-          theme: resolvedTheme === 'dark' ? 'dark' : 'light',
-          data: [{ id: 'requests', values: props.data }],
-          xField: 'timestamp',
-          yField: 'requests',
-          bar: { style: { fill: '#2563eb' } },
-          tooltip: {
-            mark: {
-              title: {
-                value: (datum: HomeRequestTrendPoint) =>
-                  formatBeijingTimestamp(datum.timestamp),
+      <>
+        <div
+          className='h-full'
+          role='img'
+          aria-label={t('Request trend for the last 24 hours')}
+        >
+          <VChart
+            option={VCHART_OPTION}
+            spec={{
+              type: 'bar',
+              background: 'transparent',
+              theme: resolvedTheme === 'dark' ? 'dark' : 'light',
+              data: [{ id: 'requests', values: props.data }],
+              xField: 'timestamp',
+              yField: 'requests',
+              bar: { style: { fill: '#2563eb' } },
+              tooltip: {
+                mark: {
+                  title: {
+                    value: (datum: HomeRequestTrendPoint) =>
+                      formatBeijingTimestamp(datum.timestamp),
+                  },
+                  content: [
+                    {
+                      key: t('Requests'),
+                      value: (datum: HomeRequestTrendPoint) =>
+                        formatNumber(datum.requests, locale),
+                    },
+                  ],
+                },
               },
-              content: [
+              axes: [
                 {
-                  key: t('Requests'),
-                  value: (datum: HomeRequestTrendPoint) =>
-                    formatNumber(datum.requests, locale),
+                  orient: 'bottom',
+                  type: 'band',
+                  label: { formatMethod: formatBeijingAxisTimestamp },
+                },
+                {
+                  orient: 'left',
+                  type: 'linear',
+                  label: {
+                    formatMethod: (value: number | string) =>
+                      formatNumber(Number(value), locale),
+                  },
                 },
               ],
-            },
-          },
-          axes: [
-            {
-              orient: 'bottom',
-              type: 'band',
-              label: { formatMethod: formatBeijingAxisTimestamp },
-            },
-            {
-              orient: 'left',
-              type: 'linear',
-              label: {
-                formatMethod: (value: number | string) =>
-                  formatNumber(Number(value), locale),
-              },
-            },
-          ],
-        }}
-      />
+            }}
+          />
+        </div>
+        <ul className='sr-only' aria-label={t('Request trend data')}>
+          {props.data.map((point) => (
+            <li key={point.timestamp}>
+              {t('At {{time}}: {{requests}} requests', {
+                time: formatBeijingTimestamp(point.timestamp),
+                requests: formatNumber(point.requests, locale),
+              })}
+            </li>
+          ))}
+        </ul>
+      </>
     )
   }
 
