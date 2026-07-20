@@ -27,6 +27,8 @@ function stableStringify(obj) {
 
 const newKeys = {
   en: {
+    'Xingluo Data Field': 'Xingluo Data Field',
+    'Zhiqing Model Service Platform': 'Zhiqing Model Service Platform',
     'Average first token latency': 'Average first token latency',
     'Conversation Audit': 'Conversation Audit',
     'Conversation details': 'Conversation details',
@@ -87,6 +89,8 @@ const newKeys = {
       '{{unavailable}} unavailable, {{unknown}} without data',
   },
   zh: {
+    'Xingluo Data Field': '星罗·数场',
+    'Zhiqing Model Service Platform': '智擎模型服务平台',
     'Average first token latency': '平均首 Token 延迟',
     'Conversation Audit': '对话审计',
     'Conversation details': '对话详情',
@@ -146,6 +150,8 @@ const newKeys = {
       '{{unavailable}} 个不可用，{{unknown}} 个无监测数据',
   },
   'zh-TW': {
+    'Xingluo Data Field': '星羅·數場',
+    'Zhiqing Model Service Platform': '智擎模型服務平台',
     'Filter by API key': '按 API 金鑰篩選',
     'Filter token analytics by time range, user, API key, and model.':
       '按時間範圍、使用者、API 金鑰和模型篩選 Token 統計。',
@@ -181,6 +187,9 @@ const newKeys = {
       '{{unavailable}} 個不可用，{{unknown}} 個無監測資料',
   },
   fr: {
+    'Xingluo Data Field': 'Xingluo Data Field',
+    'Zhiqing Model Service Platform':
+      'Plateforme de services de modèles Zhiqing',
     'Average first token latency': 'Latence moyenne du premier token',
     'Conversation Audit': 'Audit des conversations',
     'Conversation details': 'Details de la conversation',
@@ -242,6 +251,8 @@ const newKeys = {
       '{{unavailable}} indisponibles, {{unknown}} sans donnees',
   },
   ja: {
+    'Xingluo Data Field': 'Xingluo Data Field',
+    'Zhiqing Model Service Platform': 'Zhiqingモデルサービスプラットフォーム',
     'Average first token latency': '平均初回トークン遅延',
     'Conversation Audit': '会話監査',
     'Conversation details': '会話の詳細',
@@ -301,6 +312,8 @@ const newKeys = {
       '{{unavailable}} 件利用不可、{{unknown}} 件データなし',
   },
   ru: {
+    'Xingluo Data Field': 'Xingluo Data Field',
+    'Zhiqing Model Service Platform': 'Платформа модельных сервисов Zhiqing',
     'Average first token latency': 'Средняя задержка первого токена',
     'Conversation Audit': 'Аудит диалогов',
     'Conversation details': 'Сведения о диалоге',
@@ -361,6 +374,8 @@ const newKeys = {
       '{{unavailable}} недоступно, {{unknown}} без данных',
   },
   vi: {
+    'Xingluo Data Field': 'Xingluo Data Field',
+    'Zhiqing Model Service Platform': 'Nền tảng dịch vụ mô hình Zhiqing',
     'Average first token latency': 'Do tre token dau tien trung binh',
     'Conversation Audit': 'Kiem toan hoi thoai',
     'Conversation details': 'Chi tiet hoi thoai',
