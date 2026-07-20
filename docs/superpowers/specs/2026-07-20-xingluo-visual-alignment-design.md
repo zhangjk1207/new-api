@@ -28,7 +28,7 @@ Public pages and authentication pages receive the shared default theme tokens bu
 - Left brand lockup: supplied Xingluo logo at 40px high, a 1px translucent white divider, then `智擎模型服务平台` in white.
 - Right decoration: supplied mesh image, anchored to the top-right, non-repeating, pointer-events disabled, and placed behind navigation controls.
 - The global search entry is hidden by default, while the existing component and `showSearch` override remain available for future page-specific use.
-- Desktop navigation uses `#9bc3ff` for inactive items, white on hover, and a white semibold active item with a 2px underline. Navigation routes, permissions, and the mobile dropdown remain unchanged.
+- Wide-screen navigation uses accessible pale-blue inactive items, white on hover, and a white semibold active item with a 2px underline. Below 1536px, the existing dropdown avoids collisions with branding and header controls. Navigation routes and permissions remain unchanged.
 - Notifications, language, theme, and profile controls remain functionally unchanged and receive light-on-blue foreground and hover states.
 - On narrow screens, the logo scales down and the product name truncates before any action controls overlap.
 

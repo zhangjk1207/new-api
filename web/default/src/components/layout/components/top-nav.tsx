@@ -29,7 +29,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 
-import { type TopNavLink } from '../types'
+import type { TopNavLink } from '../types'
 
 type TopNavProps = React.HTMLAttributes<HTMLElement> & {
   links: TopNavLink[]
@@ -55,7 +55,7 @@ export function TopNav({ className, links, ...props }: TopNavProps) {
   return (
     <>
       {/* 移动端下拉菜单 */}
-      <div className='lg:hidden'>
+      <div className='2xl:hidden'>
         <DropdownMenu modal={false}>
           <DropdownMenuTrigger
             render={<Button size='icon' variant='outline' className='size-7' />}
@@ -87,7 +87,7 @@ export function TopNav({ className, links, ...props }: TopNavProps) {
                       </Link>
                     )
                   }
-                ></DropdownMenuItem>
+                />
               )
             )}
           </DropdownMenuContent>
@@ -96,10 +96,7 @@ export function TopNav({ className, links, ...props }: TopNavProps) {
 
       {/* 桌面端水平导航 */}
       <nav
-        className={cn(
-          'hidden items-center space-x-4 lg:flex lg:space-x-4 xl:space-x-6',
-          className
-        )}
+        className={cn('hidden items-center space-x-6 2xl:flex', className)}
         {...props}
       >
         {normalizedLinks.map(({ title, href, isActive, disabled, external }) =>
