@@ -55,6 +55,7 @@ export default defineConfig(({ envMode }) => {
     },
     html: {
       template: './index.html',
+      favicon: './public/institute-favicon.ico',
     },
     server: {
       host: '0.0.0.0',
