@@ -79,7 +79,9 @@ const API_DEMOS: ApiDemoConfig[] = [
       '"model": "dataspace-31b",',
       '"messages": [{ "role": "user", "content": "..." }]',
     ],
-    response: ['{"status":"routed","model":"dataspace-31b","node":"gpu-node-02"}'],
+    response: [
+      '{"status":"routed","model":"dataspace-31b","node":"gpu-node-02"}',
+    ],
     responseHighlights: [],
     accent: 'emerald',
   },
@@ -259,7 +261,7 @@ export function HeroTerminalDemo(props: HeroTerminalDemoProps) {
         </div>
 
         {/* Body — fixed rows so neither block shifts when switching demos */}
-        <div className='grid h-[400px] grid-rows-[235px_minmax(0,1fr)] font-mono text-[12.5px] leading-[1.55]'>
+        <div className='grid h-[175px] grid-rows-1 overflow-hidden font-mono text-[12.5px] leading-[1.55] sm:h-[400px] sm:grid-rows-[235px_minmax(0,1fr)]'>
           {/* Request */}
           <RequestBlock demo={demo} transitioning={transitioning} />
 
@@ -270,7 +272,7 @@ export function HeroTerminalDemo(props: HeroTerminalDemoProps) {
         {/* Routing status */}
         <div
           className={cn(
-            'flex items-center justify-between border-t px-5 py-2.5',
+            'hidden items-center justify-between border-t px-5 py-2.5 sm:flex',
             'border-border/40 bg-muted/30 dark:border-white/[0.05] dark:bg-white/[0.02]'
           )}
         >
@@ -331,7 +333,7 @@ function ResponseBlock(props: { demo: ApiDemoConfig; transitioning: boolean }) {
   return (
     <div
       className={cn(
-        'relative border-t px-5 py-4',
+        'relative hidden border-t px-5 py-4 sm:block',
         'border-border/40 bg-muted/20 dark:border-white/[0.05] dark:bg-white/[0.015]'
       )}
     >

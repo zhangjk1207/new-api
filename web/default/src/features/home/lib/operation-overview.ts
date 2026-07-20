@@ -19,7 +19,10 @@ export function buildHourlyRequestTrend(
   for (const item of usage) {
     const hour = item.created_at - (item.created_at % HOUR_SECONDS)
     if (hour < firstHour || hour > currentHour) continue
-    requestsByHour.set(hour, (requestsByHour.get(hour) ?? 0) + (item.count ?? 0))
+    requestsByHour.set(
+      hour,
+      (requestsByHour.get(hour) ?? 0) + (item.count ?? 0)
+    )
   }
 
   return Array.from({ length: HISTORY_HOURS }, (_, index) => {
@@ -36,7 +39,8 @@ export function calculateWeightedSuccessRate(
   for (const model of models) {
     const count = Math.max(0, model.request_count ?? 0)
     requestCount += count
-    successfulRequestWeight += count * Math.min(100, Math.max(0, model.success_rate))
+    successfulRequestWeight +=
+      count * Math.min(100, Math.max(0, model.success_rate))
   }
   return requestCount === 0 ? 100 : successfulRequestWeight / requestCount
 }

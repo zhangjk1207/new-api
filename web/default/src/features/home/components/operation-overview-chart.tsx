@@ -44,7 +44,9 @@ export function OperationOverviewChart(props: OperationOverviewChartProps) {
 
   let chartContent
   if (props.loading) {
-    chartContent = <Skeleton className='h-full w-full motion-reduce:animate-none' />
+    chartContent = (
+      <Skeleton className='h-full w-full motion-reduce:animate-none' />
+    )
   } else if (props.failed) {
     chartContent = (
       <p className='text-muted-foreground flex h-full items-center justify-center text-sm'>

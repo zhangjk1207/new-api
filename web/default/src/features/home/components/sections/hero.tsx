@@ -71,14 +71,16 @@ export function Hero(props: HeroProps) {
   }
 
   return (
-    <section className='bg-muted/25 relative overflow-hidden border-b px-6 py-16 sm:py-20 lg:py-24'>
-      <div className='mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]'>
+    <section className='bg-muted/25 relative overflow-hidden border-b px-6 py-12 sm:py-20 lg:py-24'>
+      <div className='mx-auto grid max-w-6xl items-center gap-8 sm:gap-10 lg:grid-cols-[1.05fr_0.95fr]'>
         <div className='relative z-10 max-w-2xl'>
           <p className='text-primary mb-4 text-sm font-semibold'>
             {t('Xingluo model service component')}
           </p>
           <h1 className='text-4xl leading-tight font-bold sm:text-5xl'>
-            {t('Unify access, routing, and governance for every model capability')}
+            {t(
+              'Unify access, routing, and governance for every model capability'
+            )}
           </h1>
           <p className='text-muted-foreground mt-5 max-w-xl text-base leading-8'>
             {t(

@@ -178,7 +178,9 @@ export function OperationOverview() {
               )
             }
             if (metric.loading) {
-              metricValue = <Skeleton className='h-8 w-24 motion-reduce:animate-none' />
+              metricValue = (
+                <Skeleton className='h-8 w-24 motion-reduce:animate-none' />
+              )
             }
 
             return (

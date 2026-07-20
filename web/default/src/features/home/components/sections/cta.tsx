@@ -41,13 +41,15 @@ export function CTA(props: CTAProps) {
   const isExternalDocsUrl = docsUrl.startsWith('http')
 
   return (
-    <section className='bg-primary relative z-10 px-6 py-16 text-primary-foreground sm:py-20 lg:py-24'>
+    <section className='bg-primary text-primary-foreground relative z-10 px-6 py-16 sm:py-20 lg:py-24'>
       <AnimateInView
         className='mx-auto max-w-2xl text-center'
         animation='scale-in'
       >
         <h2 className='text-2xl leading-tight font-bold sm:text-3xl'>
-          {t('Keep every model capability reliable for every business scenario')}
+          {t(
+            'Keep every model capability reliable for every business scenario'
+          )}
         </h2>
         <p className='text-primary-foreground/80 mx-auto mt-4 max-w-xl text-sm leading-6 sm:text-base'>
           {t(
@@ -56,7 +58,7 @@ export function CTA(props: CTAProps) {
         </p>
         <div className='mt-8 flex flex-wrap justify-center gap-3'>
           <Button
-            className='group h-11 bg-primary-foreground px-5 text-primary hover:bg-primary-foreground/90'
+            className='group bg-primary-foreground text-primary hover:bg-primary-foreground/90 h-11 px-5'
             render={<Link to={primaryRoute} />}
           >
             {primaryLabel}
@@ -68,7 +70,7 @@ export function CTA(props: CTAProps) {
           {isExternalDocsUrl ? (
             <Button
               variant='outline'
-              className='h-11 border-primary-foreground/50 bg-transparent px-5 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground'
+              className='border-primary-foreground/50 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground h-11 bg-transparent px-5'
               render={
                 <a href={docsUrl} target='_blank' rel='noopener noreferrer' />
               }
@@ -79,7 +81,7 @@ export function CTA(props: CTAProps) {
           ) : (
             <Button
               variant='outline'
-              className='h-11 border-primary-foreground/50 bg-transparent px-5 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground'
+              className='border-primary-foreground/50 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground h-11 bg-transparent px-5'
               render={<Link to={docsUrl} />}
             >
               <BookOpen className='size-4' aria-hidden='true' />

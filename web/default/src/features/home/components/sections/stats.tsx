@@ -23,9 +23,18 @@ interface StatsProps {
 }
 
 const capabilities = [
-  ['Multi-node unified management', 'Centrally manage distributed model services'],
-  ['Multi-protocol compatible access', 'Reduce application changes through a unified API'],
-  ['Full-link monitoring and analysis', 'Understand operations from gateway to inference engine'],
+  [
+    'Multi-node unified management',
+    'Centrally manage distributed model services',
+  ],
+  [
+    'Multi-protocol compatible access',
+    'Reduce application changes through a unified API',
+  ],
+  [
+    'Full-link monitoring and analysis',
+    'Understand operations from gateway to inference engine',
+  ],
   ['Request-path audit', 'Support troubleshooting and internal governance'],
 ] as const
 
@@ -39,7 +48,7 @@ export function Stats(_props: StatsProps) {
           {capabilities.map(([title, description]) => (
             <div
               key={title}
-              className='border-border/60 border-b px-6 py-7 last:border-b-0 sm:[&:nth-child(odd)]:border-r sm:[&:nth-last-child(-n+2)]:border-b-0 lg:border-b-0 lg:[&:nth-child(even)]:border-r lg:last:border-r-0'
+              className='border-border/60 border-b px-6 py-7 last:border-b-0 lg:border-b-0 lg:last:border-r-0 lg:[&:nth-child(even)]:border-r sm:[&:nth-child(odd)]:border-r sm:[&:nth-last-child(-n+2)]:border-b-0'
             >
               <h2 className='text-sm font-semibold'>{t(title)}</h2>
               <p className='text-muted-foreground mt-2 text-sm leading-6'>

@@ -22,7 +22,7 @@ import path from 'node:path'
 const LOCALES_DIR = path.resolve('src/i18n/locales')
 
 function stableStringify(obj) {
-  return JSON.stringify(obj, null, 2) + '\n'
+  return `${JSON.stringify(obj, null, 2)}\n`
 }
 
 const homepageKeys = {
@@ -51,7 +51,8 @@ const homepageKeys = {
     'Resource and engine monitoring': 'Resource and engine monitoring',
     'Track CPU, memory, GPU, vLLM concurrency, queueing, and cache metrics.':
       'Track CPU, memory, GPU, vLLM concurrency, queueing, and cache metrics.',
-    'Call analysis and request-path audit': 'Call analysis and request-path audit',
+    'Call analysis and request-path audit':
+      'Call analysis and request-path audit',
     'Analyze usage by user, key, and model while retaining auditable request paths.':
       'Analyze usage by user, key, and model while retaining auditable request paths.',
     'Multi-node unified management': 'Multi-node unified management',
@@ -94,10 +95,10 @@ const homepageKeys = {
     'Platform operation overview': 'Platform operation overview',
     'Retry operation overview': 'Retry operation overview',
     'Request trend': 'Request trend',
-    'Request trend for the last 24 hours': 'Request trend for the last 24 hours',
+    'Request trend for the last 24 hours':
+      'Request trend for the last 24 hours',
     'Request trend data': 'Request trend data',
-    'At {{time}}: {{requests}} requests':
-      'At {{time}}: {{requests}} requests',
+    'At {{time}}: {{requests}} requests': 'At {{time}}: {{requests}} requests',
   },
   zh: {
     'Xingluo model service component': '星罗数场大模型服务组件',
@@ -130,9 +131,11 @@ const homepageKeys = {
     'Multi-node unified management': '多节点统一纳管',
     'Centrally manage distributed model services': '集中管理分布式模型服务',
     'Multi-protocol compatible access': '多协议兼容接入',
-    'Reduce application changes through a unified API': '通过统一 API 减少应用改造',
+    'Reduce application changes through a unified API':
+      '通过统一 API 减少应用改造',
     'Full-link monitoring and analysis': '全链路监控分析',
-    'Understand operations from gateway to inference engine': '洞察从网关到推理引擎的运行情况',
+    'Understand operations from gateway to inference engine':
+      '洞察从网关到推理引擎的运行情况',
     'Request-path audit': '调用链路审计',
     'Support troubleshooting and internal governance': '支持问题排查与内部治理',
     'Access flow': '接入流程',
@@ -158,7 +161,8 @@ const homepageKeys = {
     'Requests in the last 24 hours': '最近 24 小时请求数',
     'Tokens in the last 24 hours': '最近 24 小时 Token 用量',
     'Platform call success rate': '平台调用成功率',
-    '{{healthy}} / {{total}} services healthy': '{{healthy}} / {{total}} 个服务健康',
+    '{{healthy}} / {{total}} services healthy':
+      '{{healthy}} / {{total}} 个服务健康',
     'Platform operation overview': '平台运行概览',
     'Retry operation overview': '重新加载运行概览',
     'Request trend': '请求趋势',
@@ -174,7 +178,8 @@ const homepageKeys = {
       'Zhiqing 為內部業務應用提供多節點本地模型與多渠道模型服務的統一管理，涵蓋相容 API、穩定調度、營運監控與呼叫分析。',
     'Browse models': '瀏覽模型',
     'Core capabilities': '核心能力',
-    'Operate every model service from one control plane': '以單一控制面營運所有模型服務',
+    'Operate every model service from one control plane':
+      '以單一控制面營運所有模型服務',
     'Unified model gateway': '統一模型閘道',
     'Serve different model protocols and upstream services through one compatible interface.':
       '透過單一相容介面接入不同模型協定與上游服務。',
@@ -196,9 +201,11 @@ const homepageKeys = {
     'Multi-node unified management': '多節點統一管理',
     'Centrally manage distributed model services': '集中管理分散式模型服務',
     'Multi-protocol compatible access': '多協定相容接入',
-    'Reduce application changes through a unified API': '透過統一 API 減少應用改造',
+    'Reduce application changes through a unified API':
+      '透過統一 API 減少應用改造',
     'Full-link monitoring and analysis': '全鏈路監控與分析',
-    'Understand operations from gateway to inference engine': '掌握從閘道到推理引擎的營運狀態',
+    'Understand operations from gateway to inference engine':
+      '掌握從閘道到推理引擎的營運狀態',
     'Request-path audit': '呼叫路徑稽核',
     'Support troubleshooting and internal governance': '支援問題排查與內部治理',
     'Access flow': '接入流程',
@@ -224,7 +231,8 @@ const homepageKeys = {
     'Requests in the last 24 hours': '最近 24 小時請求數',
     'Tokens in the last 24 hours': '最近 24 小時 Token 用量',
     'Platform call success rate': '平台呼叫成功率',
-    '{{healthy}} / {{total}} services healthy': '{{healthy}} / {{total}} 個服務正常',
+    '{{healthy}} / {{total}} services healthy':
+      '{{healthy}} / {{total}} 個服務正常',
     'Platform operation overview': '平台營運概覽',
     'Retry operation overview': '重新載入運行概覽',
     'Request trend': '請求趨勢',
@@ -233,7 +241,8 @@ const homepageKeys = {
     'At {{time}}: {{requests}} requests': '{{time}}：{{requests}} 次請求',
   },
   fr: {
-    'Xingluo model service component': 'Composant de service de modèles Xingluo',
+    'Xingluo model service component':
+      'Composant de service de modèles Xingluo',
     'Unify access, routing, and governance for every model capability':
       'Unifiez accès, routage et gouvernance de chaque capacité de modèle',
     'Zhiqing provides internal business applications with unified management for multi-node local models and multi-channel model services, including compatible APIs, stable routing, operational monitoring, and call analysis.':
@@ -257,7 +266,8 @@ const homepageKeys = {
     'Resource and engine monitoring': 'Supervision des ressources et moteurs',
     'Track CPU, memory, GPU, vLLM concurrency, queueing, and cache metrics.':
       "Suivez CPU, mémoire, GPU, concurrence vLLM, files d'attente et cache.",
-    'Call analysis and request-path audit': 'Analyse des appels et audit des requêtes',
+    'Call analysis and request-path audit':
+      'Analyse des appels et audit des requêtes',
     'Analyze usage by user, key, and model while retaining auditable request paths.':
       "Analysez l'usage par utilisateur, clé et modèle, avec des chemins de requête auditables.",
     'Multi-node unified management': 'Gestion unifiée multi-noeuds',
@@ -266,7 +276,8 @@ const homepageKeys = {
     'Multi-protocol compatible access': 'Accès compatible multi-protocole',
     'Reduce application changes through a unified API':
       'Réduisez les changements applicatifs avec une API unifiée',
-    'Full-link monitoring and analysis': 'Supervision et analyse de bout en bout',
+    'Full-link monitoring and analysis':
+      'Supervision et analyse de bout en bout',
     'Understand operations from gateway to inference engine':
       "Comprenez les opérations de la passerelle au moteur d'inférence",
     'Request-path audit': 'Audit du chemin des requêtes',
@@ -295,11 +306,13 @@ const homepageKeys = {
     'Requests in the last 24 hours': 'Requêtes sur 24 heures',
     'Tokens in the last 24 hours': 'Jetons sur 24 heures',
     'Platform call success rate': 'Taux de succès des appels',
-    '{{healthy}} / {{total}} services healthy': '{{healthy}} / {{total}} services sains',
+    '{{healthy}} / {{total}} services healthy':
+      '{{healthy}} / {{total}} services sains',
     'Platform operation overview': "Vue d'ensemble de la plateforme",
     'Retry operation overview': 'Recharger la vue d’ensemble opérationnelle',
     'Request trend': 'Tendance des requêtes',
-    'Request trend for the last 24 hours': 'Tendance des requêtes sur 24 heures',
+    'Request trend for the last 24 hours':
+      'Tendance des requêtes sur 24 heures',
     'Request trend data': 'Données de tendance des requêtes',
     'At {{time}}: {{requests}} requests': '{{time}} : {{requests}} requêtes',
   },
@@ -319,7 +332,8 @@ const homepageKeys = {
     'Local model access': 'ローカルモデル接続',
     'Connect multi-node vLLM model services and manage model-channel relationships centrally.':
       'マルチノード vLLM モデルサービスに接続し、モデルとチャネルの関係を一元管理します。',
-    'Multi-channel intelligent routing': 'マルチチャネルインテリジェントルーティング',
+    'Multi-channel intelligent routing':
+      'マルチチャネルインテリジェントルーティング',
     'Route requests by group, priority, and availability with automatic failover.':
       'グループ、優先度、可用性に応じてリクエストをルーティングし、自動フェイルオーバーします。',
     'Service status monitoring': 'サービス状態監視',
@@ -366,13 +380,15 @@ const homepageKeys = {
     'Requests in the last 24 hours': '過去 24 時間のリクエスト',
     'Tokens in the last 24 hours': '過去 24 時間のトークン',
     'Platform call success rate': 'プラットフォーム呼び出し成功率',
-    '{{healthy}} / {{total}} services healthy': '{{healthy}} / {{total}} サービスが正常',
+    '{{healthy}} / {{total}} services healthy':
+      '{{healthy}} / {{total}} サービスが正常',
     'Platform operation overview': 'プラットフォーム運用概要',
     'Retry operation overview': '運用概要を再読み込み',
     'Request trend': 'リクエスト推移',
     'Request trend for the last 24 hours': '過去 24 時間のリクエスト推移',
     'Request trend data': 'リクエスト推移データ',
-    'At {{time}}: {{requests}} requests': '{{time}}: {{requests}} 件のリクエスト',
+    'At {{time}}: {{requests}} requests':
+      '{{time}}: {{requests}} 件のリクエスト',
   },
   ru: {
     'Xingluo model service component': 'Компонент модельного сервиса Xingluo',
@@ -390,7 +406,8 @@ const homepageKeys = {
     'Local model access': 'Доступ к локальным моделям',
     'Connect multi-node vLLM model services and manage model-channel relationships centrally.':
       'Подключайте многоузловые сервисы vLLM и централизованно управляйте связями моделей и каналов.',
-    'Multi-channel intelligent routing': 'Интеллектуальная многоканальная маршрутизация',
+    'Multi-channel intelligent routing':
+      'Интеллектуальная многоканальная маршрутизация',
     'Route requests by group, priority, and availability with automatic failover.':
       'Маршрутизируйте запросы по группам, приоритету и доступности с автоматическим переключением.',
     'Service status monitoring': 'Мониторинг состояния сервисов',
@@ -399,7 +416,8 @@ const homepageKeys = {
     'Resource and engine monitoring': 'Мониторинг ресурсов и движков',
     'Track CPU, memory, GPU, vLLM concurrency, queueing, and cache metrics.':
       'Отслеживайте CPU, память, GPU, параллелизм vLLM, очереди и метрики кеша.',
-    'Call analysis and request-path audit': 'Анализ вызовов и аудит пути запросов',
+    'Call analysis and request-path audit':
+      'Анализ вызовов и аудит пути запросов',
     'Analyze usage by user, key, and model while retaining auditable request paths.':
       'Анализируйте использование по пользователю, ключу и модели, сохраняя проверяемые пути запросов.',
     'Multi-node unified management': 'Единое управление многими узлами',
@@ -437,7 +455,8 @@ const homepageKeys = {
     'Requests in the last 24 hours': 'Запросы за 24 часа',
     'Tokens in the last 24 hours': 'Токены за 24 часа',
     'Platform call success rate': 'Успешность вызовов платформы',
-    '{{healthy}} / {{total}} services healthy': '{{healthy}} / {{total}} сервисов исправны',
+    '{{healthy}} / {{total}} services healthy':
+      '{{healthy}} / {{total}} сервисов исправны',
     'Platform operation overview': 'Обзор работы платформы',
     'Retry operation overview': 'Перезагрузить обзор работы платформы',
     'Request trend': 'Динамика запросов',
@@ -470,7 +489,8 @@ const homepageKeys = {
     'Resource and engine monitoring': 'Giám sát tài nguyên và động cơ',
     'Track CPU, memory, GPU, vLLM concurrency, queueing, and cache metrics.':
       'Theo dõi CPU, bộ nhớ, GPU, mức đồng thời vLLM, hàng đợi và chỉ số bộ nhớ đệm.',
-    'Call analysis and request-path audit': 'Phân tích cuộc gọi và kiểm toán đường dẫn yêu cầu',
+    'Call analysis and request-path audit':
+      'Phân tích cuộc gọi và kiểm toán đường dẫn yêu cầu',
     'Analyze usage by user, key, and model while retaining auditable request paths.':
       'Phân tích mức sử dụng theo người dùng, khóa và mô hình, đồng thời giữ lại đường dẫn yêu cầu có thể kiểm toán.',
     'Multi-node unified management': 'Quản lý thống nhất đa nút',
@@ -508,7 +528,8 @@ const homepageKeys = {
     'Requests in the last 24 hours': 'Yêu cầu trong 24 giờ qua',
     'Tokens in the last 24 hours': 'Token trong 24 giờ qua',
     'Platform call success rate': 'Tỷ lệ gọi thành công của nền tảng',
-    '{{healthy}} / {{total}} services healthy': '{{healthy}} / {{total}} dịch vụ hoạt động tốt',
+    '{{healthy}} / {{total}} services healthy':
+      '{{healthy}} / {{total}} dịch vụ hoạt động tốt',
     'Platform operation overview': 'Tổng quan vận hành nền tảng',
     'Retry operation overview': 'Tải lại tổng quan vận hành',
     'Request trend': 'Xu hướng yêu cầu',

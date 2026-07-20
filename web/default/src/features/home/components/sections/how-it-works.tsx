@@ -77,13 +77,17 @@ export function HowItWorks() {
                 {!isLastStep && (
                   <div
                     aria-hidden='true'
-                    className='pointer-events-none absolute top-8 left-1/2 hidden h-px w-[calc(100%+2rem)] bg-border lg:block'
+                    className='bg-border pointer-events-none absolute top-8 left-1/2 hidden h-px w-[calc(100%+2rem)] lg:block'
                   >
-                    <ArrowRight className='text-muted-foreground absolute top-1/2 right-0 size-3 -translate-y-1/2 translate-x-1/2' />
+                    <ArrowRight className='text-muted-foreground absolute top-1/2 right-0 size-3 translate-x-1/2 -translate-y-1/2' />
                   </div>
                 )}
                 <div className='border-border/60 bg-background text-primary relative z-10 mx-auto mb-5 flex size-16 items-center justify-center rounded-lg border'>
-                  <Icon className='size-6' strokeWidth={1.75} aria-hidden='true' />
+                  <Icon
+                    className='size-6'
+                    strokeWidth={1.75}
+                    aria-hidden='true'
+                  />
                 </div>
                 <p className='text-primary mb-2 text-xs font-semibold'>
                   {String(index + 1).padStart(2, '0')}
