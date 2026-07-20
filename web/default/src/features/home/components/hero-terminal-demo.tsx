@@ -31,8 +31,6 @@ interface ApiDemoConfig {
   request: string[]
   response: string[]
   responseHighlights: string[]
-  tokens: number
-  latency: number
   accent: AccentTone
 }
 
@@ -83,8 +81,6 @@ const API_DEMOS: ApiDemoConfig[] = [
     ],
     response: ['{"status":"routed","model":"dataspace-31b","node":"gpu-node-02"}'],
     responseHighlights: [],
-    tokens: 27,
-    latency: 142,
     accent: 'emerald',
   },
   {
@@ -97,12 +93,10 @@ const API_DEMOS: ApiDemoConfig[] = [
     response: [
       '{',
       '  "output": [{ "type": "output_text", "text": <text> }],',
-      '  "usage": { "total_tokens": <tokens> }',
+      '  "status": "streaming"',
       '}',
     ],
-    responseHighlights: ['<text>', '<tokens>'],
-    tokens: 31,
-    latency: 168,
+    responseHighlights: ['<text>'],
     accent: 'amber',
   },
   {
@@ -121,12 +115,10 @@ const API_DEMOS: ApiDemoConfig[] = [
     response: [
       '{',
       '  "content": [{ "type": "text", "text": <text> }],',
-      '  "usage": { "input_tokens": <in>, "output_tokens": <out> }',
+      '  "status": "routed"',
       '}',
     ],
-    responseHighlights: ['<text>', '<in>', '<out>'],
-    tokens: 29,
-    latency: 156,
+    responseHighlights: ['<text>'],
     accent: 'blue',
   },
   {
@@ -144,12 +136,10 @@ const API_DEMOS: ApiDemoConfig[] = [
     response: [
       '{',
       '  "candidates": [{ "content": { "parts": [{ "text": <text> }] } }],',
-      '  "usageMetadata": { "totalTokenCount": <tokens> }',
+      '  "status": "routed"',
       '}',
     ],
-    responseHighlights: ['<text>', '<tokens>'],
-    tokens: 25,
-    latency: 93,
+    responseHighlights: ['<text>'],
     accent: 'violet',
   },
 ]
@@ -237,7 +227,7 @@ export function HeroTerminalDemo(props: HeroTerminalDemoProps) {
           <div className='ml-auto flex items-center gap-2 pr-2 sm:pr-3'>
             <span className='inline-block size-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.45)]' />
             <span className='text-foreground/40 font-mono text-[10px] tracking-wider uppercase'>
-              200 ok
+              routed
             </span>
           </div>
         </div>
@@ -276,30 +266,15 @@ export function HeroTerminalDemo(props: HeroTerminalDemoProps) {
           <ResponseBlock demo={demo} transitioning={transitioning} />
         </div>
 
-        {/* Footer metrics */}
+        {/* Routing status */}
         <div
           className={cn(
             'flex items-center justify-between border-t px-5 py-2.5',
             'border-border/40 bg-muted/30 dark:border-white/[0.05] dark:bg-white/[0.02]'
           )}
         >
-          <div className='text-foreground/40 flex items-center gap-3 text-[10px] tabular-nums'>
-            <span className='flex items-center gap-1'>
-              <span className='font-mono'>{demo.latency}</span>
-              <span className='tracking-wider uppercase'>ms</span>
-            </span>
-            <span className='bg-foreground/15 size-1 rounded-full' />
-            <span className='flex items-center gap-1'>
-              <span className='font-mono'>{demo.tokens}</span>
-              <span className='tracking-wider uppercase'>tokens</span>
-            </span>
-            <span className='bg-foreground/15 size-1 rounded-full' />
-            <span className='flex items-center gap-1'>
-              <span className='tracking-wider uppercase'>cost</span>
-              <span className='font-mono'>
-                ${(demo.tokens * 0.00003).toFixed(5)}
-              </span>
-            </span>
+          <div className='text-foreground/40 font-mono text-[10px] tracking-wider uppercase'>
+            route matched
           </div>
           <span className='text-foreground/30 font-mono text-[10px] tracking-wider uppercase'>
             stream · sse
@@ -413,20 +388,6 @@ function renderResponseLine(line: string, demo: ApiDemoConfig): ReactNode {
           {`"${truncateResponse(demo)}"`}
         </Accent>
       )
-    } else if (placeholder === '<tokens>') {
-      segments.push(<NumberText key={`ph-${start}`}>{demo.tokens}</NumberText>)
-    } else if (placeholder === '<in>') {
-      segments.push(
-        <NumberText key={`ph-${start}`}>
-          {Math.floor(demo.tokens * 0.4)}
-        </NumberText>
-      )
-    } else if (placeholder === '<out>') {
-      segments.push(
-        <NumberText key={`ph-${start}`}>
-          {Math.ceil(demo.tokens * 0.6)}
-        </NumberText>
-      )
     } else {
       segments.push(<Muted key={`ph-${start}`}>{placeholder}</Muted>)
     }
@@ -519,14 +480,6 @@ function Key(props: { children: ReactNode }) {
 function StringText(props: { children: ReactNode }) {
   return (
     <span className='text-amber-700 dark:text-amber-300'>{props.children}</span>
-  )
-}
-
-function NumberText(props: { children: ReactNode }) {
-  return (
-    <span className='font-medium text-violet-600 dark:text-violet-300'>
-      {props.children}
-    </span>
   )
 }
 
