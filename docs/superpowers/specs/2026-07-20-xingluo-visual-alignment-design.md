@@ -15,7 +15,7 @@ The first iteration changes only the authenticated application's global shell an
 - Make Xingluo the default preset while retaining the existing light/dark mode and user theme controls.
 - Keep the current sidebar, navigation hierarchy, tables, charts, monitoring pages, dialogs, and responsive behavior.
 
-Public pages and authentication pages are excluded from this iteration. No backend API, database, authorization, or routing behavior changes.
+Public pages and authentication pages receive the shared default theme tokens but have no component or layout changes in this iteration. No backend API, database, authorization, or routing behavior changes.
 
 ## Visual System
 
