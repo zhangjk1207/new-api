@@ -69,7 +69,7 @@ type AppHeaderProps = {
   leftContent?: React.ReactNode
   /**
    * Whether to show search box
-   * @default true
+   * @default false
    */
   showSearch?: boolean
   /**
@@ -97,7 +97,7 @@ export function AppHeader({
   navLinks = defaultTopNavLinks,
   showTopNav = true,
   leftContent,
-  showSearch = true,
+  showSearch = false,
   rightContent,
   showNotifications = true,
   showConfigDrawer = true,
