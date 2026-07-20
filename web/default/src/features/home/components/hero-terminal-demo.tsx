@@ -160,18 +160,39 @@ export function HeroTerminalDemo(props: HeroTerminalDemoProps) {
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-    if (mq.matches) return
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const mobileWidth = window.matchMedia('(max-width: 639px)')
 
-    intervalRef.current = setInterval(() => {
-      setTransitioning(true)
-      timeoutRef.current = setTimeout(() => {
-        setActiveIndex((prev) => (prev + 1) % API_DEMOS.length)
-        setTransitioning(false)
-      }, TRANSITION_MS)
-    }, CYCLE_INTERVAL)
+    const syncCycle = () => {
+      if (intervalRef.current) clearInterval(intervalRef.current)
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+      intervalRef.current = undefined
+      timeoutRef.current = undefined
+      setTransitioning(false)
+
+      if (mobileWidth.matches) {
+        setActiveIndex(0)
+        return
+      }
+      if (reducedMotion.matches) return
+
+      intervalRef.current = setInterval(() => {
+        setTransitioning(true)
+        timeoutRef.current = setTimeout(() => {
+          setActiveIndex((prev) => (prev + 1) % API_DEMOS.length)
+          setTransitioning(false)
+          timeoutRef.current = undefined
+        }, TRANSITION_MS)
+      }, CYCLE_INTERVAL)
+    }
+
+    syncCycle()
+    reducedMotion.addEventListener('change', syncCycle)
+    mobileWidth.addEventListener('change', syncCycle)
 
     return () => {
+      reducedMotion.removeEventListener('change', syncCycle)
+      mobileWidth.removeEventListener('change', syncCycle)
       if (intervalRef.current) clearInterval(intervalRef.current)
       if (timeoutRef.current) clearTimeout(timeoutRef.current)
     }
@@ -194,6 +215,7 @@ export function HeroTerminalDemo(props: HeroTerminalDemoProps) {
   return (
     <div className={cn('mx-auto w-full max-w-2xl', props.className)}>
       <div
+        data-terminal-demo='true'
         className={cn(
           'overflow-hidden rounded-2xl border backdrop-blur-sm',
           'border-border/60 bg-white/95 shadow-[0_20px_50px_-25px_rgba(15,23,42,0.18)]',
@@ -202,8 +224,9 @@ export function HeroTerminalDemo(props: HeroTerminalDemoProps) {
       >
         {/* Tab strip */}
         <div
+          data-terminal-tabs='true'
           className={cn(
-            'flex min-w-0 items-center gap-0 overflow-x-auto border-b px-1 sm:gap-1.5 sm:overflow-visible sm:px-3',
+            'hidden min-w-0 items-center gap-0 border-b px-1 sm:flex sm:gap-1.5 sm:px-3',
             'border-border/50 dark:border-white/[0.05]'
           )}
         >
@@ -251,6 +274,7 @@ export function HeroTerminalDemo(props: HeroTerminalDemoProps) {
             {demo.method}
           </span>
           <code
+            data-terminal-endpoint='true'
             className={cn(
               'text-foreground/75 truncate font-mono text-[12.5px] transition-opacity duration-200',
               transitioning ? 'opacity-0' : 'opacity-100'
@@ -260,8 +284,11 @@ export function HeroTerminalDemo(props: HeroTerminalDemoProps) {
           </code>
         </div>
 
-        {/* Body — fixed rows so neither block shifts when switching demos */}
-        <div className='grid h-[175px] grid-rows-1 overflow-hidden font-mono text-[12.5px] leading-[1.55] sm:h-[400px] sm:grid-rows-[235px_minmax(0,1fr)]'>
+        {/* Desktop rows stay fixed so neither block shifts between demos. */}
+        <div
+          data-terminal-body='true'
+          className='grid grid-rows-1 font-mono text-[12.5px] leading-[1.55] sm:h-[400px] sm:grid-rows-[235px_minmax(0,1fr)] sm:overflow-hidden'
+        >
           {/* Request */}
           <RequestBlock demo={demo} transitioning={transitioning} />
 
@@ -292,7 +319,7 @@ function RequestBlock(props: { demo: ApiDemoConfig; transitioning: boolean }) {
   const { demo, transitioning } = props
 
   return (
-    <div className='relative px-5 py-4'>
+    <div data-terminal-request='true' className='relative px-5 py-4'>
       <SectionLabel>Request</SectionLabel>
       <div
         className={cn(
@@ -332,6 +359,7 @@ function ResponseBlock(props: { demo: ApiDemoConfig; transitioning: boolean }) {
 
   return (
     <div
+      data-terminal-response='true'
       className={cn(
         'relative hidden border-t px-5 py-4 sm:block',
         'border-border/40 bg-muted/20 dark:border-white/[0.05] dark:bg-white/[0.015]'
@@ -447,7 +475,10 @@ function tokenize(input: string): ReactNode {
 
 function CodeLine(props: { children: ReactNode; indent?: number }) {
   return (
-    <div className='break-words whitespace-pre-wrap'>
+    <div
+      data-terminal-code-line='true'
+      className='break-words whitespace-pre-wrap'
+    >
       {props.indent ? (
         <span
           aria-hidden
