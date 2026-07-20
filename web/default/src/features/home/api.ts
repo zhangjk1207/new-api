@@ -18,7 +18,12 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { api } from '@/lib/api'
 
-import type { HomePageContentResponse } from './types'
+import type {
+  HomePageContentResponse,
+  HomePerformanceModel,
+  HomeServiceGroup,
+  HomeUsagePoint,
+} from './types'
 
 // ============================================================================
 // Home Page APIs
@@ -31,4 +36,37 @@ import type { HomePageContentResponse } from './types'
 export async function getHomePageContent(): Promise<HomePageContentResponse> {
   const res = await api.get('/api/home_page_content')
   return res.data
+}
+
+export async function getHomeModels(): Promise<string[]> {
+  const res = await api.get<{ success: boolean; data?: string[] }>(
+    '/api/user/models'
+  )
+  return res.data.data ?? []
+}
+
+export async function getHomeUsage(params: {
+  start_timestamp: number
+  end_timestamp: number
+}): Promise<HomeUsagePoint[]> {
+  const res = await api.get<{ success: boolean; data?: HomeUsagePoint[] }>(
+    '/api/data/self',
+    { params: { ...params, default_time: 'hour' } }
+  )
+  return res.data.data ?? []
+}
+
+export async function getHomePerformance(): Promise<HomePerformanceModel[]> {
+  const res = await api.get<{
+    success: boolean
+    data?: { models?: HomePerformanceModel[] }
+  }>('/api/perf-metrics/summary', { params: { hours: 24 } })
+  return res.data.data?.models ?? []
+}
+
+export async function getHomeServiceStatus(): Promise<HomeServiceGroup[]> {
+  const res = await api.get<{ success: boolean; data?: HomeServiceGroup[] }>(
+    '/api/uptime/status'
+  )
+  return res.data.data ?? []
 }

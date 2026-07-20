@@ -37,3 +37,28 @@ export interface HomePageContentResult {
   isLoaded: boolean
   isUrl: boolean
 }
+
+export interface HomeUsagePoint {
+  created_at: number
+  count?: number
+  token_used?: number
+}
+
+export interface HomePerformanceModel {
+  request_count?: number
+  success_rate: number
+}
+
+export interface HomeServiceMonitor {
+  status: number
+}
+
+export interface HomeServiceGroup {
+  categoryName: string
+  monitors: HomeServiceMonitor[]
+}
+
+export interface HomeRequestTrendPoint {
+  timestamp: number
+  requests: number
+}
