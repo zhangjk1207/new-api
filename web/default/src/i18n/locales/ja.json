@@ -3981,7 +3981,7 @@
     "Retention days": "保持日数",
     "Retry": "再試行",
     "Retry Chain": "リトライチェーン",
-    "Retry operation overview": "運用概要を再試行",
+    "Retry operation overview": "運用概要を再読み込み",
     "Retry Settings": "再試行設定",
     "Retry Suggestion": "リトライ提案",
     "Retry Times": "再試行回数",
