@@ -122,7 +122,7 @@ export function OperationOverview() {
     serviceStatus = <span className='text-muted-foreground text-sm'>--</span>
   }
   if (servicesQuery.isLoading) {
-    serviceStatus = <Skeleton className='h-5 w-40' />
+    serviceStatus = <Skeleton className='h-5 w-40 motion-reduce:animate-none' />
   }
 
   return (
@@ -178,7 +178,7 @@ export function OperationOverview() {
               )
             }
             if (metric.loading) {
-              metricValue = <Skeleton className='h-8 w-24' />
+              metricValue = <Skeleton className='h-8 w-24 motion-reduce:animate-none' />
             }
 
             return (

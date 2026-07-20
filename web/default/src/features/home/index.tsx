@@ -47,14 +47,14 @@ function OperationOverviewSkeleton() {
       aria-hidden='true'
     >
       <div className='mx-auto max-w-6xl'>
-        <Skeleton className='mb-10 h-16 w-48' />
+        <Skeleton className='mb-10 h-16 w-48 motion-reduce:animate-none' />
         <div className='border-border/60 grid border-y sm:grid-cols-2 lg:grid-cols-4'>
-          <Skeleton className='h-28 rounded-none border-b sm:border-r lg:border-b-0' />
-          <Skeleton className='h-28 rounded-none border-b lg:border-r lg:border-b-0' />
-          <Skeleton className='h-28 rounded-none border-b sm:border-r sm:border-b-0 lg:border-r' />
-          <Skeleton className='h-28 rounded-none' />
+          <Skeleton className='h-28 rounded-none border-b motion-reduce:animate-none sm:border-r lg:border-b-0' />
+          <Skeleton className='h-28 rounded-none border-b motion-reduce:animate-none lg:border-r lg:border-b-0' />
+          <Skeleton className='h-28 rounded-none border-b motion-reduce:animate-none sm:border-r sm:border-b-0 lg:border-r' />
+          <Skeleton className='h-28 rounded-none motion-reduce:animate-none' />
         </div>
-        <Skeleton className='mt-10 h-72 rounded-lg' />
+        <Skeleton className='mt-10 h-72 rounded-lg motion-reduce:animate-none' />
       </div>
     </section>
   )

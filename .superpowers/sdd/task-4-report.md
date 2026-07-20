@@ -181,3 +181,47 @@
    ```
 
    Result: exit code 0; no whitespace errors.
+
+## Review Fix 3
+
+### Changes
+
+- Added `motion-reduce:animate-none` to every operation overview `Skeleton` in the chart, operation overview section, and Home Suspense fallback.
+- Kept the shared `Skeleton` component and all unrelated behavior unchanged.
+
+### Verification
+
+1. Command:
+
+   ```sh
+   cd web/default
+   bun test src/features/home/lib/operation-overview.test.ts src/features/home/components/operation-overview-chart.test.tsx
+   ```
+
+   Result: exit code 0; 5 passed, 0 failed across 2 files.
+
+2. Command:
+
+   ```sh
+   cd web/default
+   bun run typecheck
+   ```
+
+   Result: exit code 0; `tsgo -b` completed without diagnostics.
+
+3. Command:
+
+   ```sh
+   cd web/default
+   bunx oxlint -c .oxlintrc.json src/features/home/components/operation-overview-chart.tsx src/features/home/components/sections/operation-overview.tsx src/features/home/index.tsx
+   ```
+
+   Result: exit code 0; no diagnostics.
+
+4. Command:
+
+   ```sh
+   git diff --check
+   ```
+
+   Result: exit code 0; no whitespace errors.
