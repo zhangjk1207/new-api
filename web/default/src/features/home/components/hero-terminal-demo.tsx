@@ -213,6 +213,7 @@ export function HeroTerminalDemo(props: HeroTerminalDemoProps) {
                 key={item.id}
                 type='button'
                 onClick={() => handleSelect(index)}
+                aria-pressed={isActive}
                 className={cn(
                   'relative -mb-px flex shrink-0 items-center gap-0.5 whitespace-nowrap border-b-2 px-2 py-2.5 text-[11px] font-medium tracking-wide transition-colors sm:gap-1.5 sm:px-3 sm:text-xs',
                   isActive
