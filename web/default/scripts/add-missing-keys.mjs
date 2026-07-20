@@ -27,6 +27,7 @@ function stableStringify(obj) {
 
 const newKeys = {
   en: {
+    'preset.xingluo': 'Xingluo',
     'Xingluo Data Field': 'Xingluo Data Field',
     'Zhiqing Model Service Platform': 'Zhiqing Model Service Platform',
     'Average first token latency': 'Average first token latency',
@@ -89,6 +90,7 @@ const newKeys = {
       '{{unavailable}} unavailable, {{unknown}} without data',
   },
   zh: {
+    'preset.xingluo': '星罗',
     'Xingluo Data Field': '星罗·数场',
     'Zhiqing Model Service Platform': '智擎模型服务平台',
     'Average first token latency': '平均首 Token 延迟',
@@ -150,6 +152,7 @@ const newKeys = {
       '{{unavailable}} 个不可用，{{unknown}} 个无监测数据',
   },
   'zh-TW': {
+    'preset.xingluo': '星羅',
     'Xingluo Data Field': '星羅·數場',
     'Zhiqing Model Service Platform': '智擎模型服務平台',
     'Filter by API key': '按 API 金鑰篩選',
@@ -187,6 +190,7 @@ const newKeys = {
       '{{unavailable}} 個不可用，{{unknown}} 個無監測資料',
   },
   fr: {
+    'preset.xingluo': 'Xingluo',
     'Xingluo Data Field': 'Xingluo Data Field',
     'Zhiqing Model Service Platform':
       'Plateforme de services de modèles Zhiqing',
@@ -251,6 +255,7 @@ const newKeys = {
       '{{unavailable}} indisponibles, {{unknown}} sans donnees',
   },
   ja: {
+    'preset.xingluo': '星羅',
     'Xingluo Data Field': 'Xingluo Data Field',
     'Zhiqing Model Service Platform': 'Zhiqingモデルサービスプラットフォーム',
     'Average first token latency': '平均初回トークン遅延',
@@ -312,6 +317,7 @@ const newKeys = {
       '{{unavailable}} 件利用不可、{{unknown}} 件データなし',
   },
   ru: {
+    'preset.xingluo': 'Синло',
     'Xingluo Data Field': 'Xingluo Data Field',
     'Zhiqing Model Service Platform': 'Платформа модельных сервисов Zhiqing',
     'Average first token latency': 'Средняя задержка первого токена',
@@ -374,6 +380,7 @@ const newKeys = {
       '{{unavailable}} недоступно, {{unknown}} без данных',
   },
   vi: {
+    'preset.xingluo': 'Xingluo',
     'Xingluo Data Field': 'Xingluo Data Field',
     'Zhiqing Model Service Platform': 'Nền tảng dịch vụ mô hình Zhiqing',
     'Average first token latency': 'Do tre token dau tien trung binh',

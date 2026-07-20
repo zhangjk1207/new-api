@@ -492,11 +492,14 @@ For commercial licensing, please contact support@quantumnous.com
  *
  * Opt-outs:
  *   - `default`: keeps neutral surfaces from :root.
+ *   - `xingluo`: uses the explicit white/light-blue brand surfaces above.
  *   - `anthropic`: warm cream surfaces are a brand choice, NOT a primary-mix
  *     derivation (the Anthropic system deliberately uses warm neutrals for
  *     cards/borders rather than tinting them with the clay accent).
  *   - `simple-large`: keeps intentionally neutral, high-contrast surfaces. */
 [data-theme-preset]:not([data-theme-preset='default']):not(
+    [data-theme-preset='xingluo']
+  ):not(
     [data-theme-preset='anthropic']
   ):not([data-theme-preset='simple-large']) {
   --card: color-mix(in oklch, var(--primary) 3%, var(--background));
@@ -522,6 +525,8 @@ For commercial licensing, please contact support@quantumnous.com
 }
 .dark
   [data-theme-preset]:not([data-theme-preset='default']):not(
+    [data-theme-preset='xingluo']
+  ):not(
     [data-theme-preset='anthropic']
   ):not([data-theme-preset='simple-large']) {
   --card: color-mix(in oklch, var(--primary) 8%, var(--background));

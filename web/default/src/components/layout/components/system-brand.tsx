@@ -17,6 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { Link } from '@tanstack/react-router'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import {
@@ -47,6 +48,7 @@ type SystemBrandProps = {
  */
 export function SystemBrand(props: SystemBrandProps) {
   const { t } = useTranslation()
+  const [inlineLogoFailed, setInlineLogoFailed] = useState(false)
   const { status } = useStatus()
   const { logo } = useSystemConfig()
 
@@ -71,13 +73,19 @@ export function SystemBrand(props: SystemBrandProps) {
           className='h-7 w-auto shrink-0 object-contain sm:h-10'
           onError={(event) => {
             event.currentTarget.hidden = true
+            setInlineLogoFailed(true)
           }}
         />
         <span
           aria-hidden='true'
           className='hidden h-8 w-px shrink-0 bg-white/45 sm:block'
         />
-        <span className='hidden max-w-56 truncate text-base font-medium md:inline'>
+        <span
+          className={cn(
+            'max-w-56 truncate text-base font-medium',
+            inlineLogoFailed ? 'inline' : 'hidden md:inline'
+          )}
+        >
           {t('Zhiqing Model Service Platform')}
         </span>
       </Link>

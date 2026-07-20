@@ -20,6 +20,28 @@
   </head>
 
   <body>
+    <script>
+      ;(() => {
+        const match = document.cookie.match(/(?:^|; )theme_preset=([^;]*)/)
+        const savedPreset = match ? decodeURIComponent(match[1]) : 'xingluo'
+        const presets = [
+          'default',
+          'xingluo',
+          'underground',
+          'rose-garden',
+          'lake-view',
+          'sunset-glow',
+          'forest-whisper',
+          'ocean-breeze',
+          'lavender-dream',
+          'simple-large',
+          'anthropic',
+        ]
+        document.body.dataset.themePreset = presets.includes(savedPreset)
+          ? savedPreset
+          : 'xingluo'
+      })()
+    </script>
     <div id="root" translate="no" class="notranslate"></div>
   </body>
 </html>

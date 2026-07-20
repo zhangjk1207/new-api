@@ -74,6 +74,14 @@ For commercial licensing, please contact support@quantumnous.com
   background-color: rgb(255 255 255 / 12%);
 }
 
+.xingluo-app-header a:focus-visible,
+.xingluo-app-header [data-slot='button']:focus-visible,
+.xingluo-header-search:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgb(8 82 229 / 55%);
+}
+
 .xingluo-header-search {
   color: #eff6ff;
   background-color: rgb(255 255 255 / 12%);
