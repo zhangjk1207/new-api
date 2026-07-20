@@ -91,6 +91,11 @@ type AppHeaderProps = {
    * @default true
    */
   showProfileDropdown?: boolean
+  /**
+   * Whether to show the authenticated sidebar trigger
+   * @default true
+   */
+  showSidebarTrigger?: boolean
 }
 
 export function AppHeader({
@@ -102,6 +107,7 @@ export function AppHeader({
   showNotifications = true,
   showConfigDrawer = true,
   showProfileDropdown = true,
+  showSidebarTrigger = true,
 }: AppHeaderProps) {
   // Prioritize dynamically generated links from backend
   const dynamicLinks = useTopNavLinks()
@@ -111,7 +117,10 @@ export function AppHeader({
   const notifications = useNotifications()
 
   return (
-    <Header className='xingluo-app-header'>
+    <Header
+      className='xingluo-app-header'
+      showSidebarTrigger={showSidebarTrigger}
+    >
       <SystemBrand variant='inline' />
 
       {leftContent ? (
