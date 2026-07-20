@@ -65,7 +65,7 @@ The four summary values are:
 - Available models: count returned by the current user's `/api/user/models` response.
 - Requests in the last 24 hours: sum of `count` from `/api/data/self` for the current user.
 - Tokens in the last 24 hours: sum of `token_used` from the same user-scoped response.
-- Platform call success rate: request-count-weighted success rate from `/api/perf-metrics/summary?hours=24`. The label explicitly says platform success rate so it cannot be mistaken for the current user's private success rate. If there are no requests in the period, the value is 100%.
+- Platform call success rate: request-count-weighted success rate from `/api/perf-metrics/summary?hours=24`. The existing summary response exposes each model's aggregate `request_count` so the frontend can calculate a mathematically correct weighted result. The label explicitly says platform success rate so it cannot be mistaken for the current user's private success rate. If there are no requests in the period, the value is 100%.
 
 Below the values, a small hourly request trend is derived from `/api/data/self`. A compact service-status summary is derived from `/api/uptime/status` and reports normal services versus total enabled services. It links to the full service-monitoring page rather than reproducing its timeline.
 
@@ -147,7 +147,7 @@ All new user-facing strings use `useTranslation()` with English source keys. Loc
 
 ## Compatibility And Upstream Merge Strategy
 
-The implementation avoids backend schema changes and new APIs. It reuses current endpoints and keeps changes concentrated in the existing homepage feature directory. Shared layout, routing, monitoring pages, and dashboard pages are not modified.
+The implementation avoids backend schema changes and new APIs. It reuses current endpoints; the existing performance-summary response adds only the already-computed aggregate `request_count` field, without exposing user-level data. Frontend changes stay concentrated in the existing homepage feature directory. Shared layout, routing, monitoring pages, and dashboard pages are not modified.
 
 This boundary reduces future merge conflicts with upstream homepage work to a small, identifiable set of frontend files. Protected references and attribution related to new-api and QuantumNous are retained.
 
