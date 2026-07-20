@@ -26,7 +26,9 @@ import { NotificationPopover } from '@/components/notification-popover'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { Button } from '@/components/ui/button'
+import { SidebarProvider } from '@/components/ui/sidebar'
 import { Skeleton } from '@/components/ui/skeleton'
+import { LayoutProvider } from '@/context/layout-provider'
 import { useNotifications } from '@/hooks/use-notifications'
 import { useSystemConfig } from '@/hooks/use-system-config'
 import { useTopNavLinks } from '@/hooks/use-top-nav-links'
@@ -67,9 +69,13 @@ export function PublicHeader(props: PublicHeaderProps) {
 
   if (isAuthenticated) {
     return (
-      <div className='fixed inset-x-0 top-0 z-50'>
-        <AppHeader showSidebarTrigger={false} />
-      </div>
+      <LayoutProvider>
+        <SidebarProvider defaultOpen={false} className='!contents'>
+          <div className='fixed inset-x-0 top-0 z-50'>
+            <AppHeader showSidebarTrigger={false} />
+          </div>
+        </SidebarProvider>
+      </LayoutProvider>
     )
   }
 
