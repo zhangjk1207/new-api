@@ -39,6 +39,13 @@ Public pages and authentication pages receive the shared default theme tokens. W
 - Unauthenticated visitors continue to use `PublicHeader`; its sign-in button, access prompt, mobile overlay, and public navigation behavior remain unchanged.
 - Page content, route guards, dynamic navigation configuration, and permissions are not moved or duplicated.
 
+### Browser Identity
+
+- Use the institute favicon served by the Xingluo platform at `/intelligence/favicon.ico` as the Zhiqing browser-tab icon.
+- Store the fetched 256x256 ICO as `institute-favicon.ico` in both frontend public directories and reference that dedicated path from both HTML entry points.
+- Keep the existing `/logo.png` assets unchanged because they are also used as in-application fallback branding and footer imagery.
+- Use the new favicon filename to avoid stale browser caches tied to the previous `/logo.png` URL.
+
 ### Theme Tokens
 
 - Primary: `#2563eb`.
@@ -60,6 +67,7 @@ Expected changes are limited to:
 - Adjusting the authenticated header and inline system brand presentation.
 - Changing only the shared header's default search visibility and scoped desktop navigation classes.
 - Allowing `PublicHeader` to reuse `AppHeader` for authenticated users while suppressing the sidebar trigger.
+- Updating only the default and classic HTML favicon references and adding the dedicated institute favicon asset.
 - Applying the shared canvas, surface, border, radius, and header foreground tokens.
 
 The implementation must not introduce Xingluo-specific styles into individual feature pages. This keeps future upstream merges focused on a small set of shared shell files.
@@ -80,6 +88,7 @@ The implementation must not introduce Xingluo-specific styles into individual fe
 - Check representative pages: overview, usage logs, operations dashboard, service monitoring, resource monitoring, and conversation audit.
 - While authenticated, navigate between dashboard, home, model square, and a model details page and confirm the full header bar does not change.
 - While unauthenticated, confirm the public header and sign-in flow remain available.
+- Confirm both frontend builds emit `institute-favicon.ico` and reference it from their generated HTML.
 - Deploy only to port 7992 for review; leave production port 7990 unchanged.
 
 ## Acceptance Criteria
@@ -88,6 +97,7 @@ The implementation must not introduce Xingluo-specific styles into individual fe
 - Existing features and navigation remain unchanged.
 - The global header has no search control, and the active desktop navigation item is unambiguous without using pill-shaped buttons.
 - Authenticated navigation between application and public content routes preserves one continuous Xingluo header.
+- The browser tab displays the institute mark without changing in-page fallback logos.
 - Most page-level visual alignment comes from shared tokens, not feature-specific CSS.
 - No content overlaps at desktop or mobile widths.
 - Port 7992 can be reviewed independently before any production rollout.
