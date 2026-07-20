@@ -30,6 +30,11 @@ export const THEME_PRESETS = [
     swatches: ['oklch(0.72 0.18 250)', 'oklch(0.7 0.12 280)'],
   },
   {
+    value: 'xingluo',
+    name: 'Xingluo',
+    swatches: ['#2563eb', '#f0f4f8'],
+  },
+  {
     // Inspired by Anthropic's official brand language: warm cream canvas
     // (#faf9f5) paired with clay/coral (#d97757) as the single accent.
     // Swatches preview the canvas → accent gradient that defines the system.
@@ -116,11 +121,15 @@ export type ThemeCustomization = {
 }
 
 export const DEFAULT_THEME_CUSTOMIZATION: ThemeCustomization = {
-  preset: 'default',
+  preset: 'xingluo',
   font: 'default',
   radius: 'default',
   scale: 'default',
   contentLayout: 'full',
+}
+
+export function themePresetAttribute(preset: ThemePreset): string | null {
+  return preset === 'default' ? null : preset
 }
 
 export const THEME_PRESET_VALUES = new Set(

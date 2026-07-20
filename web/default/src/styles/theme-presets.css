@@ -32,6 +32,75 @@ For commercial licensing, please contact support@quantumnous.com
  *   blocks so an explicit user choice overrides the preset's default radius.
  */
 
+/* ── Xingluo ─────────────────────────────────────────────────────────── */
+[data-theme-preset='xingluo'] {
+  --background: #f0f4f8;
+  --foreground: #1f2937;
+  --card: #ffffff;
+  --card-foreground: #1f2937;
+  --popover: #ffffff;
+  --popover-foreground: #1f2937;
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --secondary: #eff6ff;
+  --secondary-foreground: #1d4ed8;
+  --muted: #f3f6fb;
+  --muted-foreground: #6b7280;
+  --accent: #dbeafe;
+  --accent-foreground: #1d4ed8;
+  --border: #dbeafe;
+  --input: #cbd5e1;
+  --ring: #3b82f6;
+  --chart-1: #2563eb;
+  --chart-2: #0891b2;
+  --chart-3: #7c3aed;
+  --chart-4: #db2777;
+  --chart-5: #059669;
+  --sidebar: #f8fbff;
+  --sidebar-foreground: #1f2937;
+  --sidebar-primary: #2563eb;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #dbeafe;
+  --sidebar-accent-foreground: #1d4ed8;
+  --sidebar-border: #dbeafe;
+  --sidebar-ring: #3b82f6;
+  --radius: 0.875rem;
+}
+
+.dark [data-theme-preset='xingluo'] {
+  --background: #17191c;
+  --foreground: #f3f4f6;
+  --card: #202329;
+  --card-foreground: #f3f4f6;
+  --popover: #252932;
+  --popover-foreground: #f3f4f6;
+  --primary: #60a5fa;
+  --primary-foreground: #0f172a;
+  --secondary: #28364a;
+  --secondary-foreground: #dbeafe;
+  --muted: #292d34;
+  --muted-foreground: #aeb6c2;
+  --accent: #1e3a5f;
+  --accent-foreground: #dbeafe;
+  --border: rgb(147 197 253 / 18%);
+  --input: rgb(147 197 253 / 24%);
+  --ring: #60a5fa;
+  --chart-1: #60a5fa;
+  --chart-2: #22d3ee;
+  --chart-3: #a78bfa;
+  --chart-4: #f472b6;
+  --chart-5: #34d399;
+  --sidebar: #171b22;
+  --sidebar-foreground: #f3f4f6;
+  --sidebar-primary: #60a5fa;
+  --sidebar-primary-foreground: #0f172a;
+  --sidebar-accent: #1e3a5f;
+  --sidebar-accent-foreground: #dbeafe;
+  --sidebar-border: rgb(147 197 253 / 18%);
+  --sidebar-ring: #60a5fa;
+  --radius: 0.875rem;
+}
+
 /* ── Underground ──────────────────────────────────────────────────────── */
 [data-theme-preset='underground'] {
   --primary: oklch(0.5315 0.0694 156.19);
