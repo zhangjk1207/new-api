@@ -61,18 +61,25 @@ export function SystemBrand(props: SystemBrandProps) {
         to='/'
         aria-label={t('Go to home')}
         className={cn(
-          'text-foreground inline-flex h-7 items-center gap-1.5 rounded-md px-1.5 text-sm font-medium transition-colors outline-none select-none',
-          'hover:bg-accent focus-visible:ring-ring/40 focus-visible:ring-2'
+          'relative z-10 inline-flex min-w-0 items-center gap-2 text-white outline-none select-none sm:gap-3',
+          'focus-visible:ring-2 focus-visible:ring-white/60'
         )}
       >
-        <div className='flex size-5 items-center justify-center overflow-hidden rounded-md'>
-          <img
-            src={logo}
-            alt={t('Logo')}
-            className='size-full rounded-md object-cover'
-          />
-        </div>
-        <span className='max-w-[12rem] truncate'>{name}</span>
+        <img
+          src='/xingluo-logo.png'
+          alt={t('Xingluo Data Field')}
+          className='h-7 w-auto shrink-0 object-contain sm:h-10'
+          onError={(event) => {
+            event.currentTarget.hidden = true
+          }}
+        />
+        <span
+          aria-hidden='true'
+          className='hidden h-8 w-px shrink-0 bg-white/45 sm:block'
+        />
+        <span className='hidden max-w-56 truncate text-base font-medium md:inline'>
+          {t('Zhiqing Model Service Platform')}
+        </span>
       </Link>
     )
   }

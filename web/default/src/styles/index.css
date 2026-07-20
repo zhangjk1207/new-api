@@ -47,6 +47,51 @@ For commercial licensing, please contact support@quantumnous.com
   }
 }
 
+.xingluo-app-header {
+  color: #ffffff;
+  background-color: #0852e5;
+  background-image: url('../../public/xingluo-header-mesh.png');
+  background-repeat: no-repeat;
+  background-position: right 10px;
+  background-size: 482px 62px;
+}
+
+.xingluo-app-header nav a {
+  color: #bfdbfe;
+}
+
+.xingluo-app-header nav a:hover,
+.xingluo-app-header nav a[data-status='active'] {
+  color: #ffffff;
+}
+
+.xingluo-app-header [data-slot='button'] {
+  color: #ffffff;
+}
+
+.xingluo-app-header [data-slot='button']:hover {
+  color: #ffffff;
+  background-color: rgb(255 255 255 / 12%);
+}
+
+.xingluo-header-search {
+  color: #eff6ff;
+  background-color: rgb(255 255 255 / 12%);
+  border-color: rgb(255 255 255 / 28%);
+}
+
+.xingluo-header-search:hover {
+  color: #ffffff;
+  background-color: rgb(255 255 255 / 18%);
+  border-color: rgb(255 255 255 / 38%);
+}
+
+.xingluo-header-search kbd {
+  color: #dbeafe;
+  background-color: rgb(255 255 255 / 10%);
+  border-color: rgb(255 255 255 / 24%);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
