@@ -27,7 +27,11 @@ import { useTheme } from '@/context/theme-provider'
 import { isLikelyHtml } from '@/lib/content-format'
 import { useAuthStore } from '@/stores/auth-store'
 
-import { CTA, Features, Hero, HowItWorks, Stats } from './components'
+import { CTA } from './components/sections/cta'
+import { Features } from './components/sections/features'
+import { Hero } from './components/sections/hero'
+import { HowItWorks } from './components/sections/how-it-works'
+import { Stats } from './components/sections/stats'
 import { useHomePageContent } from './hooks'
 
 const OperationOverview = lazy(() =>
