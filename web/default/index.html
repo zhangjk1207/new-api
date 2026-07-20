@@ -23,7 +23,7 @@
     <script>
       ;(() => {
         const match = document.cookie.match(/(?:^|; )theme_preset=([^;]*)/)
-        const savedPreset = match ? decodeURIComponent(match[1]) : 'xingluo'
+        const savedPreset = match?.[1] ?? 'xingluo'
         const presets = [
           'default',
           'xingluo',
