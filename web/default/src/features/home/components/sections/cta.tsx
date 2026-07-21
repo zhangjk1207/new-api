@@ -17,12 +17,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { Link } from '@tanstack/react-router'
-import { ArrowRight, BookOpen } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { AnimateInView } from '@/components/animate-in-view'
 import { Button } from '@/components/ui/button'
-import { useStatus } from '@/hooks/use-status'
 
 interface CTAProps {
   className?: string
@@ -31,14 +30,10 @@ interface CTAProps {
 
 export function CTA(props: CTAProps) {
   const { t } = useTranslation()
-  const { status } = useStatus()
-  const docsUrl =
-    (status?.docs_link as string | undefined) || 'https://docs.newapi.pro'
   const primaryRoute = props.isAuthenticated ? '/dashboard' : '/sign-up'
   const primaryLabel = props.isAuthenticated
     ? t('Go to Dashboard')
     : t('Get Started')
-  const isExternalDocsUrl = docsUrl.startsWith('http')
 
   return (
     <section className='bg-primary text-primary-foreground relative z-10 px-6 py-16 sm:py-20 lg:py-24'>
@@ -67,27 +62,6 @@ export function CTA(props: CTAProps) {
               aria-hidden='true'
             />
           </Button>
-          {isExternalDocsUrl ? (
-            <Button
-              variant='outline'
-              className='border-primary-foreground/50 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground h-11 bg-transparent px-5'
-              render={
-                <a href={docsUrl} target='_blank' rel='noopener noreferrer' />
-              }
-            >
-              <BookOpen className='size-4' aria-hidden='true' />
-              {t('Docs')}
-            </Button>
-          ) : (
-            <Button
-              variant='outline'
-              className='border-primary-foreground/50 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground h-11 bg-transparent px-5'
-              render={<Link to={docsUrl} />}
-            >
-              <BookOpen className='size-4' aria-hidden='true' />
-              {t('Docs')}
-            </Button>
-          )}
         </div>
       </AnimateInView>
     </section>
