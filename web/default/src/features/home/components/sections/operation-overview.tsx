@@ -19,7 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { ArrowUpRight, RefreshCw } from 'lucide-react'
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
@@ -37,6 +37,7 @@ import {
   buildOperationOverviewViewState,
   canQueryOperationOverview,
   getOperationOverviewQueryKeys,
+  getRolling24HourRefreshInterval,
   getRolling24HourRange,
 } from '../../lib/operation-overview'
 import { OperationOverviewChart } from '../operation-overview-chart'
@@ -48,9 +49,20 @@ interface OperationOverviewProps {
 export function OperationOverview(props: OperationOverviewProps) {
   const { i18n, t } = useTranslation()
   const locale = toIntlLocale(i18n.resolvedLanguage || i18n.language)
+  const [nowTimestamp, setNowTimestamp] = useState(() =>
+    Math.floor(Date.now() / 1000)
+  )
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setNowTimestamp(Math.floor(Date.now() / 1000))
+    }, getRolling24HourRefreshInterval())
+    return () => window.clearInterval(interval)
+  }, [])
+
   const range = useMemo(
-    () => getRolling24HourRange(Math.floor(Date.now() / 1000)),
-    []
+    () => getRolling24HourRange(nowTimestamp),
+    [nowTimestamp]
   )
   const queryKeys = useMemo(
     () => getOperationOverviewQueryKeys(props.userId, range),

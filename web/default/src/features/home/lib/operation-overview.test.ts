@@ -7,6 +7,7 @@ import {
   calculateWeightedSuccessRate,
   canQueryOperationOverview,
   getRolling24HourRange,
+  getRolling24HourRefreshInterval,
   getOperationOverviewQueryKeys,
   summarizeServices,
 } from './operation-overview'
@@ -17,6 +18,10 @@ describe('homepage operation overview', () => {
       start_timestamp: 85_600,
       end_timestamp: 172_000,
     })
+  })
+
+  test('refreshes the rolling range at a bounded interval', () => {
+    assert.equal(getRolling24HourRefreshInterval(), 60_000)
   })
 
   test('fills a complete 24-hour request trend and sums duplicate hours', () => {

@@ -15,6 +15,10 @@ export function getRolling24HourRange(nowTimestamp: number) {
 const HOUR_SECONDS = 3_600
 const HISTORY_HOURS = 24
 
+export function getRolling24HourRefreshInterval() {
+  return 60_000
+}
+
 interface OperationOverviewSource<T> {
   data: T
   isError: boolean
