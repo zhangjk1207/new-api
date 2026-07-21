@@ -1,0 +1,91 @@
+name: zhiqing-test
+
+services:
+  app:
+    image: zhiqing-new-api:${ZHIQING_IMAGE_TAG:?ZHIQING_IMAGE_TAG is required}
+    build:
+      context: ../..
+      dockerfile: deploy/zhiqing/Dockerfile
+      network: host
+    restart: unless-stopped
+    user: "${ZHIQING_UID:?ZHIQING_UID is required}:${ZHIQING_GID:?ZHIQING_GID is required}"
+    command: ["--port", "3000", "--log-dir", "/app/logs"]
+    expose:
+      - "3000"
+    volumes:
+      - ${ZHIQING_DATA_DIR:?ZHIQING_DATA_DIR is required}:/data
+      - ${ZHIQING_LOG_DIR:?ZHIQING_LOG_DIR is required}:/app/logs
+    environment: &app-environment
+      TZ: Asia/Shanghai
+      NODE_NAME: zhiqing-test-docker
+      SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET is required}
+      CONVERSATION_AUDIT_CLICKHOUSE_DSN: ${CONVERSATION_AUDIT_CLICKHOUSE_DSN:?CONVERSATION_AUDIT_CLICKHOUSE_DSN is required}
+      HTTP_PROXY: ""
+      HTTPS_PROXY: ""
+      ALL_PROXY: ""
+      http_proxy: ""
+      https_proxy: ""
+      all_proxy: ""
+      NO_PROXY: "127.0.0.1,localhost,host.docker.internal,172.16.0.0/12"
+      no_proxy: "127.0.0.1,localhost,host.docker.internal,172.16.0.0/12"
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    healthcheck: &app-healthcheck
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O - http://127.0.0.1:3000/api/status | grep -q '\"success\":true'",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 15s
+    networks:
+      - zhiqing-test
+      - clickhouse
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - "7992:80"
+    volumes:
+      - ./nginx/test.conf:/etc/nginx/conf.d/default.conf:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1/api/status >/dev/null"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+    networks:
+      - zhiqing-test
+
+  app-preflight:
+    profiles: ["preflight"]
+    image: zhiqing-new-api:${ZHIQING_IMAGE_TAG:?ZHIQING_IMAGE_TAG is required}
+    user: "${ZHIQING_UID:?ZHIQING_UID is required}:${ZHIQING_GID:?ZHIQING_GID is required}"
+    command: ["--port", "3000", "--log-dir", "/app/logs"]
+    ports:
+      - "127.0.0.1:17992:3000"
+    volumes:
+      - ${ZHIQING_PREFLIGHT_DATA_DIR:?ZHIQING_PREFLIGHT_DATA_DIR is required}:/data
+      - ${ZHIQING_PREFLIGHT_LOG_DIR:?ZHIQING_PREFLIGHT_LOG_DIR is required}:/app/logs
+    environment: *app-environment
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    healthcheck: *app-healthcheck
+    networks:
+      - zhiqing-test
+      - clickhouse
+
+networks:
+  zhiqing-test:
+    name: zhiqing-test
+    ipam:
+      config:
+        - subnet: 10.91.0.0/24
+  clickhouse:
+    external: true
+    name: clickhouse_default
