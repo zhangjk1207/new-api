@@ -46,12 +46,11 @@ export function useHomePageContent(): HomePageContentResult {
       }
 
       try {
-        const response = await getHomePageContent()
-        const { success, data } = response
+        const data = await getHomePageContent()
 
         if (!mounted) return
 
-        if (success && data) {
+        if (data) {
           setContent(data)
           localStorage.setItem(STORAGE_KEY, data)
         } else {

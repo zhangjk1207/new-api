@@ -19,13 +19,32 @@ For commercial licensing, please contact support@quantumnous.com
 import assert from 'node:assert/strict'
 import { describe, test } from 'node:test'
 
+import i18next from 'i18next'
 import { renderToStaticMarkup } from 'react-dom/server'
+import { I18nextProvider } from 'react-i18next'
 
+import { resolveManualProtocolSelection } from '../lib/hero-terminal-motion'
 import { HeroTerminalDemo } from './hero-terminal-demo'
 
 describe('HeroTerminalDemo', () => {
-  test('keeps the complete Chat request as the compact terminal state', () => {
-    const markup = renderToStaticMarkup(<HeroTerminalDemo />)
+  test('keeps the complete Chat request as the compact terminal state', async () => {
+    const i18n = i18next.createInstance()
+    await i18n.init({
+      lng: 'zh',
+      resources: {
+        zh: {
+          translation: {
+            Routed: '已路由',
+            'Route matched': '路由已匹配',
+          },
+        },
+      },
+    })
+    const markup = renderToStaticMarkup(
+      <I18nextProvider i18n={i18n}>
+        <HeroTerminalDemo />
+      </I18nextProvider>
+    )
 
     assert.match(
       markup,
@@ -42,6 +61,9 @@ describe('HeroTerminalDemo', () => {
     assert.match(markup, /&quot;model&quot;/)
     assert.match(markup, /&quot;dataspace-31b&quot;/)
     assert.match(markup, /&quot;messages&quot;/)
+    assert.match(markup, /已路由/)
+    assert.match(markup, /路由已匹配/)
+    assert.match(markup, /&quot;status&quot;[^<]*.*&quot;routed&quot;/)
     const requestMarkup = markup.slice(
       markup.indexOf('data-terminal-request="true"'),
       markup.indexOf('data-terminal-response="true"')
@@ -50,5 +72,18 @@ describe('HeroTerminalDemo', () => {
       (requestMarkup.match(/data-terminal-code-line="true"/g) ?? []).length,
       6
     )
+  })
+
+  test('switches manual protocol selection immediately with reduced motion', () => {
+    assert.deepEqual(resolveManualProtocolSelection(0, 2, true), {
+      activeIndex: 2,
+      delayMs: 0,
+      transitioning: false,
+    })
+    assert.deepEqual(resolveManualProtocolSelection(0, 2, false), {
+      activeIndex: 0,
+      delayMs: 220,
+      transitioning: true,
+    })
   })
 })

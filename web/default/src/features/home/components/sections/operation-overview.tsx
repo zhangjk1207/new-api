@@ -35,49 +35,76 @@ import {
   getHomeUsage,
 } from '../../api'
 import {
-  buildHourlyRequestTrend,
-  calculateWeightedSuccessRate,
-  summarizeServices,
+  buildOperationOverviewViewState,
+  canQueryOperationOverview,
+  getOperationOverviewQueryKeys,
 } from '../../lib/operation-overview'
 import { OperationOverviewChart } from '../operation-overview-chart'
 
-export function OperationOverview() {
+interface OperationOverviewProps {
+  userId: number
+}
+
+export function OperationOverview(props: OperationOverviewProps) {
   const { i18n, t } = useTranslation()
   const locale = toIntlLocale(i18n.resolvedLanguage || i18n.language)
   const range = useMemo(() => computeTimeRange(1), [])
+  const queryKeys = useMemo(
+    () => getOperationOverviewQueryKeys(props.userId, range),
+    [props.userId, range]
+  )
+  const canQuery = canQueryOperationOverview(props.userId)
 
   const modelsQuery = useQuery({
-    queryKey: ['home', 'models'],
+    queryKey: queryKeys.models,
     queryFn: getHomeModels,
+    enabled: canQuery,
     staleTime: 5 * 60 * 1000,
   })
   const usageQuery = useQuery({
-    queryKey: ['home', 'usage', range.start_timestamp, range.end_timestamp],
+    queryKey: queryKeys.usage,
     queryFn: () => getHomeUsage(range),
+    enabled: canQuery,
     staleTime: 60 * 1000,
   })
   const performanceQuery = useQuery({
-    queryKey: ['home', 'performance', 24],
+    queryKey: queryKeys.performance,
     queryFn: getHomePerformance,
+    enabled: canQuery,
     staleTime: 60 * 1000,
   })
   const servicesQuery = useQuery({
-    queryKey: ['home', 'services'],
+    queryKey: queryKeys.services,
     queryFn: getHomeServiceStatus,
+    enabled: canQuery,
     staleTime: 60 * 1000,
   })
 
-  const usage = usageQuery.data ?? []
-  const requests = usage.reduce((sum, item) => sum + (item.count ?? 0), 0)
-  const tokens = usage.reduce((sum, item) => sum + (item.token_used ?? 0), 0)
-  const successRate = calculateWeightedSuccessRate(performanceQuery.data ?? [])
-  const services = summarizeServices(servicesQuery.data ?? [])
-  const trend = buildHourlyRequestTrend(usage, Math.floor(Date.now() / 1000))
-  const allFailed =
-    modelsQuery.isError &&
-    usageQuery.isError &&
-    performanceQuery.isError &&
-    servicesQuery.isError
+  const view = buildOperationOverviewViewState(
+    {
+      models: {
+        data: modelsQuery.data ?? [],
+        isError: modelsQuery.isError,
+        isLoading: modelsQuery.isLoading,
+      },
+      usage: {
+        data: usageQuery.data ?? [],
+        isError: usageQuery.isError,
+        isLoading: usageQuery.isLoading,
+      },
+      performance: {
+        data: performanceQuery.data ?? [],
+        isError: performanceQuery.isError,
+        isLoading: performanceQuery.isLoading,
+      },
+      services: {
+        data: servicesQuery.data ?? [],
+        isError: servicesQuery.isError,
+        isLoading: servicesQuery.isLoading,
+      },
+    },
+    Math.floor(Date.now() / 1000)
+  )
   const retrying =
     modelsQuery.isFetching ||
     usageQuery.isFetching ||
@@ -86,29 +113,45 @@ export function OperationOverview() {
   const metrics = [
     {
       label: t('Available models'),
-      value: formatNumber(modelsQuery.data?.length, locale),
-      loading: modelsQuery.isLoading,
-      failed: modelsQuery.isError,
+      value:
+        typeof view.metrics.models.value === 'number'
+          ? formatNumber(view.metrics.models.value, locale)
+          : view.metrics.models.value,
+      loading: view.metrics.models.status === 'loading',
+      failed: view.metrics.models.status === 'failed',
     },
     {
       label: t('Requests in the last 24 hours'),
-      value: formatCompactNumber(requests, locale),
-      loading: usageQuery.isLoading,
-      failed: usageQuery.isError,
+      value:
+        typeof view.metrics.requests.value === 'number'
+          ? formatCompactNumber(view.metrics.requests.value, locale)
+          : view.metrics.requests.value,
+      loading: view.metrics.requests.status === 'loading',
+      failed: view.metrics.requests.status === 'failed',
     },
     {
       label: t('Tokens in the last 24 hours'),
-      value: formatCompactNumber(tokens, locale),
-      loading: usageQuery.isLoading,
-      failed: usageQuery.isError,
+      value:
+        typeof view.metrics.tokens.value === 'number'
+          ? formatCompactNumber(view.metrics.tokens.value, locale)
+          : view.metrics.tokens.value,
+      loading: view.metrics.tokens.status === 'loading',
+      failed: view.metrics.tokens.status === 'failed',
     },
     {
       label: t('Platform call success rate'),
-      value: formatPercent(successRate),
-      loading: performanceQuery.isLoading,
-      failed: performanceQuery.isError,
+      value:
+        typeof view.metrics.successRate.value === 'number'
+          ? formatPercent(view.metrics.successRate.value)
+          : view.metrics.successRate.value,
+      loading: view.metrics.successRate.status === 'loading',
+      failed: view.metrics.successRate.status === 'failed',
     },
   ]
+  const services =
+    view.services.value === '--'
+      ? { healthy: 0, total: 0 }
+      : view.services.value
   let serviceStatus = (
     <Link
       to='/service-monitoring'
@@ -118,12 +161,14 @@ export function OperationOverview() {
       <ArrowUpRight className='size-3.5' aria-hidden='true' />
     </Link>
   )
-  if (servicesQuery.isError) {
+  if (view.services.status === 'failed') {
     serviceStatus = <span className='text-muted-foreground text-sm'>--</span>
   }
-  if (servicesQuery.isLoading) {
+  if (view.services.status === 'loading') {
     serviceStatus = <Skeleton className='h-5 w-40 motion-reduce:animate-none' />
   }
+
+  if (!canQuery) return null
 
   return (
     <section className='border-border/60 bg-muted/20 relative z-10 border-y px-6 py-16 sm:py-20 lg:py-24'>
@@ -137,7 +182,7 @@ export function OperationOverview() {
               {t('Last 24 hours')}
             </p>
           </div>
-          {allFailed && (
+          {view.allFailed && (
             <Button
               variant='outline'
               size='icon-sm'
@@ -208,9 +253,9 @@ export function OperationOverview() {
             {serviceStatus}
           </div>
           <OperationOverviewChart
-            data={trend}
-            loading={usageQuery.isLoading}
-            failed={usageQuery.isError}
+            data={view.trend.data}
+            loading={view.trend.status === 'loading'}
+            failed={view.trend.status === 'failed'}
           />
         </div>
       </div>

@@ -24,7 +24,6 @@ import { Footer } from '@/components/layout/components/footer'
 import { RichContent } from '@/components/rich-content'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useTheme } from '@/context/theme-provider'
-import { isLikelyHtml } from '@/lib/content-format'
 import { useAuthStore } from '@/stores/auth-store'
 
 import { CTA } from './components/sections/cta'
@@ -33,6 +32,7 @@ import { Hero } from './components/sections/hero'
 import { HowItWorks } from './components/sections/how-it-works'
 import { Stats } from './components/sections/stats'
 import { useHomePageContent } from './hooks'
+import { resolveHomeComposition } from './lib/home-composition'
 
 const OperationOverview = lazy(() =>
   import('./components/sections/operation-overview').then(
@@ -67,6 +67,12 @@ export function Home() {
   const { auth } = useAuthStore()
   const isAuthenticated = !!auth.user
   const { content, isLoaded, isUrl } = useHomePageContent()
+  const composition = resolveHomeComposition({
+    content,
+    isAuthenticated,
+    isLoaded,
+    isUrl,
+  })
 
   const syncIframePreferences = useCallback(() => {
     try {
@@ -89,7 +95,7 @@ export function Home() {
     }
   }, [isUrl, syncIframePreferences])
 
-  if (!isLoaded) {
+  if (composition.kind === 'loading') {
     return (
       <PublicLayout showMainContainer={false}>
         <main className='flex min-h-screen items-center justify-center'>
@@ -99,51 +105,49 @@ export function Home() {
     )
   }
 
-  if (content) {
-    if (isUrl) {
-      return (
-        <PublicLayout showMainContainer={false}>
-          {/*
-            allow-top-navigation-by-user-activation: the custom home page URL is
-            admin-configured (trusted); this lets its target="_top" nav/menu links
-            navigate the top-level window on user click. The default sandbox blocks
-            this on desktop, while some mobile browsers allow it via allow-popups,
-            causing inconsistent behavior. This token only permits user-activated
-            top-level navigation and does NOT grant same-origin access.
-          */}
-          <iframe
-            ref={iframeRef}
-            src={content}
-            className='h-screen w-full border-none'
-            title={t('Custom Home Page')}
-            sandbox='allow-forms allow-popups allow-popups-to-escape-sandbox allow-scripts allow-top-navigation-by-user-activation'
-            onLoad={syncIframePreferences}
-          />
-        </PublicLayout>
-      )
-    }
+  if (composition.kind === 'custom-url') {
+    return (
+      <PublicLayout showMainContainer={false}>
+        {/*
+          allow-top-navigation-by-user-activation: the custom home page URL is
+          admin-configured (trusted); this lets its target="_top" nav/menu links
+          navigate the top-level window on user click. The default sandbox blocks
+          this on desktop, while some mobile browsers allow it via allow-popups,
+          causing inconsistent behavior. This token only permits user-activated
+          top-level navigation and does NOT grant same-origin access.
+        */}
+        <iframe
+          ref={iframeRef}
+          src={composition.content}
+          className='h-screen w-full border-none'
+          title={t('Custom Home Page')}
+          sandbox='allow-forms allow-popups allow-popups-to-escape-sandbox allow-scripts allow-top-navigation-by-user-activation'
+          onLoad={syncIframePreferences}
+        />
+      </PublicLayout>
+    )
+  }
 
-    const contentIsHtml = isLikelyHtml(content)
+  if (composition.kind === 'custom-html') {
+    return (
+      <PublicLayout showMainContainer={false}>
+        <RichContent
+          mode='html'
+          htmlVariant='isolated'
+          content={composition.content}
+          className='custom-home-content'
+        />
+      </PublicLayout>
+    )
+  }
 
-    if (contentIsHtml) {
-      return (
-        <PublicLayout showMainContainer={false}>
-          <RichContent
-            mode='html'
-            htmlVariant='isolated'
-            content={content}
-            className='custom-home-content'
-          />
-        </PublicLayout>
-      )
-    }
-
+  if (composition.kind === 'custom-markdown') {
     return (
       <PublicLayout>
         <div className='mx-auto max-w-6xl px-4 py-8'>
           <RichContent
             mode='markdown'
-            content={content}
+            content={composition.content}
             className='custom-home-content'
           />
         </div>
@@ -151,14 +155,17 @@ export function Home() {
     )
   }
 
+  const showOperationOverview =
+    composition.sections.includes('operation-overview')
+
   return (
     <PublicLayout showMainContainer={false}>
       <Hero isAuthenticated={isAuthenticated} />
       <Stats />
       <Features />
-      {isAuthenticated && (
+      {showOperationOverview && auth.user && (
         <Suspense fallback={<OperationOverviewSkeleton />}>
-          <OperationOverview />
+          <OperationOverview userId={auth.user.id} />
         </Suspense>
       )}
       <HowItWorks />

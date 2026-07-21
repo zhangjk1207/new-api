@@ -18,12 +18,18 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { api } from '@/lib/api'
 
+import {
+  type HomeApiResponse,
+  unwrapHomeApiResponse,
+} from './lib/home-api-response'
 import type {
-  HomePageContentResponse,
   HomePerformanceModel,
   HomeServiceGroup,
   HomeUsagePoint,
 } from './types'
+
+const HOME_API_FALLBACK = 'Failed to load homepage data'
+const HOME_API_REQUEST = { skipBusinessError: true } as const
 
 // ============================================================================
 // Home Page APIs
@@ -33,40 +39,53 @@ import type {
  * Get custom home page content
  * Returns Markdown/HTML content or iframe URL
  */
-export async function getHomePageContent(): Promise<HomePageContentResponse> {
-  const res = await api.get('/api/home_page_content')
-  return res.data
+export async function getHomePageContent(): Promise<string | undefined> {
+  const res = await api.get<HomeApiResponse<string>>(
+    '/api/home_page_content',
+    HOME_API_REQUEST
+  )
+  return unwrapHomeApiResponse(res.data, HOME_API_FALLBACK)
 }
 
 export async function getHomeModels(): Promise<string[]> {
-  const res = await api.get<{ success: boolean; data?: string[] }>(
-    '/api/user/models'
+  const res = await api.get<HomeApiResponse<string[]>>(
+    '/api/user/models',
+    HOME_API_REQUEST
   )
-  return res.data.data ?? []
+  return unwrapHomeApiResponse(res.data, HOME_API_FALLBACK, [])
 }
 
 export async function getHomeUsage(params: {
   start_timestamp: number
   end_timestamp: number
 }): Promise<HomeUsagePoint[]> {
-  const res = await api.get<{ success: boolean; data?: HomeUsagePoint[] }>(
+  const res = await api.get<HomeApiResponse<HomeUsagePoint[]>>(
     '/api/data/self',
-    { params: { ...params, default_time: 'hour' } }
+    {
+      ...HOME_API_REQUEST,
+      params: { ...params, default_time: 'hour' },
+    }
   )
-  return res.data.data ?? []
+  return unwrapHomeApiResponse(res.data, HOME_API_FALLBACK, [])
 }
 
 export async function getHomePerformance(): Promise<HomePerformanceModel[]> {
-  const res = await api.get<{
-    success: boolean
-    data?: { models?: HomePerformanceModel[] }
-  }>('/api/perf-metrics/summary', { params: { hours: 24 } })
-  return res.data.data?.models ?? []
+  const res = await api.get<
+    HomeApiResponse<{ models?: HomePerformanceModel[] }>
+  >('/api/perf-metrics/summary', {
+    ...HOME_API_REQUEST,
+    params: { hours: 24 },
+  })
+  return (
+    unwrapHomeApiResponse(res.data, HOME_API_FALLBACK, { models: [] }).models ??
+    []
+  )
 }
 
 export async function getHomeServiceStatus(): Promise<HomeServiceGroup[]> {
-  const res = await api.get<{ success: boolean; data?: HomeServiceGroup[] }>(
-    '/api/uptime/status'
+  const res = await api.get<HomeApiResponse<HomeServiceGroup[]>>(
+    '/api/uptime/status',
+    HOME_API_REQUEST
   )
-  return res.data.data ?? []
+  return unwrapHomeApiResponse(res.data, HOME_API_FALLBACK, [])
 }

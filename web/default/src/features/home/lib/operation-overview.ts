@@ -8,6 +8,81 @@ import type {
 const HOUR_SECONDS = 3_600
 const HISTORY_HOURS = 24
 
+interface OperationOverviewSource<T> {
+  data: T
+  isError: boolean
+  isLoading: boolean
+}
+
+interface OperationOverviewSources {
+  models: OperationOverviewSource<string[]>
+  usage: OperationOverviewSource<HomeUsagePoint[]>
+  performance: OperationOverviewSource<HomePerformanceModel[]>
+  services: OperationOverviewSource<HomeServiceGroup[]>
+}
+
+type OperationOverviewValue<T> = {
+  status: 'failed' | 'loading' | 'ready'
+  value: T | '--'
+}
+
+interface OperationOverviewViewState {
+  metrics: {
+    models: OperationOverviewValue<number>
+    requests: OperationOverviewValue<number>
+    tokens: OperationOverviewValue<number>
+    successRate: OperationOverviewValue<number>
+  }
+  services: OperationOverviewValue<{ healthy: number; total: number }>
+  trend: {
+    status: 'failed' | 'loading' | 'ready'
+    data: HomeRequestTrendPoint[]
+  }
+  allFailed: boolean
+}
+
+function resolveSourceStatus(source: {
+  isError: boolean
+  isLoading: boolean
+}): 'failed' | 'loading' | 'ready' {
+  if (source.isError) return 'failed'
+  if (source.isLoading) return 'loading'
+  return 'ready'
+}
+
+function resolveOverviewValue<T>(
+  source: { isError: boolean; isLoading: boolean },
+  value: T
+): OperationOverviewValue<T> {
+  const status = resolveSourceStatus(source)
+  if (status !== 'ready') return { status, value: '--' }
+  return { status, value }
+}
+
+export function getOperationOverviewQueryKeys(
+  userId: number,
+  range: { start_timestamp: number; end_timestamp: number }
+) {
+  return {
+    models: ['home', 'models', userId] as const,
+    usage: [
+      'home',
+      'usage',
+      userId,
+      range.start_timestamp,
+      range.end_timestamp,
+    ] as const,
+    performance: ['home', 'performance', 24] as const,
+    services: ['home', 'services'] as const,
+  }
+}
+
+export function canQueryOperationOverview(
+  userId: number | null | undefined
+): userId is number {
+  return Number.isSafeInteger(userId) && Number(userId) > 0
+}
+
 export function buildHourlyRequestTrend(
   usage: HomeUsagePoint[],
   now: number
@@ -53,5 +128,44 @@ export function summarizeServices(groups: HomeServiceGroup[]): {
   return {
     healthy: monitors.filter((monitor) => monitor.status === 1).length,
     total: monitors.length,
+  }
+}
+
+export function buildOperationOverviewViewState(
+  sources: OperationOverviewSources,
+  now: number
+): OperationOverviewViewState {
+  const requests = sources.usage.data.reduce(
+    (sum, item) => sum + (item.count ?? 0),
+    0
+  )
+  const tokens = sources.usage.data.reduce(
+    (sum, item) => sum + (item.token_used ?? 0),
+    0
+  )
+
+  return {
+    metrics: {
+      models: resolveOverviewValue(sources.models, sources.models.data.length),
+      requests: resolveOverviewValue(sources.usage, requests),
+      tokens: resolveOverviewValue(sources.usage, tokens),
+      successRate: resolveOverviewValue(
+        sources.performance,
+        calculateWeightedSuccessRate(sources.performance.data)
+      ),
+    },
+    services: resolveOverviewValue(
+      sources.services,
+      summarizeServices(sources.services.data)
+    ),
+    trend: {
+      status: resolveSourceStatus(sources.usage),
+      data: buildHourlyRequestTrend(sources.usage.data, now),
+    },
+    allFailed:
+      sources.models.isError &&
+      sources.usage.isError &&
+      sources.performance.isError &&
+      sources.services.isError,
   }
 }

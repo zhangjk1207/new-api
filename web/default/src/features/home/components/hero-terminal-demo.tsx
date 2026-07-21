@@ -17,8 +17,14 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { useState, useEffect, useRef, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { cn } from '@/lib/utils'
+
+import {
+  resolveManualProtocolSelection,
+  TERMINAL_TRANSITION_MS,
+} from '../lib/hero-terminal-motion'
 
 type AccentTone = 'emerald' | 'amber' | 'blue' | 'violet'
 
@@ -147,23 +153,25 @@ const API_DEMOS: ApiDemoConfig[] = [
 ]
 
 const CYCLE_INTERVAL = 4500
-const TRANSITION_MS = 220
 
 interface HeroTerminalDemoProps {
   className?: string
 }
 
 export function HeroTerminalDemo(props: HeroTerminalDemoProps) {
+  const { t } = useTranslation()
   const [activeIndex, setActiveIndex] = useState(0)
   const [transitioning, setTransitioning] = useState(false)
   const intervalRef = useRef<ReturnType<typeof setInterval>>(undefined)
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const reducedMotionRef = useRef(false)
 
   useEffect(() => {
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
     const mobileWidth = window.matchMedia('(max-width: 639px)')
 
     const syncCycle = () => {
+      reducedMotionRef.current = reducedMotion.matches
       if (intervalRef.current) clearInterval(intervalRef.current)
       if (timeoutRef.current) clearTimeout(timeoutRef.current)
       intervalRef.current = undefined
@@ -182,7 +190,7 @@ export function HeroTerminalDemo(props: HeroTerminalDemoProps) {
           setActiveIndex((prev) => (prev + 1) % API_DEMOS.length)
           setTransitioning(false)
           timeoutRef.current = undefined
-        }, TRANSITION_MS)
+        }, TERMINAL_TRANSITION_MS)
       }, CYCLE_INTERVAL)
     }
 
@@ -199,14 +207,25 @@ export function HeroTerminalDemo(props: HeroTerminalDemoProps) {
   }, [])
 
   const handleSelect = (index: number) => {
-    if (index === activeIndex) return
+    const selection = resolveManualProtocolSelection(
+      activeIndex,
+      index,
+      reducedMotionRef.current
+    )
+    if (selection.delayMs === null) return
     if (intervalRef.current) clearInterval(intervalRef.current)
     if (timeoutRef.current) clearTimeout(timeoutRef.current)
-    setTransitioning(true)
+    setTransitioning(selection.transitioning)
+    if (selection.delayMs === 0) {
+      setActiveIndex(selection.activeIndex)
+      timeoutRef.current = undefined
+      return
+    }
     timeoutRef.current = setTimeout(() => {
       setActiveIndex(index)
       setTransitioning(false)
-    }, TRANSITION_MS)
+      timeoutRef.current = undefined
+    }, selection.delayMs)
   }
 
   const demo = API_DEMOS[activeIndex]
@@ -240,7 +259,7 @@ export function HeroTerminalDemo(props: HeroTerminalDemoProps) {
                 onClick={() => handleSelect(index)}
                 aria-pressed={isActive}
                 className={cn(
-                  'relative -mb-px flex shrink-0 items-center gap-0.5 whitespace-nowrap border-b-2 px-2 py-2.5 text-[11px] font-medium tracking-wide transition-colors sm:gap-1.5 sm:px-3 sm:text-xs',
+                  'relative -mb-px flex shrink-0 items-center gap-0.5 whitespace-nowrap border-b-2 px-2 py-2.5 text-[11px] font-medium tracking-wide transition-colors motion-reduce:transition-none sm:gap-1.5 sm:px-3 sm:text-xs',
                   isActive
                     ? `${tone.activeBorder} ${tone.activeText}`
                     : 'text-foreground/40 hover:text-foreground/70 border-transparent'
@@ -253,7 +272,7 @@ export function HeroTerminalDemo(props: HeroTerminalDemoProps) {
           <div className='ml-auto hidden shrink-0 items-center gap-2 pr-2 sm:flex sm:pr-3'>
             <span className='inline-block size-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.45)]' />
             <span className='text-foreground/40 font-mono text-[10px] tracking-wider uppercase'>
-              routed
+              {t('Routed')}
             </span>
           </div>
         </div>
@@ -277,6 +296,7 @@ export function HeroTerminalDemo(props: HeroTerminalDemoProps) {
             data-terminal-endpoint='true'
             className={cn(
               'text-foreground/75 truncate font-mono text-[12.5px] transition-opacity duration-200',
+              'motion-reduce:transition-none',
               transitioning ? 'opacity-0' : 'opacity-100'
             )}
           >
@@ -304,7 +324,7 @@ export function HeroTerminalDemo(props: HeroTerminalDemoProps) {
           )}
         >
           <div className='text-foreground/40 font-mono text-[10px] tracking-wider uppercase'>
-            route matched
+            {t('Route matched')}
           </div>
           <span className='text-foreground/30 font-mono text-[10px] tracking-wider uppercase'>
             stream · sse
@@ -323,7 +343,7 @@ function RequestBlock(props: { demo: ApiDemoConfig; transitioning: boolean }) {
       <SectionLabel>Request</SectionLabel>
       <div
         className={cn(
-          'mt-2 transition-opacity duration-200',
+          'mt-2 transition-opacity duration-200 motion-reduce:transition-none',
           transitioning ? 'opacity-0' : 'opacity-100'
         )}
       >
@@ -368,7 +388,7 @@ function ResponseBlock(props: { demo: ApiDemoConfig; transitioning: boolean }) {
       <SectionLabel>Response</SectionLabel>
       <div
         className={cn(
-          'mt-2 transition-opacity duration-200',
+          'mt-2 transition-opacity duration-200 motion-reduce:transition-none',
           transitioning ? 'opacity-0' : 'opacity-100'
         )}
       >

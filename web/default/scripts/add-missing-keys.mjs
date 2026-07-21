@@ -99,6 +99,8 @@ const homepageKeys = {
       'Request trend for the last 24 hours',
     'Request trend data': 'Request trend data',
     'At {{time}}: {{requests}} requests': 'At {{time}}: {{requests}} requests',
+    Routed: 'Routed',
+    'Route matched': 'Route matched',
   },
   zh: {
     'Xingluo model service component': '星罗数场大模型服务组件',
@@ -169,6 +171,8 @@ const homepageKeys = {
     'Request trend for the last 24 hours': '最近 24 小时请求趋势',
     'Request trend data': '请求趋势数据',
     'At {{time}}: {{requests}} requests': '{{time}}：{{requests}} 次请求',
+    Routed: '已路由',
+    'Route matched': '路由已匹配',
   },
   'zh-TW': {
     'Xingluo model service component': '星羅數場大模型服務元件',
@@ -239,6 +243,8 @@ const homepageKeys = {
     'Request trend for the last 24 hours': '最近 24 小時請求趨勢',
     'Request trend data': '請求趨勢資料',
     'At {{time}}: {{requests}} requests': '{{time}}：{{requests}} 次請求',
+    Routed: '已路由',
+    'Route matched': '路由已符合',
   },
   fr: {
     'Xingluo model service component':
@@ -315,6 +321,8 @@ const homepageKeys = {
       'Tendance des requêtes sur 24 heures',
     'Request trend data': 'Données de tendance des requêtes',
     'At {{time}}: {{requests}} requests': '{{time}} : {{requests}} requêtes',
+    Routed: 'Acheminé',
+    'Route matched': 'Route trouvée',
   },
   ja: {
     'Xingluo model service component': '星羅モデルサービスコンポーネント',
@@ -389,6 +397,8 @@ const homepageKeys = {
     'Request trend data': 'リクエスト推移データ',
     'At {{time}}: {{requests}} requests':
       '{{time}}: {{requests}} 件のリクエスト',
+    Routed: 'ルーティング済み',
+    'Route matched': 'ルート一致',
   },
   ru: {
     'Xingluo model service component': 'Компонент модельного сервиса Xingluo',
@@ -463,6 +473,8 @@ const homepageKeys = {
     'Request trend for the last 24 hours': 'Динамика запросов за 24 часа',
     'Request trend data': 'Данные динамики запросов',
     'At {{time}}: {{requests}} requests': '{{time}}: {{requests}} запросов',
+    Routed: 'Маршрутизировано',
+    'Route matched': 'Маршрут подобран',
   },
   vi: {
     'Xingluo model service component': 'Thành phần dịch vụ mô hình Xingluo',
@@ -536,6 +548,8 @@ const homepageKeys = {
     'Request trend for the last 24 hours': 'Xu hướng yêu cầu trong 24 giờ qua',
     'Request trend data': 'Dữ liệu xu hướng yêu cầu',
     'At {{time}}: {{requests}} requests': '{{time}}: {{requests}} yêu cầu',
+    Routed: 'Đã định tuyến',
+    'Route matched': 'Đã khớp tuyến',
   },
 }
 
