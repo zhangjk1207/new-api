@@ -34,3 +34,17 @@ func TestPerfMetricsSummaryResponseIncludesRequestCount(t *testing.T) {
 	assert.Equal(t, int64(37), payload.Models[0].RequestCount)
 	assert.Equal(t, 91.89, payload.Models[0].SuccessRate)
 }
+
+func TestSanitizePerfMetricsSummaryForPublicViewerHidesRequestCount(t *testing.T) {
+	result := perfmetrics.SummaryAllResult{
+		Models: []perfmetrics.ModelSummary{{ModelName: "zhiqing-local", RequestCount: 37}},
+	}
+
+	public := sanitizePerfMetricsSummaryForViewer(result, false)
+	authenticated := sanitizePerfMetricsSummaryForViewer(result, true)
+
+	require.Len(t, public.Models, 1)
+	assert.Zero(t, public.Models[0].RequestCount)
+	assert.Equal(t, int64(37), authenticated.Models[0].RequestCount)
+	assert.Equal(t, int64(37), result.Models[0].RequestCount)
+}

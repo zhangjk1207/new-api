@@ -19,6 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 import { api } from '@/lib/api'
 
 import {
+  getHomeSelfApiRequest,
   type HomeApiResponse,
   unwrapHomeApiResponse,
 } from './lib/home-api-response'
@@ -50,7 +51,7 @@ export async function getHomePageContent(): Promise<string | undefined> {
 export async function getHomeModels(): Promise<string[]> {
   const res = await api.get<HomeApiResponse<string[]>>(
     '/api/user/models',
-    HOME_API_REQUEST
+    getHomeSelfApiRequest()
   )
   return unwrapHomeApiResponse(res.data, HOME_API_FALLBACK, [])
 }
@@ -62,7 +63,7 @@ export async function getHomeUsage(params: {
   const res = await api.get<HomeApiResponse<HomeUsagePoint[]>>(
     '/api/data/self',
     {
-      ...HOME_API_REQUEST,
+      ...getHomeSelfApiRequest(),
       params: { ...params, default_time: 'hour' },
     }
   )

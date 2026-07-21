@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict'
 import { describe, test } from 'node:test'
 
-import { unwrapHomeApiResponse } from './home-api-response'
+import {
+  getHomeSelfApiRequest,
+  unwrapHomeApiResponse,
+} from './home-api-response'
 
 describe('homepage API responses', () => {
   test('allows successful responses with omitted optional data', () => {
@@ -31,5 +34,9 @@ describe('homepage API responses', () => {
         ),
       /Failed to load homepage data/
     )
+  })
+
+  test('disables request deduplication for user-scoped homepage APIs', () => {
+    assert.equal(getHomeSelfApiRequest().disableDuplicate, true)
   })
 })

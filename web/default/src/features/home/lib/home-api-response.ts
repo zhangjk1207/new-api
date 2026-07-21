@@ -4,6 +4,13 @@ export interface HomeApiResponse<T> {
   data?: T
 }
 
+export function getHomeSelfApiRequest() {
+  return {
+    skipBusinessError: true,
+    disableDuplicate: true,
+  } as const
+}
+
 export function unwrapHomeApiResponse<T>(
   response: HomeApiResponse<T>,
   fallbackMessage: string,

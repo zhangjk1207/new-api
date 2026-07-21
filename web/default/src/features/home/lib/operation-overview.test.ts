@@ -6,11 +6,19 @@ import {
   buildOperationOverviewViewState,
   calculateWeightedSuccessRate,
   canQueryOperationOverview,
+  getRolling24HourRange,
   getOperationOverviewQueryKeys,
   summarizeServices,
 } from './operation-overview'
 
 describe('homepage operation overview', () => {
+  test('uses a strict rolling 24-hour range for homepage usage', () => {
+    assert.deepEqual(getRolling24HourRange(172_000), {
+      start_timestamp: 85_600,
+      end_timestamp: 172_000,
+    })
+  })
+
   test('fills a complete 24-hour request trend and sums duplicate hours', () => {
     const trend = buildHourlyRequestTrend(
       [

@@ -5,6 +5,13 @@ import type {
   HomeUsagePoint,
 } from '../types'
 
+export function getRolling24HourRange(nowTimestamp: number) {
+  return {
+    start_timestamp: nowTimestamp - 24 * 60 * 60,
+    end_timestamp: nowTimestamp,
+  }
+}
+
 const HOUR_SECONDS = 3_600
 const HISTORY_HOURS = 24
 

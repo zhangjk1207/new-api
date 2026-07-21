@@ -31,8 +31,18 @@ func GetPerfMetricsSummary(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
-		"data":    result,
+		"data":    sanitizePerfMetricsSummaryForViewer(result, c.GetInt("id") > 0),
 	})
+}
+
+func sanitizePerfMetricsSummaryForViewer(result perfmetrics.SummaryAllResult, authenticated bool) perfmetrics.SummaryAllResult {
+	models := append([]perfmetrics.ModelSummary(nil), result.Models...)
+	if !authenticated {
+		for index := range models {
+			models[index].RequestCount = 0
+		}
+	}
+	return perfmetrics.SummaryAllResult{Models: models}
 }
 
 func GetPerfMetrics(c *gin.Context) {

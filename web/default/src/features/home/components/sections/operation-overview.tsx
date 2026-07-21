@@ -26,7 +26,6 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toIntlLocale } from '@/i18n/languages'
 import { formatCompactNumber, formatNumber, formatPercent } from '@/lib/format'
-import { computeTimeRange } from '@/lib/time'
 
 import {
   getHomeModels,
@@ -38,6 +37,7 @@ import {
   buildOperationOverviewViewState,
   canQueryOperationOverview,
   getOperationOverviewQueryKeys,
+  getRolling24HourRange,
 } from '../../lib/operation-overview'
 import { OperationOverviewChart } from '../operation-overview-chart'
 
@@ -48,7 +48,10 @@ interface OperationOverviewProps {
 export function OperationOverview(props: OperationOverviewProps) {
   const { i18n, t } = useTranslation()
   const locale = toIntlLocale(i18n.resolvedLanguage || i18n.language)
-  const range = useMemo(() => computeTimeRange(1), [])
+  const range = useMemo(
+    () => getRolling24HourRange(Math.floor(Date.now() / 1000)),
+    []
+  )
   const queryKeys = useMemo(
     () => getOperationOverviewQueryKeys(props.userId, range),
     [props.userId, range]
