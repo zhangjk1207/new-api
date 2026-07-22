@@ -5,6 +5,7 @@ import {
   formatBeijingTime,
   getTimelineSlots,
   getTimelineStatusClass,
+  getTimelineStatusLabelKey,
 } from './monitor-status'
 
 describe('service monitoring timeline status', () => {
@@ -14,13 +15,18 @@ describe('service monitoring timeline status', () => {
     assert.equal(getTimelineStatusClass(2), 'bg-amber-500')
     assert.equal(getTimelineStatusClass(3), 'bg-blue-500')
     assert.equal(getTimelineStatusClass(-1), 'bg-muted-foreground/30')
+    assert.equal(getTimelineStatusLabelKey(2), 'Health check timed out')
   })
 
   test('maps the last 24 hours into one slot per hour', () => {
     const now = Date.UTC(2026, 6, 14, 10, 30, 0) / 1000
     const slots = getTimelineSlots(
       [
-        { timestamp: now - 23 * 60 * 60 + 5 * 60, status: 1, response_time: 12 },
+        {
+          timestamp: now - 23 * 60 * 60 + 5 * 60,
+          status: 1,
+          response_time: 12,
+        },
         { timestamp: now - 90 * 60, status: 1, response_time: 18 },
         { timestamp: now - 70 * 60, status: 0, response_time: 24 },
       ],

@@ -33,6 +33,7 @@ func TestGetNativeServiceMonitoringUsesLocalHealthChecks(t *testing.T) {
 	now := time.Now().Unix()
 	require.NoError(t, db.Create([]model.ChannelHealthCheck{
 		{ChannelID: 1, Status: 0, ResponseTime: 30, CheckedAt: now - 60*60},
+		{ChannelID: 1, Status: 2, ResponseTime: 25, CheckedAt: now - 30*60},
 		{ChannelID: 1, Status: 1, ResponseTime: 15, CheckedAt: now - 60},
 		{ChannelID: 2, Status: 1, ResponseTime: 10, CheckedAt: now - 60},
 	}).Error)
@@ -46,6 +47,6 @@ func TestGetNativeServiceMonitoringUsesLocalHealthChecks(t *testing.T) {
 	assert.Equal(t, "enabled-channel", monitor.Name)
 	assert.Equal(t, 1, monitor.Status)
 	assert.Equal(t, 15.0, monitor.ResponseTime)
-	assert.Equal(t, 0.5, monitor.Uptime)
-	require.Len(t, monitor.History, 2)
+	assert.InDelta(t, 2.0/3.0, monitor.Uptime, 0.001)
+	require.Len(t, monitor.History, 3)
 }

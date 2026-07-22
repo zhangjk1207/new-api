@@ -2196,6 +2196,7 @@
     "Header Value (supports string or JSON mapping)": "Header Value (supports string or JSON mapping)",
     "header. Anthropic-formatted endpoints accept the": "header. Anthropic-formatted endpoints accept the",
     "Health": "Health",
+    "Health check timed out": "Health check timed out",
     "Health checks": "Health checks",
     "Healthy": "Healthy",
     "Healthy channels": "Healthy channels",

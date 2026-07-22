@@ -20,8 +20,10 @@ import (
 )
 
 const (
-	channelHealthCheckTimeout  = 5 * time.Second
-	channelHealthHistoryPeriod = 7 * 24 * time.Hour
+	channelHealthCheckTimeout          = 10 * time.Second
+	channelHealthHistoryPeriod         = 7 * 24 * time.Hour
+	channelHealthFailureLookbackPeriod = 10 * time.Minute
+	channelHealthDownThreshold         = 3
 )
 
 type ChannelHealthCheckSummary struct {
@@ -52,6 +54,25 @@ func RunChannelHealthCheck(ctx context.Context) (ChannelHealthCheckSummary, erro
 	if err := model.DB.Where("status = ?", common.ChannelStatusEnabled).Find(&channels).Error; err != nil {
 		return ChannelHealthCheckSummary{}, err
 	}
+	channelIDs := make([]int, 0, len(channels))
+	for _, channel := range channels {
+		channelIDs = append(channelIDs, channel.Id)
+	}
+	previousChecks, err := model.ListChannelHealthChecksSince(
+		channelIDs,
+		time.Now().Add(-channelHealthFailureLookbackPeriod).Unix(),
+	)
+	if err != nil {
+		return ChannelHealthCheckSummary{}, err
+	}
+	consecutiveFailures := make(map[int]int, len(channels))
+	for _, check := range previousChecks {
+		if check.Status == 1 {
+			consecutiveFailures[check.ChannelID] = 0
+		} else {
+			consecutiveFailures[check.ChannelID]++
+		}
+	}
 
 	client := &http.Client{Timeout: channelHealthCheckTimeout}
 	checks := make([]model.ChannelHealthCheck, len(channels))
@@ -68,8 +89,11 @@ func RunChannelHealthCheck(ctx context.Context) (ChannelHealthCheckSummary, erro
 	}
 
 	summary := ChannelHealthCheckSummary{Total: len(checks)}
-	for _, check := range checks {
-		if check.Status == 1 {
+	for i := range checks {
+		if checks[i].Status == 0 && consecutiveFailures[checks[i].ChannelID]+1 < channelHealthDownThreshold {
+			checks[i].Status = 2
+		}
+		if checks[i].Status != 0 {
 			summary.Up++
 		}
 	}

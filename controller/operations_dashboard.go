@@ -121,7 +121,7 @@ func buildOperationsDashboardSummary(now time.Time) (operationsDashboardSummary,
 			summary.Alerts = append(summary.Alerts, operationsDashboardAlert{Type: "channel_no_data", Name: channel.Name})
 			continue
 		}
-		if latest.Status == 1 {
+		if latest.Status != 0 {
 			summary.Metrics.HealthyChannels++
 		} else {
 			summary.Alerts = append(summary.Alerts, operationsDashboardAlert{Type: "channel_down", Name: channel.Name})

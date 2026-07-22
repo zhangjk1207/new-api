@@ -23,8 +23,10 @@ export function getTimelineSlots(
   history: ServiceHeartbeatPoint[],
   now = Math.floor(Date.now() / 1000)
 ): Array<ServiceHeartbeatPoint | null> {
-  const currentHour = Math.floor(now / TIMELINE_HOUR_SECONDS) * TIMELINE_HOUR_SECONDS
-  const firstHour = currentHour - (TIMELINE_HOUR_COUNT - 1) * TIMELINE_HOUR_SECONDS
+  const currentHour =
+    Math.floor(now / TIMELINE_HOUR_SECONDS) * TIMELINE_HOUR_SECONDS
+  const firstHour =
+    currentHour - (TIMELINE_HOUR_COUNT - 1) * TIMELINE_HOUR_SECONDS
   const slots = Array<ServiceHeartbeatPoint | null>(TIMELINE_HOUR_COUNT).fill(
     null
   )
@@ -55,7 +57,7 @@ export function getTimelineStatusClass(status: number): string {
 export function getTimelineStatusLabelKey(status: number): string {
   if (status === 1) return 'Operational'
   if (status === 0) return 'Down'
-  if (status === 2) return 'Pending'
+  if (status === 2) return 'Health check timed out'
   if (status === 3) return 'Maintenance'
   return 'No data'
 }

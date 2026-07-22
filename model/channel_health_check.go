@@ -16,7 +16,7 @@ func ListChannelHealthChecksSince(channelIDs []int, since int64) ([]ChannelHealt
 		return checks, nil
 	}
 	err := DB.Where("channel_id IN ? AND checked_at >= ?", channelIDs, since).
-		Order("checked_at asc").
+		Order("checked_at asc, id asc").
 		Find(&checks).Error
 	return checks, err
 }
