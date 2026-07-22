@@ -30,6 +30,7 @@ import { toast } from 'sonner'
 import { OAuthCallbackScreen } from '@/features/auth/components/oauth-callback-screen'
 import { OAUTH_BIND_STORAGE_KEY } from '@/features/auth/constants'
 import { api, getSelf } from '@/lib/api'
+import { withRuntimeBasePath } from '@/lib/runtime-base-path'
 import { useAuthStore, type AuthUser } from '@/stores/auth-store'
 
 type OAuthRequestConfig = AxiosRequestConfig & {
@@ -112,7 +113,9 @@ function OAuthCallback() {
         window.close()
         setTimeout(() => {
           if (!window.closed) {
-            window.location.replace('/_authenticated/profile/')
+            window.location.replace(
+              withRuntimeBasePath('/_authenticated/profile/')
+            )
           }
         }, 200)
       }

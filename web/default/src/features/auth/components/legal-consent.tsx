@@ -20,6 +20,7 @@ import { useTranslation } from 'react-i18next'
 
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
+import { withRuntimeBasePath } from '@/lib/runtime-base-path'
 import { cn } from '@/lib/utils'
 
 import type { SystemStatus } from '../types'
@@ -70,7 +71,7 @@ export function LegalConsent({
           {t('I have read and agree to the')}{' '}
           {hasUserAgreement && (
             <a
-              href='/user-agreement'
+              href={withRuntimeBasePath('/user-agreement')}
               target='_blank'
               rel='noopener noreferrer'
               className='text-primary hover:underline'
@@ -81,7 +82,7 @@ export function LegalConsent({
           {hasUserAgreement && hasPrivacyPolicy && ' and the '}
           {hasPrivacyPolicy && (
             <a
-              href='/privacy-policy'
+              href={withRuntimeBasePath('/privacy-policy')}
               target='_blank'
               rel='noopener noreferrer'
               className='text-primary hover:underline'

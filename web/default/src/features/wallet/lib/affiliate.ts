@@ -20,10 +20,12 @@ For commercial licensing, please contact support@quantumnous.com
 // Affiliate Functions
 // ============================================================================
 
+import { getRuntimeOriginUrl } from '@/lib/runtime-base-path'
+
 /**
  * Generate affiliate registration link
  */
 export function generateAffiliateLink(affCode: string): string {
   if (typeof window === 'undefined') return ''
-  return `${window.location.origin}/sign-up?aff=${affCode}`
+  return getRuntimeOriginUrl(`/sign-up?aff=${affCode}`)
 }

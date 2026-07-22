@@ -18,6 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { useTranslation } from 'react-i18next'
 
+import { withRuntimeBasePath } from '@/lib/runtime-base-path'
 import { cn } from '@/lib/utils'
 
 import type { SystemStatus } from '../types'
@@ -48,11 +49,11 @@ export function TermsFooter({
 
   const agreementLink = {
     label: 'User Agreement',
-    href: '/user-agreement',
+    href: withRuntimeBasePath('/user-agreement'),
   }
   const privacyLink = {
     label: 'Privacy Policy',
-    href: '/privacy-policy',
+    href: withRuntimeBasePath('/privacy-policy'),
   }
 
   const activeLinks =

@@ -27,6 +27,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import useDialogState from '@/hooks/use-dialog'
 import { useUserDisplay } from '@/hooks/use-user-display'
+import { withRuntimeBasePath } from '@/lib/runtime-base-path'
 import type { AuthUser } from '@/stores/auth-store'
 
 import { MOBILE_DRAWER_ANIMATION, MOBILE_DRAWER_CONFIG } from '../constants'
@@ -91,7 +92,10 @@ function MobileUserProfile({ user, onNavigate }: MobileUserProfileProps) {
         {/* User header - simplified */}
         <div className='border-border flex items-center gap-2.5 border-b p-2.5'>
           <Avatar className='size-9'>
-            <AvatarImage src='/avatars/01.png' alt={`@${displayName}`} />
+            <AvatarImage
+              src={withRuntimeBasePath('/avatars/01.png')}
+              alt={`@${displayName}`}
+            />
             <AvatarFallback className='text-xs'>{initials}</AvatarFallback>
           </Avatar>
           <div className='flex flex-1 flex-col gap-0.5 overflow-hidden'>

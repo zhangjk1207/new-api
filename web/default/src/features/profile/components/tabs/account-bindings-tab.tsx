@@ -36,6 +36,10 @@ import {
   handleDiscordOAuth,
   handleLinuxDOOAuth,
 } from '@/lib/oauth'
+import {
+  getRuntimeOriginUrl,
+  withRuntimeBasePath,
+} from '@/lib/runtime-base-path'
 
 import {
   getSelfOAuthBindings,
@@ -116,8 +120,10 @@ export function AccountBindingsTab({
   }
 
   const handleBindCustomOAuth = (provider: { id: string; name: string }) => {
-    const redirectUrl = `${window.location.origin}/oauth/${provider.id}?bind=true`
-    window.location.href = `/api/oauth/${provider.id}?redirect=${encodeURIComponent(redirectUrl)}`
+    const redirectUrl = getRuntimeOriginUrl(`/oauth/${provider.id}?bind=true`)
+    window.location.href = withRuntimeBasePath(
+      `/api/oauth/${provider.id}?redirect=${encodeURIComponent(redirectUrl)}`
+    )
   }
 
   useEffect(() => {

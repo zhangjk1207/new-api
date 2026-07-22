@@ -34,6 +34,7 @@ import { applyFaviconToDom } from '@/lib/dom-utils'
 import '@/lib/dayjs'
 import { initializeFrontendCache } from '@/lib/frontend-cache'
 import { handleServerError } from '@/lib/handle-server-error'
+import { getRuntimeBasePath } from '@/lib/runtime-base-path'
 import { useAuthStore } from '@/stores/auth-store'
 
 import { DirectionProvider } from './context/direction-provider'
@@ -104,6 +105,7 @@ const queryClient = new QueryClient({
 const router = createRouter({
   routeTree,
   context: { queryClient },
+  basepath: getRuntimeBasePath() || '/',
   defaultPreload: 'intent',
   defaultPreloadStaleTime: 0,
 })

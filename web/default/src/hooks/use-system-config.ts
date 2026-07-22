@@ -20,6 +20,7 @@ import { useEffect, useCallback } from 'react'
 
 import { DEFAULT_SYSTEM_NAME, DEFAULT_LOGO } from '@/lib/constants'
 import { applyFaviconToDom } from '@/lib/dom-utils'
+import { withRuntimeBasePath } from '@/lib/runtime-base-path'
 import {
   useSystemConfigStore,
   type CurrencyConfig,
@@ -104,7 +105,7 @@ export function mapStatusDataToConfig(
 
 // Fetch system config from API
 async function fetchSystemConfig(): Promise<Partial<SystemConfig>> {
-  const response = await fetch('/api/status')
+  const response = await fetch(withRuntimeBasePath('/api/status'))
   if (!response.ok) throw new Error('Failed to fetch status')
 
   const data: StatusApiResponse = await response.json()

@@ -22,6 +22,8 @@ import { toast } from 'sonner'
 
 import { useAuthStore } from '@/stores/auth-store'
 
+import { getRuntimeBasePath } from './runtime-base-path'
+
 declare module 'axios' {
   export interface AxiosRequestConfig {
     skipBusinessError?: boolean
@@ -36,8 +38,8 @@ export type ApiRequestConfig = AxiosRequestConfig
 // Axios Instance Configuration
 // ============================================================================
 
-// Base URL: empty string for same-origin API requests
-const baseURL = ''
+// Runtime prefix is injected by a reverse proxy when the app is mounted below /.
+const baseURL = getRuntimeBasePath()
 
 // Create axios instance with default config
 export const api = axios.create({

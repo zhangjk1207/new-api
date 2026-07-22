@@ -27,6 +27,7 @@ import { ComboboxInput } from '@/components/ui/combobox-input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { getUserModels } from '@/lib/api'
+import { getRuntimeServerBaseUrl } from '@/lib/runtime-base-path'
 
 const APP_CONFIGS = {
   claude: {
@@ -63,7 +64,7 @@ function getServerAddress(): string {
   } catch {
     /* empty */
   }
-  return window.location.origin
+  return getRuntimeServerBaseUrl()
 }
 
 function buildCCSwitchURL(

@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/sidebar'
 import { useStatus } from '@/hooks/use-status'
 import { useSystemConfig } from '@/hooks/use-system-config'
+import { withRuntimeBasePath } from '@/lib/runtime-base-path'
 import { cn } from '@/lib/utils'
 
 type SystemBrandProps = {
@@ -68,7 +69,7 @@ export function SystemBrand(props: SystemBrandProps) {
         )}
       >
         <img
-          src='/xingluo-logo.png'
+          src={withRuntimeBasePath('/xingluo-logo.png')}
           alt={t('Xingluo Data Field')}
           className='h-7 w-auto shrink-0 object-contain sm:h-10'
           onError={(event) => {

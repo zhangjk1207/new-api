@@ -53,6 +53,7 @@ import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 import { getUserModels } from '@/lib/api'
 import { MOTION_TRANSITION } from '@/lib/motion'
 import { ROLE } from '@/lib/roles'
+import { getRuntimeServerBaseUrl } from '@/lib/runtime-base-path'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/auth-store'
 
@@ -139,7 +140,7 @@ function saveSetupGuideExpanded(expanded: boolean): void {
 
 function getCurrentOrigin(): string {
   if (typeof window === 'undefined') return ''
-  return window.location.origin
+  return getRuntimeServerBaseUrl()
 }
 
 function normalizeEndpoint(sourceUrl?: string): string {
