@@ -2242,6 +2242,7 @@
     "Header Value (supports string or JSON mapping)": "Giá trị header (hỗ trợ chuỗi hoặc ánh xạ JSON)",
     "header. Anthropic-formatted endpoints accept the": ". Các endpoint định dạng Anthropic chấp nhận header",
     "Health": "Sức khỏe",
+    "Health check timed out": "Kiem tra suc khoe het thoi gian",
     "Health checks": "Kiem tra suc khoe",
     "Healthy": "Bình thường",
     "Healthy channels": "Kenh hoat dong tot",

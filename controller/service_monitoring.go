@@ -87,7 +87,7 @@ func getNativeServiceMonitoring(now time.Time) ([]UptimeGroupResult, error) {
 				Status:       check.Status,
 				ResponseTime: float64(check.ResponseTime),
 			})
-			if check.Status == 1 {
+			if check.Status != 0 {
 				upCount++
 			}
 		}

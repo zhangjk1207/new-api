@@ -107,6 +107,27 @@ func TestBuildOperationsDashboardSummaryTreatsAnIdleGatewayAsFullySuccessful(t *
 	assert.Equal(t, 100.0, summary.Traffic[0].SuccessRate)
 }
 
+func TestBuildOperationsDashboardSummaryTreatsPendingHealthAsAvailable(t *testing.T) {
+	db := setupModelListControllerTestDB(t)
+	require.NoError(t, db.AutoMigrate(&model.ChannelHealthCheck{}, &model.PerfMetric{}, &model.QuotaData{}, &model.Log{}))
+
+	now := time.Date(2026, time.July, 16, 12, 0, 0, 0, time.UTC)
+	baseURL := "http://127.0.0.1:8000"
+	require.NoError(t, db.Create(&model.Channel{
+		Id: 1, Name: "pending", Status: common.ChannelStatusEnabled, BaseURL: &baseURL,
+	}).Error)
+	require.NoError(t, db.Create(&model.ChannelHealthCheck{
+		ChannelID: 1, Status: 2, ResponseTime: 10_000, CheckedAt: now.Add(-time.Minute).Unix(),
+	}).Error)
+
+	summary, err := buildOperationsDashboardSummary(now)
+
+	require.NoError(t, err)
+	assert.Equal(t, int64(1), summary.Metrics.HealthyChannels)
+	assert.Equal(t, int64(0), summary.Metrics.UnavailableChannels)
+	assert.NotContains(t, operationAlertTypes(summary.Alerts), "channel_down")
+}
+
 func operationAlertTypes(alerts []operationsDashboardAlert) []string {
 	types := make([]string, 0, len(alerts))
 	for _, alert := range alerts {

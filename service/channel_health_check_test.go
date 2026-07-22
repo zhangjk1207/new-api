@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"sync/atomic"
 	"testing"
 
 	"github.com/QuantumNous/new-api/common"
@@ -61,4 +62,53 @@ vllm:cache_config_info{kv_cache_max_concurrency="3.6"} 1
 	assert.Equal(t, 1, checks[0].Status)
 	require.NotNil(t, checks[0].MaxConcurrency)
 	assert.Equal(t, 4, *checks[0].MaxConcurrency)
+}
+
+func TestRunChannelHealthCheckRequiresThreeConsecutiveFailuresToMarkDown(t *testing.T) {
+	truncate(t)
+	require.NoError(t, model.DB.AutoMigrate(&model.ChannelHealthCheck{}))
+	t.Cleanup(func() {
+		require.NoError(t, model.DB.Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&model.ChannelHealthCheck{}).Error)
+	})
+
+	var healthy atomic.Bool
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/health" {
+			http.NotFound(w, r)
+			return
+		}
+		if !healthy.Load() {
+			http.Error(w, "temporarily unavailable", http.StatusServiceUnavailable)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	require.NoError(t, model.DB.Create(&model.Channel{
+		Id: 1, Name: "flaky", Status: common.ChannelStatusEnabled, BaseURL: &server.URL,
+	}).Error)
+
+	for attempt, expectedStatus := range []int{2, 2, 0} {
+		summary, err := RunChannelHealthCheck(context.Background())
+		require.NoError(t, err)
+		assert.Equal(t, 1, summary.Total)
+		if expectedStatus == 0 {
+			assert.Equal(t, 0, summary.Up)
+		} else {
+			assert.Equal(t, 1, summary.Up)
+		}
+
+		var check model.ChannelHealthCheck
+		require.NoError(t, model.DB.Order("id desc").First(&check).Error)
+		assert.Equal(t, expectedStatus, check.Status, "attempt %d", attempt+1)
+	}
+
+	healthy.Store(true)
+	summary, err := RunChannelHealthCheck(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, 1, summary.Up)
+	var recovered model.ChannelHealthCheck
+	require.NoError(t, model.DB.Order("id desc").First(&recovered).Error)
+	assert.Equal(t, 1, recovered.Status)
 }

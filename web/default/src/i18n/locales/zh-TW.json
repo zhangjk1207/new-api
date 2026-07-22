@@ -2242,6 +2242,7 @@
     "Header Value (supports string or JSON mapping)": "請求頭值（支援字串或 JSON 映射）",
     "header. Anthropic-formatted endpoints accept the": " 請求頭。Anthropic 格式的端點也接受",
     "Health": "健康",
+    "Health check timed out": "健康檢查逾時",
     "Health checks": "健康檢查",
     "Healthy": "正常",
     "Healthy channels": "健康渠道",

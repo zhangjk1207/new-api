@@ -137,7 +137,9 @@ export function summarizeServices(groups: HomeServiceGroup[]): {
 } {
   const monitors = groups.flatMap((group) => group.monitors)
   return {
-    healthy: monitors.filter((monitor) => monitor.status === 1).length,
+    healthy: monitors.filter(
+      (monitor) => monitor.status === 1 || monitor.status === 2
+    ).length,
     total: monitors.length,
   }
 }

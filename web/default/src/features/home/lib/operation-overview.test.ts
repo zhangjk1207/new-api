@@ -52,12 +52,15 @@ describe('homepage operation overview', () => {
     assert.equal(calculateWeightedSuccessRate([]), 100)
   })
 
-  test('counts only currently healthy enabled monitors', () => {
+  test('counts operational and pending monitors as available', () => {
     assert.deepEqual(
       summarizeServices([
-        { categoryName: 'default', monitors: [{ status: 1 }, { status: 0 }] },
+        {
+          categoryName: 'default',
+          monitors: [{ status: 1 }, { status: 2 }, { status: 0 }],
+        },
       ]),
-      { healthy: 1, total: 2 }
+      { healthy: 2, total: 3 }
     )
   })
 

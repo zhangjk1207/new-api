@@ -2242,6 +2242,7 @@
     "Header Value (supports string or JSON mapping)": "Valeur de l'en-tête (chaîne ou mappage JSON)",
     "header. Anthropic-formatted endpoints accept the": ". Les points de terminaison au format Anthropic acceptent à la place",
     "Health": "Santé",
+    "Health check timed out": "Delai de verification depasse",
     "Health checks": "Controles de sante",
     "Healthy": "Normal",
     "Healthy channels": "Canaux sains",
