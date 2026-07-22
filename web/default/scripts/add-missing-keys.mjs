@@ -17,9 +17,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import fs from 'node:fs/promises'
+import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
 const LOCALES_DIR = path.resolve('src/i18n/locales')
+const marketplaceTranslations = JSON.parse(
+  readFileSync(
+    new URL('./marketplace-translations.json', import.meta.url),
+    'utf8'
+  )
+)
 
 function stableStringify(obj) {
   return `${JSON.stringify(obj, null, 2)}\n`
@@ -553,9 +560,181 @@ const homepageKeys = {
   },
 }
 
+const marketplaceEnglishKeys = [
+  'API Debug Assistant',
+  'API service',
+  'Algorithm Square',
+  'Analyze API requests, responses, and logs to identify likely integration failures.',
+  'Answer questions against internal materials with traceable source references.',
+  'Audio files',
+  'Audio or transcript',
+  'Capability catalog',
+  'Capability tags',
+  'Categories',
+  'Convert recorded meetings and business audio into timestamped text.',
+  'Create semantic vectors for retrieval, clustering, and knowledge base indexing.',
+  'Data Analysis Report',
+  'Data Intelligence',
+  'Data Productivity',
+  'Developer Tools',
+  'Diagnosis and remediation steps',
+  'Discover ready-to-use workflows that combine models, algorithms, and business prompts.',
+  'Document Image OCR',
+  'Document Intelligence',
+  'Document Productivity',
+  'Document Summary',
+  'Document images',
+  'Documents and images',
+  'Documents and instructions',
+  'Explore reusable algorithm services for document, speech, and data processing.',
+  'Extract key findings, conclusions, and action items from long business documents.',
+  'Generate clear Mandarin speech for assistants, broadcasts, and digital humans.',
+  'Generate, explain, and optimize SQL from business questions and database schemas.',
+  'Grounded answer with citations',
+  'Insights and report outline',
+  'Knowledge Base Q&A',
+  'Knowledge Services',
+  'Markdown and structured data',
+  'Meeting Minutes',
+  'MinerU Document Parsing',
+  'Mock data',
+  'No matching capabilities',
+  'Office Productivity',
+  'OpenAI-compatible API',
+  'Organize meeting transcripts into topics, decisions, owners, and follow-up actions.',
+  'Parse PDF, Word, PowerPoint, images, and spreadsheets into structured Markdown.',
+  'Query and passages',
+  'Question and database schema',
+  'Question and knowledge base',
+  'Recognize Chinese and English text while preserving blocks, tables, and reading order.',
+  'Relevance scores',
+  'Request, response, and logs',
+  'Rerank retrieved passages by relevance to improve grounded answer quality.',
+  'SQL Copilot',
+  'SQL and explanation',
+  'Search algorithms by name, category, or tag...',
+  'Search skills by name, scenario, or tag...',
+  'Skills Square',
+  'Speech Intelligence',
+  'Speech Recognition',
+  'Speech Synthesis',
+  'Speech audio',
+  'Streaming API',
+  'Structured meeting minutes',
+  'Structured summary',
+  'Tables and analysis goals',
+  'Text Embedding',
+  'Text Reranking',
+  'Text and layout data',
+  'This is preview data. Access instructions and live availability will be connected later.',
+  'Timestamped transcript',
+  'Try another keyword or category.',
+  'Turn tables and metric data into concise findings, trends, and management summaries.',
+  'Vector embeddings',
+  'Workflow',
+  '{{count}} capabilities',
+]
+
+const marketplaceEnglish = Object.fromEntries(
+  marketplaceEnglishKeys.map((key) => [key, key])
+)
+
+const marketplaceChinese = {
+  'API Debug Assistant': 'API 调试助手',
+  'API service': 'API 服务',
+  'Algorithm Square': '算法广场',
+  'Analyze API requests, responses, and logs to identify likely integration failures.':
+    '分析 API 请求、响应与日志，定位可能的集成故障。',
+  'Answer questions against internal materials with traceable source references.':
+    '基于内部资料回答问题，并提供可追溯的来源引用。',
+  'Audio files': '音频文件',
+  'Audio or transcript': '音频或转写文本',
+  'Capability catalog': '能力目录',
+  'Capability tags': '能力标签',
+  Categories: '分类',
+  'Convert recorded meetings and business audio into timestamped text.':
+    '将会议录音和业务音频转换为带时间戳的文本。',
+  'Create semantic vectors for retrieval, clustering, and knowledge base indexing.':
+    '生成用于检索、聚类和知识库索引的语义向量。',
+  'Data Analysis Report': '数据分析报告',
+  'Data Intelligence': '数据智能',
+  'Data Productivity': '数据生产力',
+  'Developer Tools': '开发工具',
+  'Diagnosis and remediation steps': '诊断结果与修复步骤',
+  'Discover ready-to-use workflows that combine models, algorithms, and business prompts.':
+    '发现由模型、算法和业务提示词组合而成的开箱即用工作流。',
+  'Document Image OCR': '文档图像 OCR',
+  'Document Intelligence': '文档智能',
+  'Document Productivity': '文档生产力',
+  'Document Summary': '文档摘要',
+  'Document images': '文档图像',
+  'Documents and images': '文档与图像',
+  'Documents and instructions': '文档与处理要求',
+  'Explore reusable algorithm services for document, speech, and data processing.':
+    '浏览面向文档、语音和数据处理的可复用算法服务。',
+  'Extract key findings, conclusions, and action items from long business documents.':
+    '从长篇业务文档中提取核心发现、结论和行动项。',
+  'Generate clear Mandarin speech for assistants, broadcasts, and digital humans.':
+    '为助手、播报和数字人生成清晰的普通话语音。',
+  'Generate, explain, and optimize SQL from business questions and database schemas.':
+    '根据业务问题和数据库结构生成、解释并优化 SQL。',
+  'Grounded answer with citations': '带引用的可信回答',
+  'Insights and report outline': '分析洞察与报告提纲',
+  'Knowledge Base Q&A': '知识库问答',
+  'Knowledge Services': '知识服务',
+  'Markdown and structured data': 'Markdown 与结构化数据',
+  'Meeting Minutes': '会议纪要',
+  'MinerU Document Parsing': 'MinerU 文档解析',
+  'Mock data': '模拟数据',
+  'No matching capabilities': '没有匹配的能力',
+  'Office Productivity': '办公生产力',
+  'OpenAI-compatible API': 'OpenAI 兼容 API',
+  'Organize meeting transcripts into topics, decisions, owners, and follow-up actions.':
+    '将会议转写整理为议题、决策、负责人和后续行动。',
+  'Parse PDF, Word, PowerPoint, images, and spreadsheets into structured Markdown.':
+    '将 PDF、Word、PowerPoint、图像和表格解析为结构化 Markdown。',
+  'Query and passages': '查询与候选段落',
+  'Question and database schema': '问题与数据库结构',
+  'Question and knowledge base': '问题与知识库',
+  'Recognize Chinese and English text while preserving blocks, tables, and reading order.':
+    '识别中英文文本，并保留区块、表格和阅读顺序。',
+  'Relevance scores': '相关性评分',
+  'Request, response, and logs': '请求、响应与日志',
+  'Rerank retrieved passages by relevance to improve grounded answer quality.':
+    '按相关性重排检索段落，提高有依据回答的质量。',
+  'SQL Copilot': 'SQL 助手',
+  'SQL and explanation': 'SQL 与说明',
+  'Search algorithms by name, category, or tag...':
+    '按名称、分类或标签搜索算法...',
+  'Search skills by name, scenario, or tag...':
+    '按名称、场景或标签搜索 Skills...',
+  'Skills Square': 'Skills 广场',
+  'Speech Intelligence': '语音智能',
+  'Speech Recognition': '语音识别',
+  'Speech Synthesis': '语音合成',
+  'Speech audio': '语音音频',
+  'Streaming API': '流式 API',
+  'Structured meeting minutes': '结构化会议纪要',
+  'Structured summary': '结构化摘要',
+  'Tables and analysis goals': '表格与分析目标',
+  'Text Embedding': '文本向量化',
+  'Text Reranking': '文本重排序',
+  'Text and layout data': '文本与版面数据',
+  'This is preview data. Access instructions and live availability will be connected later.':
+    '当前展示为预览数据，后续将接入调用说明和实时可用状态。',
+  'Timestamped transcript': '带时间戳的转写文本',
+  'Try another keyword or category.': '请尝试其他关键词或分类。',
+  'Turn tables and metric data into concise findings, trends, and management summaries.':
+    '将表格和指标数据转化为简明发现、趋势与管理摘要。',
+  'Vector embeddings': '向量数据',
+  Workflow: '工作流',
+  '{{count}} capabilities': '{{count}} 项能力',
+}
+
 const newKeys = {
   en: {
     ...homepageKeys.en,
+    ...marketplaceEnglish,
     'preset.xingluo': 'Xingluo',
     'Xingluo Data Field': 'Xingluo Data Field',
     'Zhiqing Model Service Platform': 'Zhiqing Model Service Platform',
@@ -621,6 +800,7 @@ const newKeys = {
   },
   zh: {
     ...homepageKeys.zh,
+    ...marketplaceChinese,
     'preset.xingluo': '星罗',
     'Xingluo Data Field': '星罗·数场',
     'Zhiqing Model Service Platform': '智擎模型服务平台',
@@ -685,6 +865,7 @@ const newKeys = {
   },
   'zh-TW': {
     ...homepageKeys['zh-TW'],
+    ...marketplaceChinese,
     'preset.xingluo': '星羅',
     'Xingluo Data Field': '星羅·數場',
     'Zhiqing Model Service Platform': '智擎模型服務平台',
@@ -725,6 +906,7 @@ const newKeys = {
   },
   fr: {
     ...homepageKeys.fr,
+    ...marketplaceTranslations.fr,
     'preset.xingluo': 'Xingluo',
     'Xingluo Data Field': 'Xingluo Data Field',
     'Zhiqing Model Service Platform':
@@ -792,6 +974,7 @@ const newKeys = {
   },
   ja: {
     ...homepageKeys.ja,
+    ...marketplaceTranslations.ja,
     'preset.xingluo': '星羅',
     'Xingluo Data Field': 'Xingluo Data Field',
     'Zhiqing Model Service Platform': 'Zhiqingモデルサービスプラットフォーム',
@@ -856,6 +1039,7 @@ const newKeys = {
   },
   ru: {
     ...homepageKeys.ru,
+    ...marketplaceTranslations.ru,
     'preset.xingluo': 'Синло',
     'Xingluo Data Field': 'Xingluo Data Field',
     'Zhiqing Model Service Platform': 'Платформа модельных сервисов Zhiqing',
@@ -921,6 +1105,7 @@ const newKeys = {
   },
   vi: {
     ...homepageKeys.vi,
+    ...marketplaceTranslations.vi,
     'preset.xingluo': 'Xingluo',
     'Xingluo Data Field': 'Xingluo Data Field',
     'Zhiqing Model Service Platform': 'Nền tảng dịch vụ mô hình Zhiqing',

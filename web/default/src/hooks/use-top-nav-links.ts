@@ -79,6 +79,9 @@ export function useTopNavLinks(): TopNavLink[] {
     links.push({ title: t('Model Square'), href: '/pricing', requiresAuth })
   }
 
+  links.push({ title: t('Algorithm Square'), href: '/algorithms' })
+  links.push({ title: t('Skills Square'), href: '/skills' })
+
   // Rankings
   const rankings = modules?.rankings
   if (rankings && typeof rankings === 'object' && rankings.enabled) {
