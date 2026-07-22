@@ -19,6 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 import { useTranslation } from 'react-i18next'
 
 import { Separator } from '@/components/ui/separator'
+import { withRuntimeBasePath } from '@/lib/runtime-base-path'
 
 import { getGatewayFeatures } from '../constants'
 
@@ -46,7 +47,7 @@ export function GatewayCard({ logo, systemName }: GatewayCardProps) {
         {/* Gateway Header */}
         <div className='mb-8 flex items-center justify-center gap-3'>
           <img
-            src={logo}
+            src={withRuntimeBasePath(logo)}
             alt={systemName}
             className='h-12 w-12 rounded-lg object-cover'
           />

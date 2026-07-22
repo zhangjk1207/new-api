@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next'
 
 import { Skeleton } from '@/components/ui/skeleton'
 import { useSystemConfig } from '@/hooks/use-system-config'
+import { withRuntimeBasePath } from '@/lib/runtime-base-path'
 
 type AuthLayoutProps = {
   children: React.ReactNode
@@ -41,7 +42,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
             <Skeleton className='absolute inset-0 rounded-full' />
           ) : (
             <img
-              src={logo}
+              src={withRuntimeBasePath(logo)}
               alt={t('Logo')}
               className='h-8 w-8 rounded-full object-cover'
             />

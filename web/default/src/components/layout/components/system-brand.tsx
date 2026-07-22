@@ -103,7 +103,7 @@ export function SystemBrand(props: SystemBrandProps) {
         >
           <div className='flex aspect-square size-8 items-center justify-center overflow-hidden rounded-lg'>
             <img
-              src={logo}
+              src={withRuntimeBasePath(logo)}
               alt={t('Logo')}
               className='size-full rounded-lg object-cover'
             />

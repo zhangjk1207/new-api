@@ -37,6 +37,7 @@ import {
 import { Form } from '@/components/ui/form'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useSystemConfig } from '@/hooks/use-system-config'
+import { withRuntimeBasePath } from '@/lib/runtime-base-path'
 import { cn } from '@/lib/utils'
 
 import { buildSetupPayload, getSetupStatus, submitSetup } from './api'
@@ -290,7 +291,7 @@ export function SetupWizard() {
               <Skeleton className='absolute inset-0 rounded-full' />
             ) : (
               <img
-                src={logo}
+                src={withRuntimeBasePath(logo)}
                 alt={t('System logo')}
                 className='h-12 w-12 rounded-full object-cover shadow-sm'
               />
