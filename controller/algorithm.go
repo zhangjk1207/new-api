@@ -508,6 +508,17 @@ func copyAlgorithmResponse(c *gin.Context, response *http.Response) {
 	_, _ = io.Copy(c.Writer, response.Body)
 }
 
+func prepareAlgorithmTestRequest(c *gin.Context) (io.Reader, string, error) {
+	contentType := c.GetHeader("Content-Type")
+	if !strings.HasPrefix(contentType, "application/json") &&
+		!strings.HasPrefix(contentType, "multipart/form-data") &&
+		!strings.HasPrefix(contentType, "application/x-www-form-urlencoded") {
+		return nil, "", fmt.Errorf("content type must be JSON, multipart, or form data")
+	}
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, algorithmBodyMaxBytes)
+	return c.Request.Body, contentType, nil
+}
+
 func TestAlgorithm(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil || id <= 0 {
@@ -519,7 +530,7 @@ func TestAlgorithm(c *gin.Context) {
 		common.ApiError(c, err)
 		return
 	}
-	_, body, contentType, err := prepareAlgorithmRequest(c, algorithm.ContentType)
+	body, contentType, err := prepareAlgorithmTestRequest(c)
 	if err != nil {
 		common.ApiErrorMsg(c, err.Error())
 		return

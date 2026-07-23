@@ -16,7 +16,7 @@ import {
   TestTube2,
   Trash2,
 } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
@@ -58,6 +58,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 import {
   formatDisplayPriceFromUSD,
@@ -77,20 +78,17 @@ import {
   type OpenAPIImport,
 } from './api'
 
-type SchemaProperty = {
-  type?: string
-  format?: string
-  title?: string
-  description?: string
-  default?: unknown
-  enum?: unknown[]
-  items?: SchemaProperty
-  anyOf?: SchemaProperty[]
-}
+type AlgorithmTestBodyType =
+  | 'application/json'
+  | 'multipart/form-data'
+  | 'application/x-www-form-urlencoded'
 
-type RequestSchema = {
-  properties?: Record<string, SchemaProperty>
-  required?: string[]
+type AlgorithmTestFormField = {
+  id: number
+  key: string
+  kind: 'text' | 'file'
+  value: string
+  file: File | null
 }
 
 const emptyForm: AlgorithmInput = {
@@ -440,122 +438,105 @@ function AlgorithmTestDialog(props: {
   onOpenChange: (open: boolean) => void
 }) {
   const { t } = useTranslation()
-  const [values, setValues] = useState<Record<string, string | boolean>>({})
-  const [files, setFiles] = useState<Record<string, File[]>>({})
+  const nextFieldId = useRef(1)
+  const [bodyType, setBodyType] =
+    useState<AlgorithmTestBodyType>('application/json')
+  const [jsonBody, setJsonBody] = useState('{\n  "key": "value"\n}')
+  const [formFields, setFormFields] = useState<AlgorithmTestFormField[]>([
+    { id: 0, key: '', kind: 'text', value: '', file: null },
+  ])
   const [result, setResult] = useState<{
     status: number
     duration: number
     data: string
   } | null>(null)
 
-  const schema = useMemo<RequestSchema>(() => {
-    if (!props.algorithm?.request_schema) return {}
-    try {
-      return JSON.parse(props.algorithm.request_schema) as RequestSchema
-    } catch {
-      return {}
-    }
-  }, [props.algorithm?.request_schema])
-  const properties = useMemo(
-    () => Object.entries(schema.properties ?? {}),
-    [schema.properties]
-  )
-  const required = useMemo(
-    () => new Set(schema.required ?? []),
-    [schema.required]
-  )
-
   useEffect(() => {
     if (!props.open) return
-    const defaults: Record<string, string | boolean> = {}
-    for (const [name, property] of properties) {
-      const propertyType =
-        property.type ??
-        property.anyOf?.find((item) => item.type !== 'null')?.type
-      if (property.default === undefined) continue
-      if (propertyType === 'boolean') {
-        defaults[name] = Boolean(property.default)
-      } else if (Array.isArray(property.default)) {
-        defaults[name] = property.default.join(', ')
-      } else {
-        defaults[name] = String(property.default)
-      }
+    const configuredType = props.algorithm?.content_type
+    if (
+      configuredType === 'application/json' ||
+      configuredType === 'multipart/form-data' ||
+      configuredType === 'application/x-www-form-urlencoded'
+    ) {
+      setBodyType(configuredType)
+    } else {
+      setBodyType('application/json')
     }
-    setValues(defaults)
-    setFiles({})
+    setJsonBody('{\n  "key": "value"\n}')
+    setFormFields([{ id: 0, key: '', kind: 'text', value: '', file: null }])
+    nextFieldId.current = 1
     setResult(null)
-  }, [properties, props.open])
+  }, [props.algorithm?.content_type, props.open])
 
   const testMutation = useMutation({
     mutationFn: async () => {
       if (!props.algorithm) throw new Error(t('Algorithm service not found'))
-      const contentType = props.algorithm.content_type
-      if (contentType === 'multipart/form-data') {
-        const form = new FormData()
-        for (const [name, selectedFiles] of Object.entries(files)) {
-          for (const file of selectedFiles) form.append(name, file)
+      if (bodyType === 'application/json') {
+        let payload: unknown
+        try {
+          payload = JSON.parse(jsonBody)
+        } catch {
+          throw new Error(t('Request body must be valid JSON'))
         }
-        for (const [name, value] of Object.entries(values)) {
-          if (value === '') continue
-          const property = schema.properties?.[name]
-          if (property?.type === 'array') {
-            for (const item of String(value).split(',')) {
-              if (item.trim()) form.append(name, item.trim())
-            }
-          } else {
-            form.append(name, String(value))
-          }
-        }
-        return testAlgorithm(props.algorithm.id, form, contentType)
+        return testAlgorithm(props.algorithm.id, payload, bodyType)
       }
 
-      const payload: Record<string, unknown> = {}
-      for (const [name, value] of Object.entries(values)) {
-        if (value === '') continue
-        const property = schema.properties?.[name]
-        const propertyType =
-          property?.type ??
-          property?.anyOf?.find((item) => item.type !== 'null')?.type
-        if (propertyType === 'integer' || propertyType === 'number') {
-          payload[name] = Number(value)
-        } else if (propertyType === 'array') {
-          payload[name] = String(value)
-            .split(',')
-            .map((item) => item.trim())
-            .filter(Boolean)
-        } else {
-          payload[name] = value
-        }
-      }
-      if (contentType === 'application/x-www-form-urlencoded') {
-        const form = new URLSearchParams()
-        for (const [name, value] of Object.entries(payload)) {
-          if (Array.isArray(value)) {
-            for (const item of value) form.append(name, String(item))
+      if (bodyType === 'multipart/form-data') {
+        const form = new FormData()
+        for (const field of formFields) {
+          const key = field.key.trim()
+          if (!key) continue
+          if (field.kind === 'file') {
+            if (field.file) form.append(key, field.file)
           } else {
-            form.append(name, String(value))
+            form.append(key, field.value)
           }
         }
-        return testAlgorithm(props.algorithm.id, form, contentType)
+        return testAlgorithm(props.algorithm.id, form, bodyType)
       }
-      return testAlgorithm(props.algorithm.id, payload, contentType)
+
+      const form = new URLSearchParams()
+      for (const field of formFields) {
+        const key = field.key.trim()
+        if (key) form.append(key, field.value)
+      }
+      return testAlgorithm(props.algorithm.id, form, bodyType)
     },
     onSuccess: setResult,
     onError: (error) => toast.error(error.message),
   })
 
-  const missingRequired = properties.some(([name, property]) => {
-    if (!required.has(name)) return false
-    const isFile =
-      property.format === 'binary' || property.items?.format === 'binary'
-    return isFile
-      ? !files[name]?.length
-      : values[name] === '' || values[name] === undefined
-  })
+  const formattedResult = useMemo(() => {
+    if (!result) return ''
+    try {
+      return JSON.stringify(JSON.parse(result.data), null, 2)
+    } catch {
+      return result.data
+    }
+  }, [result])
+
+  const updateField = (
+    id: number,
+    patch: Partial<Omit<AlgorithmTestFormField, 'id'>>
+  ) => {
+    setFormFields((current) =>
+      current.map((field) => (field.id === id ? { ...field, ...patch } : field))
+    )
+  }
+
+  const addField = () => {
+    const id = nextFieldId.current
+    nextFieldId.current += 1
+    setFormFields((current) => [
+      ...current,
+      { id, key: '', kind: 'text', value: '', file: null },
+    ])
+  }
 
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
-      <DialogContent className='max-h-[90vh] overflow-y-auto sm:max-w-3xl'>
+      <DialogContent className='flex max-h-[90vh] flex-col overflow-hidden sm:max-w-4xl'>
         <DialogHeader>
           <DialogTitle>
             {t('Test algorithm service')}: {props.algorithm?.display_name}
@@ -566,158 +547,177 @@ function AlgorithmTestDialog(props: {
           </DialogDescription>
         </DialogHeader>
 
-        <div className='grid gap-4 sm:grid-cols-2'>
-          {properties.map(([name, property]) => {
-            const isFile =
-              property.format === 'binary' ||
-              property.items?.format === 'binary'
-            const propertyType =
-              property.type ??
-              property.anyOf?.find((item) => item.type !== 'null')?.type
-            const label = property.title || name
-            if (isFile) {
-              return (
-                <Field
-                  key={name}
-                  label={`${label}${required.has(name) ? ' *' : ''}`}
-                  className='space-y-2 sm:col-span-2'
-                >
-                  <Input
-                    type='file'
-                    multiple={property.type === 'array'}
-                    onChange={(event) =>
-                      setFiles({
-                        ...files,
-                        [name]: [...(event.target.files ?? [])],
-                      })
-                    }
-                  />
-                  {property.description ? (
-                    <p className='text-muted-foreground text-xs'>
-                      {property.description}
-                    </p>
-                  ) : null}
-                </Field>
-              )
-            }
-            if (propertyType === 'boolean') {
-              return (
-                <div
-                  key={name}
-                  className='flex min-h-16 items-center justify-between gap-3 rounded-md border px-3 py-2'
-                >
-                  <div>
-                    <Label>{label}</Label>
-                    {property.description ? (
-                      <p className='text-muted-foreground mt-1 line-clamp-2 text-xs'>
-                        {property.description}
-                      </p>
-                    ) : null}
+        <div className='min-h-0 flex-1 space-y-4 overflow-y-auto pr-1'>
+          <Tabs
+            value={bodyType}
+            onValueChange={(value) => {
+              setBodyType(value as AlgorithmTestBodyType)
+              setResult(null)
+            }}
+          >
+            <TabsList className='grid w-full grid-cols-3'>
+              <TabsTrigger value='application/json'>JSON</TabsTrigger>
+              <TabsTrigger value='multipart/form-data'>
+                {t('Form Data')}
+              </TabsTrigger>
+              <TabsTrigger value='application/x-www-form-urlencoded'>
+                {t('URL Encoded')}
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value='application/json' className='mt-4'>
+              <Textarea
+                aria-label={t('JSON request body')}
+                className='min-h-72 resize-y font-mono text-xs leading-5'
+                value={jsonBody}
+                onChange={(event) => setJsonBody(event.target.value)}
+                spellCheck={false}
+              />
+            </TabsContent>
+
+            {['multipart/form-data', 'application/x-www-form-urlencoded'].map(
+              (type) => (
+                <TabsContent key={type} value={type} className='mt-4 space-y-3'>
+                  <div className='overflow-x-auto rounded-md border'>
+                    <div
+                      className={`bg-muted/50 text-muted-foreground grid gap-2 border-b px-3 py-2 text-xs font-medium ${
+                        type === 'multipart/form-data'
+                          ? 'min-w-[620px] grid-cols-[7rem_minmax(8rem,0.8fr)_minmax(10rem,1.2fr)_2rem]'
+                          : 'min-w-[440px] grid-cols-[minmax(8rem,0.8fr)_minmax(10rem,1.2fr)_2rem]'
+                      }`}
+                    >
+                      {type === 'multipart/form-data' ? (
+                        <span>{t('Type')}</span>
+                      ) : null}
+                      <span>{t('Key')}</span>
+                      <span>{t('Value')}</span>
+                      <span />
+                    </div>
+                    <div className='divide-y'>
+                      {formFields.map((field) => (
+                        <div
+                          key={field.id}
+                          className={`grid items-center gap-2 px-3 py-2 ${
+                            type === 'multipart/form-data'
+                              ? 'min-w-[620px] grid-cols-[7rem_minmax(8rem,0.8fr)_minmax(10rem,1.2fr)_2rem]'
+                              : 'min-w-[440px] grid-cols-[minmax(8rem,0.8fr)_minmax(10rem,1.2fr)_2rem]'
+                          }`}
+                        >
+                          {type === 'multipart/form-data' ? (
+                            <NativeSelect
+                              value={field.kind}
+                              onChange={(event) =>
+                                updateField(field.id, {
+                                  kind: event.target.value as 'text' | 'file',
+                                  value: '',
+                                  file: null,
+                                })
+                              }
+                            >
+                              <NativeSelectOption value='text'>
+                                {t('Text')}
+                              </NativeSelectOption>
+                              <NativeSelectOption value='file'>
+                                {t('File')}
+                              </NativeSelectOption>
+                            </NativeSelect>
+                          ) : null}
+                          <Input
+                            value={field.key}
+                            placeholder={t('Parameter name')}
+                            onChange={(event) =>
+                              updateField(field.id, { key: event.target.value })
+                            }
+                          />
+                          {type === 'multipart/form-data' &&
+                          field.kind === 'file' ? (
+                            <Input
+                              type='file'
+                              onChange={(event) =>
+                                updateField(field.id, {
+                                  file: event.target.files?.[0] ?? null,
+                                })
+                              }
+                            />
+                          ) : (
+                            <Input
+                              value={field.value}
+                              placeholder={t('Parameter value')}
+                              onChange={(event) =>
+                                updateField(field.id, {
+                                  value: event.target.value,
+                                })
+                              }
+                            />
+                          )}
+                          <Button
+                            type='button'
+                            variant='ghost'
+                            size='icon-sm'
+                            aria-label={t('Remove field')}
+                            onClick={() =>
+                              setFormFields((current) =>
+                                current.filter((item) => item.id !== field.id)
+                              )
+                            }
+                          >
+                            <Trash2 className='size-4' />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <Switch
-                    checked={Boolean(values[name])}
-                    onCheckedChange={(checked) =>
-                      setValues({ ...values, [name]: checked })
-                    }
-                  />
-                </div>
-              )
-            }
-            const options = property.enum ?? property.items?.enum
-            return (
-              <Field
-                key={name}
-                label={`${label}${required.has(name) ? ' *' : ''}`}
-              >
-                {options && property.type !== 'array' ? (
-                  <NativeSelect
-                    className='w-full'
-                    value={String(values[name] ?? '')}
-                    onChange={(event) =>
-                      setValues({ ...values, [name]: event.target.value })
-                    }
+                  <Button
+                    type='button'
+                    variant='outline'
+                    size='sm'
+                    onClick={addField}
                   >
-                    <NativeSelectOption value=''>
-                      {t('Use service default')}
-                    </NativeSelectOption>
-                    {options.map((option) => (
-                      <NativeSelectOption
-                        key={String(option)}
-                        value={String(option)}
-                      >
-                        {String(option)}
-                      </NativeSelectOption>
-                    ))}
-                  </NativeSelect>
-                ) : (
-                  <Input
-                    type={
-                      propertyType === 'integer' || propertyType === 'number'
-                        ? 'number'
-                        : 'text'
-                    }
-                    value={String(values[name] ?? '')}
-                    placeholder={
-                      property.type === 'array'
-                        ? t('Comma-separated values')
-                        : undefined
-                    }
-                    onChange={(event) =>
-                      setValues({ ...values, [name]: event.target.value })
-                    }
-                  />
-                )}
-                {property.description ? (
-                  <p className='text-muted-foreground line-clamp-2 text-xs'>
-                    {property.description}
-                  </p>
-                ) : null}
-              </Field>
-            )
-          })}
-          {properties.length === 0 ? (
-            <p className='text-muted-foreground sm:col-span-2'>
-              {t('No request fields were found in the OpenAPI schema.')}
-            </p>
+                    <Plus className='size-4' />
+                    {t('Add field')}
+                  </Button>
+                </TabsContent>
+              )
+            )}
+          </Tabs>
+
+          {result ? (
+            <div className='space-y-2 border-t pt-4'>
+              <div className='flex items-center gap-2 text-sm'>
+                <Badge
+                  variant={
+                    result.status >= 200 && result.status < 300
+                      ? 'default'
+                      : 'destructive'
+                  }
+                >
+                  HTTP {result.status}
+                </Badge>
+                <span className='text-muted-foreground'>
+                  {result.duration} ms
+                </span>
+              </div>
+              <pre className='bg-muted max-h-64 overflow-auto rounded-md p-3 text-xs break-all whitespace-pre-wrap'>
+                {formattedResult}
+              </pre>
+            </div>
           ) : null}
         </div>
 
-        {result ? (
-          <div className='space-y-2'>
-            <div className='flex items-center gap-2 text-sm'>
-              <Badge
-                variant={
-                  result.status >= 200 && result.status < 300
-                    ? 'default'
-                    : 'destructive'
-                }
-              >
-                HTTP {result.status}
-              </Badge>
-              <span className='text-muted-foreground'>
-                {result.duration} ms
-              </span>
-            </div>
-            <pre className='bg-muted max-h-64 overflow-auto rounded-md p-3 text-xs break-all whitespace-pre-wrap'>
-              {result.data}
-            </pre>
-          </div>
-        ) : null}
-
-        <DialogFooter>
+        <DialogFooter className='shrink-0 border-t pt-4'>
           <Button variant='outline' onClick={() => props.onOpenChange(false)}>
             {t('Close')}
           </Button>
           <Button
             onClick={() => testMutation.mutate()}
-            disabled={testMutation.isPending || missingRequired}
+            disabled={testMutation.isPending}
           >
             {testMutation.isPending ? (
               <Loader2 className='size-4 animate-spin' />
             ) : (
               <TestTube2 className='size-4' />
             )}
-            {t('Run test')}
+            {t('Send request')}
           </Button>
         </DialogFooter>
       </DialogContent>

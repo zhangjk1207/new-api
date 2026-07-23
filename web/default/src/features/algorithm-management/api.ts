@@ -118,7 +118,7 @@ export async function deleteAlgorithm(id: number) {
 
 export async function testAlgorithm(
   id: number,
-  body: FormData | URLSearchParams | Record<string, unknown>,
+  body: unknown,
   contentType: string
 ) {
   const response = await api.post(`/api/algorithms/${id}/test`, body, {

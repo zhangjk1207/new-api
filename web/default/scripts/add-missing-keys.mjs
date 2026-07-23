@@ -760,6 +760,15 @@ const algorithmServiceKeys = {
     'No request fields were found in the OpenAPI schema.':
       'No request fields were found in the OpenAPI schema.',
     'Run test': 'Run test',
+    'Form Data': 'Form Data',
+    'URL Encoded': 'URL Encoded',
+    'JSON request body': 'JSON request body',
+    'Request body must be valid JSON': 'Request body must be valid JSON',
+    'Parameter name': 'Parameter name',
+    'Parameter value': 'Parameter value',
+    'Remove field': 'Remove field',
+    'Add field': 'Add field',
+    'Send request': 'Send request',
   },
   zh: {
     'Algorithm Services': '算法服务',
@@ -789,6 +798,15 @@ const algorithmServiceKeys = {
     'No request fields were found in the OpenAPI schema.':
       'OpenAPI 请求结构中没有可用字段。',
     'Run test': '开始测试',
+    'Form Data': '表单数据',
+    'URL Encoded': 'URL 编码',
+    'JSON request body': 'JSON 请求体',
+    'Request body must be valid JSON': '请求体必须是有效的 JSON',
+    'Parameter name': '参数名',
+    'Parameter value': '参数值',
+    'Remove field': '删除字段',
+    'Add field': '添加字段',
+    'Send request': '发送请求',
   },
   'zh-TW': {
     'Algorithm Services': '演算法服務',
@@ -818,6 +836,15 @@ const algorithmServiceKeys = {
     'No request fields were found in the OpenAPI schema.':
       'OpenAPI 請求結構中沒有可用欄位。',
     'Run test': '開始測試',
+    'Form Data': '表單資料',
+    'URL Encoded': 'URL 編碼',
+    'JSON request body': 'JSON 請求本文',
+    'Request body must be valid JSON': '請求本文必須是有效的 JSON',
+    'Parameter name': '參數名稱',
+    'Parameter value': '參數值',
+    'Remove field': '刪除欄位',
+    'Add field': '新增欄位',
+    'Send request': '傳送請求',
   },
   fr: {
     'Algorithm Services': 'Services algorithmiques',
@@ -847,6 +874,16 @@ const algorithmServiceKeys = {
     'No request fields were found in the OpenAPI schema.':
       'Aucun champ de requete trouve dans le schema OpenAPI.',
     'Run test': 'Lancer le test',
+    'Form Data': 'Donnees de formulaire',
+    'URL Encoded': 'Encode URL',
+    'JSON request body': 'Corps de requete JSON',
+    'Request body must be valid JSON':
+      'Le corps de la requete doit etre un JSON valide',
+    'Parameter name': 'Nom du parametre',
+    'Parameter value': 'Valeur du parametre',
+    'Remove field': 'Supprimer le champ',
+    'Add field': 'Ajouter un champ',
+    'Send request': 'Envoyer la requete',
   },
   ja: {
     'Algorithm Services': 'アルゴリズムサービス',
@@ -878,6 +915,16 @@ const algorithmServiceKeys = {
     'No request fields were found in the OpenAPI schema.':
       'OpenAPI スキーマにリクエストフィールドがありません。',
     'Run test': 'テストを実行',
+    'Form Data': 'フォームデータ',
+    'URL Encoded': 'URL エンコード',
+    'JSON request body': 'JSON リクエスト本文',
+    'Request body must be valid JSON':
+      'リクエスト本文は有効な JSON である必要があります',
+    'Parameter name': 'パラメーター名',
+    'Parameter value': 'パラメーター値',
+    'Remove field': 'フィールドを削除',
+    'Add field': 'フィールドを追加',
+    'Send request': 'リクエストを送信',
   },
   ru: {
     'Algorithm Services': 'Алгоритмические сервисы',
@@ -907,6 +954,16 @@ const algorithmServiceKeys = {
     'No request fields were found in the OpenAPI schema.':
       'В схеме OpenAPI не найдены поля запроса.',
     'Run test': 'Запустить тест',
+    'Form Data': 'Данные формы',
+    'URL Encoded': 'URL-кодирование',
+    'JSON request body': 'Тело JSON-запроса',
+    'Request body must be valid JSON':
+      'Тело запроса должно содержать корректный JSON',
+    'Parameter name': 'Имя параметра',
+    'Parameter value': 'Значение параметра',
+    'Remove field': 'Удалить поле',
+    'Add field': 'Добавить поле',
+    'Send request': 'Отправить запрос',
   },
   vi: {
     'Algorithm Services': 'Dich vu thuat toan',
@@ -936,6 +993,15 @@ const algorithmServiceKeys = {
     'No request fields were found in the OpenAPI schema.':
       'Khong tim thay truong yeu cau trong luoc do OpenAPI.',
     'Run test': 'Chay kiem tra',
+    'Form Data': 'Du lieu bieu mau',
+    'URL Encoded': 'Ma hoa URL',
+    'JSON request body': 'Noi dung yeu cau JSON',
+    'Request body must be valid JSON': 'Noi dung yeu cau phai la JSON hop le',
+    'Parameter name': 'Ten tham so',
+    'Parameter value': 'Gia tri tham so',
+    'Remove field': 'Xoa truong',
+    'Add field': 'Them truong',
+    'Send request': 'Gui yeu cau',
   },
 }
 

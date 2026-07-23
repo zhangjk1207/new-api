@@ -3,6 +3,7 @@ package controller
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -134,4 +135,54 @@ func TestAlgorithmForwardsAdminMultipartRequestWithoutRequiringEnabled(t *testin
 	assert.Equal(t, http.StatusOK, recorder.Code)
 	assert.JSONEq(t, `{"parsed":true}`, recorder.Body.String())
 	assert.NotEmpty(t, recorder.Header().Get("X-Algorithm-Test-Duration-Ms"))
+}
+
+func TestAlgorithmAdminTestForwardsRawBodyRegardlessOfConfiguredContentType(t *testing.T) {
+	tests := []struct {
+		name        string
+		contentType string
+		body        string
+	}{
+		{name: "JSON", contentType: "application/json", body: `[{"input":"value"}]`},
+		{name: "URL encoded", contentType: "application/x-www-form-urlencoded", body: "input=value&repeat=one&repeat=two"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			gin.SetMode(gin.TestMode)
+			setupAlgorithmControllerTestDB(t)
+
+			upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+				assert.Equal(t, test.contentType, request.Header.Get("Content-Type"))
+				data, err := io.ReadAll(request.Body)
+				require.NoError(t, err)
+				if test.contentType == "application/json" {
+					assert.JSONEq(t, test.body, string(data))
+				} else {
+					assert.Equal(t, test.body, string(data))
+				}
+				w.Header().Set("Content-Type", "application/json")
+				_, _ = w.Write([]byte(`{"ok":true}`))
+			}))
+			defer upstream.Close()
+
+			algorithm := &model.Algorithm{
+				Name: "generic-test", DisplayName: "Generic Test", Enabled: true,
+				BaseURL: upstream.URL, Method: http.MethodPost, Path: "/invoke",
+				ContentType: "multipart/form-data", TimeoutSeconds: 10,
+				PricingModel: "algorithm:generic-test",
+			}
+			require.NoError(t, model.CreateAlgorithm(algorithm))
+
+			recorder := httptest.NewRecorder()
+			context, _ := gin.CreateTestContext(recorder)
+			context.Params = gin.Params{{Key: "id", Value: fmt.Sprint(algorithm.Id)}}
+			context.Request = httptest.NewRequest(http.MethodPost, "/api/algorithms/1/test", strings.NewReader(test.body))
+			context.Request.Header.Set("Content-Type", test.contentType)
+			TestAlgorithm(context)
+
+			assert.Equal(t, http.StatusOK, recorder.Code)
+			assert.JSONEq(t, `{"ok":true}`, recorder.Body.String())
+		})
+	}
 }
