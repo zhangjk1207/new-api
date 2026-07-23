@@ -471,6 +471,70 @@ func prepareAlgorithmRequest(c *gin.Context, contentType string) (string, io.Rea
 	return "", nil, "", fmt.Errorf("content type must be JSON, multipart, or form data")
 }
 
+func proxyAlgorithmRequest(ctx *gin.Context, algorithm *model.Algorithm, body io.Reader, contentType string) (*http.Response, error) {
+	upstreamBase, err := url.Parse(algorithm.BaseURL)
+	if err != nil {
+		return nil, err
+	}
+	relative, err := url.Parse(algorithm.Path)
+	if err != nil {
+		return nil, err
+	}
+	request, err := http.NewRequestWithContext(
+		ctx.Request.Context(),
+		algorithm.Method,
+		upstreamBase.ResolveReference(relative).String(),
+		body,
+	)
+	if err != nil {
+		return nil, err
+	}
+	request.Header.Set("Content-Type", contentType)
+	request.Header.Set("Accept", ctx.GetHeader("Accept"))
+	client := &http.Client{Timeout: time.Duration(algorithm.TimeoutSeconds) * time.Second}
+	return client.Do(request)
+}
+
+func copyAlgorithmResponse(c *gin.Context, response *http.Response) {
+	for key, values := range response.Header {
+		if strings.EqualFold(key, "Content-Length") || strings.EqualFold(key, "Transfer-Encoding") {
+			continue
+		}
+		for _, value := range values {
+			c.Writer.Header().Add(key, value)
+		}
+	}
+	c.Status(response.StatusCode)
+	_, _ = io.Copy(c.Writer, response.Body)
+}
+
+func TestAlgorithm(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil || id <= 0 {
+		common.ApiErrorMsg(c, "invalid algorithm ID")
+		return
+	}
+	algorithm, err := model.GetAlgorithmByID(id)
+	if err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	_, body, contentType, err := prepareAlgorithmRequest(c, algorithm.ContentType)
+	if err != nil {
+		common.ApiErrorMsg(c, err.Error())
+		return
+	}
+	startedAt := time.Now()
+	response, err := proxyAlgorithmRequest(c, algorithm, body, contentType)
+	if err != nil {
+		common.ApiErrorMsg(c, err.Error())
+		return
+	}
+	defer response.Body.Close()
+	c.Header("X-Algorithm-Test-Duration-Ms", strconv.FormatInt(time.Since(startedAt).Milliseconds(), 10))
+	copyAlgorithmResponse(c, response)
+}
+
 func InvokeAlgorithm(c *gin.Context) {
 	requestContentType := c.GetHeader("Content-Type")
 	algorithmName := strings.TrimSpace(c.Query("algorithm"))
@@ -531,19 +595,7 @@ func InvokeAlgorithm(c *gin.Context) {
 		c.JSON(statusCode, gin.H{"error": gin.H{"message": apiErr.Error(), "type": "billing_error"}})
 		return
 	}
-	upstreamBase, _ := url.Parse(algorithm.BaseURL)
-	relative, _ := url.Parse(algorithm.Path)
-	upstreamURL := upstreamBase.ResolveReference(relative)
-	request, err := http.NewRequestWithContext(c.Request.Context(), algorithm.Method, upstreamURL.String(), body)
-	if err != nil {
-		info.Billing.Refund(c)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": gin.H{"message": err.Error(), "type": "server_error"}})
-		return
-	}
-	request.Header.Set("Content-Type", forwardedContentType)
-	request.Header.Set("Accept", c.GetHeader("Accept"))
-	client := &http.Client{Timeout: time.Duration(algorithm.TimeoutSeconds) * time.Second}
-	response, err := client.Do(request)
+	response, err := proxyAlgorithmRequest(c, algorithm, body, forwardedContentType)
 	if err != nil {
 		info.Billing.Refund(c)
 		c.JSON(http.StatusBadGateway, gin.H{"error": gin.H{"message": err.Error(), "type": "upstream_error"}})
@@ -552,13 +604,7 @@ func InvokeAlgorithm(c *gin.Context) {
 	defer response.Body.Close()
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
 		info.Billing.Refund(c)
-		for key, values := range response.Header {
-			for _, value := range values {
-				c.Writer.Header().Add(key, value)
-			}
-		}
-		c.Status(response.StatusCode)
-		_, _ = io.Copy(c.Writer, response.Body)
+		copyAlgorithmResponse(c, response)
 		return
 	}
 	info.PriceData = priceData
@@ -567,14 +613,5 @@ func InvokeAlgorithm(c *gin.Context) {
 		return
 	}
 	service.LogTaskConsumption(c, info)
-	for key, values := range response.Header {
-		if strings.EqualFold(key, "Content-Length") || strings.EqualFold(key, "Transfer-Encoding") {
-			continue
-		}
-		for _, value := range values {
-			c.Writer.Header().Add(key, value)
-		}
-	}
-	c.Status(response.StatusCode)
-	_, _ = io.Copy(c.Writer, response.Body)
+	copyAlgorithmResponse(c, response)
 }

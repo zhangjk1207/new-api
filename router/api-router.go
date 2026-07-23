@@ -55,6 +55,7 @@ func SetApiRouter(router *gin.Engine) {
 		{
 			algorithmRoute.GET("", controller.ListAlgorithms)
 			algorithmRoute.POST("", controller.CreateAlgorithm)
+			algorithmRoute.POST("/:id/test", controller.TestAlgorithm)
 			algorithmRoute.PUT("/:id", controller.UpdateAlgorithm)
 			algorithmRoute.DELETE("/:id", controller.DeleteAlgorithm)
 			algorithmRoute.POST("/import-openapi", controller.ImportAlgorithmOpenAPI)

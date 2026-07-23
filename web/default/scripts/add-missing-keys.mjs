@@ -753,6 +753,13 @@ const algorithmServiceKeys = {
     'Delete this algorithm service?': 'Delete this algorithm service?',
     'OpenAPI response': 'OpenAPI response',
     'Unified algorithm API': 'Unified algorithm API',
+    'Test algorithm service': 'Test algorithm service',
+    'Algorithm service not found': 'Algorithm service not found',
+    'Use service default': 'Use service default',
+    'Comma-separated values': 'Comma-separated values',
+    'No request fields were found in the OpenAPI schema.':
+      'No request fields were found in the OpenAPI schema.',
+    'Run test': 'Run test',
   },
   zh: {
     'Algorithm Services': '算法服务',
@@ -775,6 +782,13 @@ const algorithmServiceKeys = {
     'Delete this algorithm service?': '确定删除这个算法服务吗？',
     'OpenAPI response': 'OpenAPI 响应',
     'Unified algorithm API': '统一算法 API',
+    'Test algorithm service': '测试算法服务',
+    'Algorithm service not found': '未找到算法服务',
+    'Use service default': '使用服务默认值',
+    'Comma-separated values': '多个值请用逗号分隔',
+    'No request fields were found in the OpenAPI schema.':
+      'OpenAPI 请求结构中没有可用字段。',
+    'Run test': '开始测试',
   },
   'zh-TW': {
     'Algorithm Services': '演算法服務',
@@ -797,6 +811,13 @@ const algorithmServiceKeys = {
     'Delete this algorithm service?': '確定刪除此演算法服務嗎？',
     'OpenAPI response': 'OpenAPI 回應',
     'Unified algorithm API': '統一演算法 API',
+    'Test algorithm service': '測試演算法服務',
+    'Algorithm service not found': '找不到演算法服務',
+    'Use service default': '使用服務預設值',
+    'Comma-separated values': '多個值請以逗號分隔',
+    'No request fields were found in the OpenAPI schema.':
+      'OpenAPI 請求結構中沒有可用欄位。',
+    'Run test': '開始測試',
   },
   fr: {
     'Algorithm Services': 'Services algorithmiques',
@@ -819,6 +840,13 @@ const algorithmServiceKeys = {
     'Delete this algorithm service?': 'Supprimer ce service algorithmique ?',
     'OpenAPI response': 'Reponse OpenAPI',
     'Unified algorithm API': 'API algorithmique unifiee',
+    'Test algorithm service': 'Tester le service algorithmique',
+    'Algorithm service not found': 'Service algorithmique introuvable',
+    'Use service default': 'Utiliser la valeur par defaut',
+    'Comma-separated values': 'Valeurs separees par des virgules',
+    'No request fields were found in the OpenAPI schema.':
+      'Aucun champ de requete trouve dans le schema OpenAPI.',
+    'Run test': 'Lancer le test',
   },
   ja: {
     'Algorithm Services': 'アルゴリズムサービス',
@@ -826,7 +854,7 @@ const algorithmServiceKeys = {
     'Edit algorithm service': 'アルゴリズムサービスを編集',
     'Import an OpenAPI operation and expose it through the unified algorithm endpoint.':
       'OpenAPI 操作をインポートし、統一アルゴリズムエンドポイントで公開します。',
-    'OpenAPI URL': 'OpenAPI URL',
+    'OpenAPI URL': 'OpenAPI の URL',
     'Import OpenAPI': 'OpenAPI をインポート',
     'OpenAPI operation': 'OpenAPI 操作',
     'Select an operation': '操作を選択',
@@ -843,6 +871,13 @@ const algorithmServiceKeys = {
       'このアルゴリズムサービスを削除しますか？',
     'OpenAPI response': 'OpenAPI レスポンス',
     'Unified algorithm API': '統一アルゴリズム API',
+    'Test algorithm service': 'アルゴリズムサービスをテスト',
+    'Algorithm service not found': 'アルゴリズムサービスが見つかりません',
+    'Use service default': 'サービスのデフォルト値を使用',
+    'Comma-separated values': 'カンマ区切りの値',
+    'No request fields were found in the OpenAPI schema.':
+      'OpenAPI スキーマにリクエストフィールドがありません。',
+    'Run test': 'テストを実行',
   },
   ru: {
     'Algorithm Services': 'Алгоритмические сервисы',
@@ -865,6 +900,13 @@ const algorithmServiceKeys = {
     'Delete this algorithm service?': 'Удалить этот алгоритмический сервис?',
     'OpenAPI response': 'Ответ OpenAPI',
     'Unified algorithm API': 'Единый API алгоритмов',
+    'Test algorithm service': 'Тест алгоритмического сервиса',
+    'Algorithm service not found': 'Алгоритмический сервис не найден',
+    'Use service default': 'Использовать значение сервиса по умолчанию',
+    'Comma-separated values': 'Значения через запятую',
+    'No request fields were found in the OpenAPI schema.':
+      'В схеме OpenAPI не найдены поля запроса.',
+    'Run test': 'Запустить тест',
   },
   vi: {
     'Algorithm Services': 'Dich vu thuat toan',
@@ -887,6 +929,13 @@ const algorithmServiceKeys = {
     'Delete this algorithm service?': 'Xoa dich vu thuat toan nay?',
     'OpenAPI response': 'Phan hoi OpenAPI',
     'Unified algorithm API': 'API thuat toan thong nhat',
+    'Test algorithm service': 'Kiem tra dich vu thuat toan',
+    'Algorithm service not found': 'Khong tim thay dich vu thuat toan',
+    'Use service default': 'Dung gia tri mac dinh cua dich vu',
+    'Comma-separated values': 'Cac gia tri cach nhau bang dau phay',
+    'No request fields were found in the OpenAPI schema.':
+      'Khong tim thay truong yeu cau trong luoc do OpenAPI.',
+    'Run test': 'Chay kiem tra',
   },
 }
 

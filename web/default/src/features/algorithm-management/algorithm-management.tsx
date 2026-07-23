@@ -7,11 +7,25 @@ published by the Free Software Foundation, either version 3 of the
 License, or (at your option) any later version.
 */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Braces, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react'
+import {
+  Braces,
+  Loader2,
+  Pencil,
+  Plus,
+  RefreshCw,
+  TestTube2,
+  Trash2,
+} from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
+import {
+  sideDrawerContentClassName,
+  sideDrawerFooterClassName,
+  sideDrawerFormClassName,
+  sideDrawerHeaderClassName,
+} from '@/components/drawer-layout'
 import { SectionPageLayout } from '@/components/layout'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -26,6 +40,14 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
 import {
@@ -48,11 +70,28 @@ import {
   deleteAlgorithm,
   getAlgorithms,
   importOpenAPI,
+  testAlgorithm,
   updateAlgorithm,
   type Algorithm,
   type AlgorithmInput,
   type OpenAPIImport,
 } from './api'
+
+type SchemaProperty = {
+  type?: string
+  format?: string
+  title?: string
+  description?: string
+  default?: unknown
+  enum?: unknown[]
+  items?: SchemaProperty
+  anyOf?: SchemaProperty[]
+}
+
+type RequestSchema = {
+  properties?: Record<string, SchemaProperty>
+  required?: string[]
+}
 
 const emptyForm: AlgorithmInput = {
   name: '',
@@ -126,6 +165,17 @@ function AlgorithmDialog(props: {
   useEffect(() => {
     if (!props.open) return
     if (props.algorithm) {
+      let requestSchema: Record<string, unknown> | undefined
+      if (props.algorithm.request_schema) {
+        try {
+          requestSchema = JSON.parse(props.algorithm.request_schema) as Record<
+            string,
+            unknown
+          >
+        } catch {
+          requestSchema = undefined
+        }
+      }
       setForm({
         ...props.algorithm,
         price: Number(
@@ -134,9 +184,7 @@ function AlgorithmDialog(props: {
             pricingCurrency.exchangeRate
           )
         ),
-        request_schema: props.algorithm.request_schema
-          ? JSON.parse(props.algorithm.request_schema)
-          : undefined,
+        request_schema: requestSchema,
       })
       setTagText(props.algorithm.tags.join(', '))
     } else {
@@ -157,6 +205,7 @@ function AlgorithmDialog(props: {
         version: current.version || data.version,
       }))
     },
+    onError: (error) => toast.error(error.message),
   })
 
   const saveMutation = useMutation({
@@ -180,6 +229,7 @@ function AlgorithmDialog(props: {
       toast.success(t('Algorithm service saved'))
       props.onOpenChange(false)
     },
+    onError: (error) => toast.error(error.message),
   })
 
   const selectOperation = (index: number) => {
@@ -196,24 +246,24 @@ function AlgorithmDialog(props: {
   }
 
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange}>
-      <DialogContent className='max-h-[90vh] overflow-y-auto sm:max-w-4xl'>
-        <DialogHeader>
-          <DialogTitle>
+    <Sheet open={props.open} onOpenChange={props.onOpenChange}>
+      <SheetContent className={sideDrawerContentClassName('sm:max-w-4xl')}>
+        <SheetHeader className={sideDrawerHeaderClassName()}>
+          <SheetTitle>
             {t(
               props.algorithm
                 ? 'Edit algorithm service'
                 : 'Add algorithm service'
             )}
-          </DialogTitle>
-          <DialogDescription>
+          </SheetTitle>
+          <SheetDescription>
             {t(
               'Import an OpenAPI operation and expose it through the unified algorithm endpoint.'
             )}
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
 
-        <div className='space-y-5'>
+        <div className={sideDrawerFormClassName()}>
           <div className='grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end'>
             <Field label={t('OpenAPI URL')}>
               <Input
@@ -362,7 +412,7 @@ function AlgorithmDialog(props: {
           </div>
         </div>
 
-        <DialogFooter>
+        <SheetFooter className={sideDrawerFooterClassName()}>
           <Button variant='outline' onClick={() => props.onOpenChange(false)}>
             {t('Cancel')}
           </Button>
@@ -378,6 +428,297 @@ function AlgorithmDialog(props: {
           >
             {t('Save')}
           </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  )
+}
+
+function AlgorithmTestDialog(props: {
+  open: boolean
+  algorithm: Algorithm | null
+  onOpenChange: (open: boolean) => void
+}) {
+  const { t } = useTranslation()
+  const [values, setValues] = useState<Record<string, string | boolean>>({})
+  const [files, setFiles] = useState<Record<string, File[]>>({})
+  const [result, setResult] = useState<{
+    status: number
+    duration: number
+    data: string
+  } | null>(null)
+
+  const schema = useMemo<RequestSchema>(() => {
+    if (!props.algorithm?.request_schema) return {}
+    try {
+      return JSON.parse(props.algorithm.request_schema) as RequestSchema
+    } catch {
+      return {}
+    }
+  }, [props.algorithm?.request_schema])
+  const properties = useMemo(
+    () => Object.entries(schema.properties ?? {}),
+    [schema.properties]
+  )
+  const required = useMemo(
+    () => new Set(schema.required ?? []),
+    [schema.required]
+  )
+
+  useEffect(() => {
+    if (!props.open) return
+    const defaults: Record<string, string | boolean> = {}
+    for (const [name, property] of properties) {
+      const propertyType =
+        property.type ??
+        property.anyOf?.find((item) => item.type !== 'null')?.type
+      if (property.default === undefined) continue
+      if (propertyType === 'boolean') {
+        defaults[name] = Boolean(property.default)
+      } else if (Array.isArray(property.default)) {
+        defaults[name] = property.default.join(', ')
+      } else {
+        defaults[name] = String(property.default)
+      }
+    }
+    setValues(defaults)
+    setFiles({})
+    setResult(null)
+  }, [properties, props.open])
+
+  const testMutation = useMutation({
+    mutationFn: async () => {
+      if (!props.algorithm) throw new Error(t('Algorithm service not found'))
+      const contentType = props.algorithm.content_type
+      if (contentType === 'multipart/form-data') {
+        const form = new FormData()
+        for (const [name, selectedFiles] of Object.entries(files)) {
+          for (const file of selectedFiles) form.append(name, file)
+        }
+        for (const [name, value] of Object.entries(values)) {
+          if (value === '') continue
+          const property = schema.properties?.[name]
+          if (property?.type === 'array') {
+            for (const item of String(value).split(',')) {
+              if (item.trim()) form.append(name, item.trim())
+            }
+          } else {
+            form.append(name, String(value))
+          }
+        }
+        return testAlgorithm(props.algorithm.id, form, contentType)
+      }
+
+      const payload: Record<string, unknown> = {}
+      for (const [name, value] of Object.entries(values)) {
+        if (value === '') continue
+        const property = schema.properties?.[name]
+        const propertyType =
+          property?.type ??
+          property?.anyOf?.find((item) => item.type !== 'null')?.type
+        if (propertyType === 'integer' || propertyType === 'number') {
+          payload[name] = Number(value)
+        } else if (propertyType === 'array') {
+          payload[name] = String(value)
+            .split(',')
+            .map((item) => item.trim())
+            .filter(Boolean)
+        } else {
+          payload[name] = value
+        }
+      }
+      if (contentType === 'application/x-www-form-urlencoded') {
+        const form = new URLSearchParams()
+        for (const [name, value] of Object.entries(payload)) {
+          if (Array.isArray(value)) {
+            for (const item of value) form.append(name, String(item))
+          } else {
+            form.append(name, String(value))
+          }
+        }
+        return testAlgorithm(props.algorithm.id, form, contentType)
+      }
+      return testAlgorithm(props.algorithm.id, payload, contentType)
+    },
+    onSuccess: setResult,
+    onError: (error) => toast.error(error.message),
+  })
+
+  const missingRequired = properties.some(([name, property]) => {
+    if (!required.has(name)) return false
+    const isFile =
+      property.format === 'binary' || property.items?.format === 'binary'
+    return isFile
+      ? !files[name]?.length
+      : values[name] === '' || values[name] === undefined
+  })
+
+  return (
+    <Dialog open={props.open} onOpenChange={props.onOpenChange}>
+      <DialogContent className='max-h-[90vh] overflow-y-auto sm:max-w-3xl'>
+        <DialogHeader>
+          <DialogTitle>
+            {t('Test algorithm service')}: {props.algorithm?.display_name}
+          </DialogTitle>
+          <DialogDescription>
+            {props.algorithm?.method} {props.algorithm?.base_url}
+            {props.algorithm?.path}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className='grid gap-4 sm:grid-cols-2'>
+          {properties.map(([name, property]) => {
+            const isFile =
+              property.format === 'binary' ||
+              property.items?.format === 'binary'
+            const propertyType =
+              property.type ??
+              property.anyOf?.find((item) => item.type !== 'null')?.type
+            const label = property.title || name
+            if (isFile) {
+              return (
+                <Field
+                  key={name}
+                  label={`${label}${required.has(name) ? ' *' : ''}`}
+                  className='space-y-2 sm:col-span-2'
+                >
+                  <Input
+                    type='file'
+                    multiple={property.type === 'array'}
+                    onChange={(event) =>
+                      setFiles({
+                        ...files,
+                        [name]: [...(event.target.files ?? [])],
+                      })
+                    }
+                  />
+                  {property.description ? (
+                    <p className='text-muted-foreground text-xs'>
+                      {property.description}
+                    </p>
+                  ) : null}
+                </Field>
+              )
+            }
+            if (propertyType === 'boolean') {
+              return (
+                <div
+                  key={name}
+                  className='flex min-h-16 items-center justify-between gap-3 rounded-md border px-3 py-2'
+                >
+                  <div>
+                    <Label>{label}</Label>
+                    {property.description ? (
+                      <p className='text-muted-foreground mt-1 line-clamp-2 text-xs'>
+                        {property.description}
+                      </p>
+                    ) : null}
+                  </div>
+                  <Switch
+                    checked={Boolean(values[name])}
+                    onCheckedChange={(checked) =>
+                      setValues({ ...values, [name]: checked })
+                    }
+                  />
+                </div>
+              )
+            }
+            const options = property.enum ?? property.items?.enum
+            return (
+              <Field
+                key={name}
+                label={`${label}${required.has(name) ? ' *' : ''}`}
+              >
+                {options && property.type !== 'array' ? (
+                  <NativeSelect
+                    className='w-full'
+                    value={String(values[name] ?? '')}
+                    onChange={(event) =>
+                      setValues({ ...values, [name]: event.target.value })
+                    }
+                  >
+                    <NativeSelectOption value=''>
+                      {t('Use service default')}
+                    </NativeSelectOption>
+                    {options.map((option) => (
+                      <NativeSelectOption
+                        key={String(option)}
+                        value={String(option)}
+                      >
+                        {String(option)}
+                      </NativeSelectOption>
+                    ))}
+                  </NativeSelect>
+                ) : (
+                  <Input
+                    type={
+                      propertyType === 'integer' || propertyType === 'number'
+                        ? 'number'
+                        : 'text'
+                    }
+                    value={String(values[name] ?? '')}
+                    placeholder={
+                      property.type === 'array'
+                        ? t('Comma-separated values')
+                        : undefined
+                    }
+                    onChange={(event) =>
+                      setValues({ ...values, [name]: event.target.value })
+                    }
+                  />
+                )}
+                {property.description ? (
+                  <p className='text-muted-foreground line-clamp-2 text-xs'>
+                    {property.description}
+                  </p>
+                ) : null}
+              </Field>
+            )
+          })}
+          {properties.length === 0 ? (
+            <p className='text-muted-foreground sm:col-span-2'>
+              {t('No request fields were found in the OpenAPI schema.')}
+            </p>
+          ) : null}
+        </div>
+
+        {result ? (
+          <div className='space-y-2'>
+            <div className='flex items-center gap-2 text-sm'>
+              <Badge
+                variant={
+                  result.status >= 200 && result.status < 300
+                    ? 'default'
+                    : 'destructive'
+                }
+              >
+                HTTP {result.status}
+              </Badge>
+              <span className='text-muted-foreground'>
+                {result.duration} ms
+              </span>
+            </div>
+            <pre className='bg-muted max-h-64 overflow-auto rounded-md p-3 text-xs break-all whitespace-pre-wrap'>
+              {result.data}
+            </pre>
+          </div>
+        ) : null}
+
+        <DialogFooter>
+          <Button variant='outline' onClick={() => props.onOpenChange(false)}>
+            {t('Close')}
+          </Button>
+          <Button
+            onClick={() => testMutation.mutate()}
+            disabled={testMutation.isPending || missingRequired}
+          >
+            {testMutation.isPending ? (
+              <Loader2 className='size-4 animate-spin' />
+            ) : (
+              <TestTube2 className='size-4' />
+            )}
+            {t('Run test')}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -391,132 +732,162 @@ export function AlgorithmManagement() {
   const query = useQuery({ queryKey: ['algorithms'], queryFn: getAlgorithms })
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<Algorithm | null>(null)
+  const [testing, setTesting] = useState<Algorithm | null>(null)
   const removeMutation = useMutation({
     mutationFn: deleteAlgorithm,
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ['algorithms'] }),
+    onError: (error) => toast.error(error.message),
   })
 
   return (
-    <SectionPageLayout>
-      <SectionPageLayout.Title>
-        {t('Algorithm Services')}
-      </SectionPageLayout.Title>
-      <SectionPageLayout.Actions>
-        <Button
-          variant='outline'
-          size='icon'
-          aria-label={t('Refresh')}
-          onClick={() => query.refetch()}
-        >
-          <RefreshCw className='size-4' />
-        </Button>
-        <Button
-          onClick={() => {
-            setEditing(null)
-            setOpen(true)
-          }}
-        >
-          <Plus className='size-4' />
-          {t('Add algorithm service')}
-        </Button>
-      </SectionPageLayout.Actions>
+    <>
+      <SectionPageLayout>
+        <SectionPageLayout.Title>
+          {t('Algorithm Services')}
+        </SectionPageLayout.Title>
+        <SectionPageLayout.Actions>
+          <Button
+            variant='outline'
+            size='icon'
+            aria-label={t('Refresh')}
+            onClick={() => query.refetch()}
+          >
+            <RefreshCw className='size-4' />
+          </Button>
+          <Button
+            onClick={() => {
+              setEditing(null)
+              setOpen(true)
+            }}
+          >
+            <Plus className='size-4' />
+            {t('Add algorithm service')}
+          </Button>
+        </SectionPageLayout.Actions>
 
-      <div className='overflow-hidden rounded-lg border'>
-        <Table>
-          <TableHeader>
-            <TableRow className='bg-muted/40 hover:bg-muted/40'>
-              <TableHead>{t('Algorithm')}</TableHead>
-              <TableHead>{t('OpenAPI operation')}</TableHead>
-              <TableHead>
-                {t('Price per call')} ({pricingCurrency.label})
-              </TableHead>
-              <TableHead>{t('Status')}</TableHead>
-              <TableHead className='text-right'>{t('Actions')}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {query.isLoading ? (
-              <TableRow>
-                <TableCell colSpan={5}>
-                  <Skeleton className='h-14 w-full' />
-                </TableCell>
-              </TableRow>
-            ) : null}
-            {query.data?.map((algorithm) => (
-              <TableRow key={algorithm.id}>
-                <TableCell>
-                  <p className='font-medium'>{algorithm.display_name}</p>
-                  <p className='text-muted-foreground font-mono text-xs'>
-                    {algorithm.name}
-                  </p>
-                </TableCell>
-                <TableCell>
-                  <p className='font-mono text-xs'>
-                    {algorithm.method} {algorithm.path}
-                  </p>
-                  <p className='text-muted-foreground max-w-80 truncate text-xs'>
-                    {algorithm.base_url}
-                  </p>
-                </TableCell>
-                <TableCell className='font-mono'>
-                  {pricingCurrency.symbol}
-                  {formatDisplayPriceFromUSD(
-                    algorithm.price,
-                    pricingCurrency.exchangeRate
-                  )}
-                </TableCell>
-                <TableCell>
-                  <Badge variant={algorithm.enabled ? 'default' : 'secondary'}>
-                    {t(algorithm.enabled ? 'Enabled' : 'Disabled')}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <div className='flex justify-end gap-1'>
-                    <Button
-                      variant='ghost'
-                      size='icon'
-                      aria-label={t('Edit')}
-                      onClick={() => {
-                        setEditing(algorithm)
-                        setOpen(true)
-                      }}
+        <SectionPageLayout.Content>
+          {query.isError ? (
+            <div className='border-destructive/40 bg-destructive/5 text-destructive mb-3 rounded-md border px-4 py-3 text-sm'>
+              {query.error.message}
+            </div>
+          ) : null}
+          <div className='overflow-hidden rounded-lg border'>
+            <Table>
+              <TableHeader>
+                <TableRow className='bg-muted/40 hover:bg-muted/40'>
+                  <TableHead>{t('Algorithm')}</TableHead>
+                  <TableHead>{t('OpenAPI operation')}</TableHead>
+                  <TableHead>
+                    {t('Price per call')} ({pricingCurrency.label})
+                  </TableHead>
+                  <TableHead>{t('Status')}</TableHead>
+                  <TableHead className='text-right'>{t('Actions')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {query.isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={5}>
+                      <Skeleton className='h-14 w-full' />
+                    </TableCell>
+                  </TableRow>
+                ) : null}
+                {query.data?.map((algorithm) => (
+                  <TableRow key={algorithm.id}>
+                    <TableCell>
+                      <p className='font-medium'>{algorithm.display_name}</p>
+                      <p className='text-muted-foreground font-mono text-xs'>
+                        {algorithm.name}
+                      </p>
+                    </TableCell>
+                    <TableCell>
+                      <p className='font-mono text-xs'>
+                        {algorithm.method} {algorithm.path}
+                      </p>
+                      <p className='text-muted-foreground max-w-80 truncate text-xs'>
+                        {algorithm.base_url}
+                      </p>
+                    </TableCell>
+                    <TableCell className='font-mono'>
+                      {pricingCurrency.symbol}
+                      {formatDisplayPriceFromUSD(
+                        algorithm.price,
+                        pricingCurrency.exchangeRate
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={algorithm.enabled ? 'default' : 'secondary'}
+                      >
+                        {t(algorithm.enabled ? 'Enabled' : 'Disabled')}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className='flex justify-end gap-1'>
+                        <Button
+                          variant='ghost'
+                          size='icon'
+                          aria-label={t('Test')}
+                          onClick={() => setTesting(algorithm)}
+                        >
+                          <TestTube2 className='size-4' />
+                        </Button>
+                        <Button
+                          variant='ghost'
+                          size='icon'
+                          aria-label={t('Edit')}
+                          onClick={() => {
+                            setEditing(algorithm)
+                            setOpen(true)
+                          }}
+                        >
+                          <Pencil className='size-4' />
+                        </Button>
+                        <Button
+                          variant='ghost'
+                          size='icon'
+                          aria-label={t('Delete')}
+                          onClick={() => {
+                            if (
+                              window.confirm(
+                                t('Delete this algorithm service?')
+                              )
+                            ) {
+                              removeMutation.mutate(algorithm.id)
+                            }
+                          }}
+                        >
+                          <Trash2 className='size-4' />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {!query.isLoading && query.data?.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={5}
+                      className='text-muted-foreground h-32 text-center'
                     >
-                      <Pencil className='size-4' />
-                    </Button>
-                    <Button
-                      variant='ghost'
-                      size='icon'
-                      aria-label={t('Delete')}
-                      onClick={() => {
-                        if (
-                          window.confirm(t('Delete this algorithm service?'))
-                        ) {
-                          removeMutation.mutate(algorithm.id)
-                        }
-                      }}
-                    >
-                      <Trash2 className='size-4' />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-            {!query.isLoading && query.data?.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={5}
-                  className='text-muted-foreground h-32 text-center'
-                >
-                  {t('No algorithm services configured')}
-                </TableCell>
-              </TableRow>
-            ) : null}
-          </TableBody>
-        </Table>
-      </div>
+                      {t('No algorithm services configured')}
+                    </TableCell>
+                  </TableRow>
+                ) : null}
+              </TableBody>
+            </Table>
+          </div>
+        </SectionPageLayout.Content>
+      </SectionPageLayout>
 
       <AlgorithmDialog open={open} algorithm={editing} onOpenChange={setOpen} />
-    </SectionPageLayout>
+      <AlgorithmTestDialog
+        open={testing !== null}
+        algorithm={testing}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) setTesting(null)
+        }}
+      />
+    </>
   )
 }

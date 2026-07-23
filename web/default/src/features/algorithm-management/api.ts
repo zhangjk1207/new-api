@@ -115,3 +115,24 @@ export async function deleteAlgorithm(id: number) {
   const response = await api.delete<APIResponse<null>>(`/api/algorithms/${id}`)
   dataOrThrow(response.data)
 }
+
+export async function testAlgorithm(
+  id: number,
+  body: FormData | URLSearchParams | Record<string, unknown>,
+  contentType: string
+) {
+  const response = await api.post(`/api/algorithms/${id}/test`, body, {
+    headers:
+      body instanceof FormData ? undefined : { 'Content-Type': contentType },
+    responseType: 'text',
+    validateStatus: () => true,
+  })
+  return {
+    status: response.status,
+    duration: Number(response.headers['x-algorithm-test-duration-ms'] ?? 0),
+    data:
+      typeof response.data === 'string'
+        ? response.data
+        : JSON.stringify(response.data, null, 2),
+  }
+}
