@@ -49,6 +49,16 @@ func SetApiRouter(router *gin.Engine) {
 		//apiRouter.GET("/midjourney", controller.GetMidjourney)
 		apiRouter.GET("/home_page_content", controller.GetHomePageContent)
 		apiRouter.GET("/pricing", middleware.HeaderNavModuleAuth("pricing"), controller.GetPricing)
+		apiRouter.GET("/algorithms/public", controller.ListPublicAlgorithms)
+		algorithmRoute := apiRouter.Group("/algorithms")
+		algorithmRoute.Use(middleware.AdminAuth())
+		{
+			algorithmRoute.GET("", controller.ListAlgorithms)
+			algorithmRoute.POST("", controller.CreateAlgorithm)
+			algorithmRoute.PUT("/:id", controller.UpdateAlgorithm)
+			algorithmRoute.DELETE("/:id", controller.DeleteAlgorithm)
+			algorithmRoute.POST("/import-openapi", controller.ImportAlgorithmOpenAPI)
+		}
 		perfMetricsRoute := apiRouter.Group("/perf-metrics")
 		perfMetricsRoute.Use(middleware.HeaderNavModulePublicOrUserAuth("pricing"))
 		{

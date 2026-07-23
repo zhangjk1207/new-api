@@ -151,9 +151,11 @@ export function CapabilityMarketplace(props: CapabilityMarketplaceProps) {
               <p className='text-sm font-semibold'>
                 {t('{{count}} capabilities', { count: filteredItems.length })}
               </p>
-              <span className='text-muted-foreground text-xs'>
-                {t('Mock data')}
-              </span>
+              {!props.definition.live ? (
+                <span className='text-muted-foreground text-xs'>
+                  {t('Mock data')}
+                </span>
+              ) : null}
             </div>
 
             {filteredItems.length > 0 ? (

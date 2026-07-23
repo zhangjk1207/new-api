@@ -80,11 +80,20 @@ export function MarketplaceDetailsDialog(props: MarketplaceDetailsDialogProps) {
             </div>
           </div>
 
-          <p className='text-muted-foreground border-t pt-4 text-xs'>
-            {t(
-              'This is preview data. Access instructions and live availability will be connected later.'
-            )}
-          </p>
+          {item.endpoint ? (
+            <div className='border-t pt-4'>
+              <p className='text-muted-foreground text-xs'>{t('Endpoint')}</p>
+              <code className='mt-1 block text-sm'>{item.endpoint}</code>
+            </div>
+          ) : null}
+
+          {!item.endpoint ? (
+            <p className='text-muted-foreground border-t pt-4 text-xs'>
+              {t(
+                'This is preview data. Access instructions and live availability will be connected later.'
+              )}
+            </p>
+          ) : null}
         </div>
       ) : null}
     </Dialog>

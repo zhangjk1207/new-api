@@ -16,8 +16,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import fs from 'node:fs/promises'
 import { readFileSync } from 'node:fs'
+import fs from 'node:fs/promises'
 import path from 'node:path'
 
 const LOCALES_DIR = path.resolve('src/i18n/locales')
@@ -731,9 +731,169 @@ const marketplaceChinese = {
   '{{count}} capabilities': '{{count}} 项能力',
 }
 
+const algorithmServiceKeys = {
+  en: {
+    'Algorithm Services': 'Algorithm Services',
+    'Add algorithm service': 'Add algorithm service',
+    'Edit algorithm service': 'Edit algorithm service',
+    'Import an OpenAPI operation and expose it through the unified algorithm endpoint.':
+      'Import an OpenAPI operation and expose it through the unified algorithm endpoint.',
+    'OpenAPI URL': 'OpenAPI URL',
+    'Import OpenAPI': 'Import OpenAPI',
+    'OpenAPI operation': 'OpenAPI operation',
+    'Select an operation': 'Select an operation',
+    'Algorithm identifier': 'Algorithm identifier',
+    'Operation path': 'Operation path',
+    'Price per call': 'Price per call',
+    'Timeout (seconds)': 'Timeout (seconds)',
+    'Disabled algorithms cannot be invoked or shown in Algorithm Square.':
+      'Disabled algorithms cannot be invoked or shown in Algorithm Square.',
+    'Algorithm service saved': 'Algorithm service saved',
+    'No algorithm services configured': 'No algorithm services configured',
+    'Delete this algorithm service?': 'Delete this algorithm service?',
+    'OpenAPI response': 'OpenAPI response',
+    'Unified algorithm API': 'Unified algorithm API',
+  },
+  zh: {
+    'Algorithm Services': '算法服务',
+    'Add algorithm service': '添加算法服务',
+    'Edit algorithm service': '编辑算法服务',
+    'Import an OpenAPI operation and expose it through the unified algorithm endpoint.':
+      '导入 OpenAPI 操作，并通过统一算法接口对外提供服务。',
+    'OpenAPI URL': 'OpenAPI 地址',
+    'Import OpenAPI': '导入 OpenAPI',
+    'OpenAPI operation': 'OpenAPI 操作',
+    'Select an operation': '选择一个操作',
+    'Algorithm identifier': '算法标识',
+    'Operation path': '操作路径',
+    'Price per call': '单次调用价格',
+    'Timeout (seconds)': '超时时间（秒）',
+    'Disabled algorithms cannot be invoked or shown in Algorithm Square.':
+      '禁用后将无法调用，也不会显示在算法广场中。',
+    'Algorithm service saved': '算法服务已保存',
+    'No algorithm services configured': '暂无算法服务配置',
+    'Delete this algorithm service?': '确定删除这个算法服务吗？',
+    'OpenAPI response': 'OpenAPI 响应',
+    'Unified algorithm API': '统一算法 API',
+  },
+  'zh-TW': {
+    'Algorithm Services': '演算法服務',
+    'Add algorithm service': '新增演算法服務',
+    'Edit algorithm service': '編輯演算法服務',
+    'Import an OpenAPI operation and expose it through the unified algorithm endpoint.':
+      '匯入 OpenAPI 操作，並透過統一演算法介面提供服務。',
+    'OpenAPI URL': 'OpenAPI 位址',
+    'Import OpenAPI': '匯入 OpenAPI',
+    'OpenAPI operation': 'OpenAPI 操作',
+    'Select an operation': '選擇一個操作',
+    'Algorithm identifier': '演算法識別碼',
+    'Operation path': '操作路徑',
+    'Price per call': '單次呼叫價格',
+    'Timeout (seconds)': '逾時時間（秒）',
+    'Disabled algorithms cannot be invoked or shown in Algorithm Square.':
+      '停用後將無法呼叫，也不會顯示於演算法廣場。',
+    'Algorithm service saved': '演算法服務已儲存',
+    'No algorithm services configured': '尚未設定演算法服務',
+    'Delete this algorithm service?': '確定刪除此演算法服務嗎？',
+    'OpenAPI response': 'OpenAPI 回應',
+    'Unified algorithm API': '統一演算法 API',
+  },
+  fr: {
+    'Algorithm Services': 'Services algorithmiques',
+    'Add algorithm service': 'Ajouter un service algorithmique',
+    'Edit algorithm service': 'Modifier le service algorithmique',
+    'Import an OpenAPI operation and expose it through the unified algorithm endpoint.':
+      "Importez une operation OpenAPI et exposez-la via le point d'acces algorithmique unifie.",
+    'OpenAPI URL': 'URL OpenAPI',
+    'Import OpenAPI': 'Importer OpenAPI',
+    'OpenAPI operation': 'Operation OpenAPI',
+    'Select an operation': 'Selectionner une operation',
+    'Algorithm identifier': "Identifiant de l'algorithme",
+    'Operation path': "Chemin de l'operation",
+    'Price per call': 'Prix par appel',
+    'Timeout (seconds)': "Delai d'attente (secondes)",
+    'Disabled algorithms cannot be invoked or shown in Algorithm Square.':
+      'Les algorithmes desactives ne peuvent pas etre appeles ni affiches.',
+    'Algorithm service saved': 'Service algorithmique enregistre',
+    'No algorithm services configured': 'Aucun service algorithmique configure',
+    'Delete this algorithm service?': 'Supprimer ce service algorithmique ?',
+    'OpenAPI response': 'Reponse OpenAPI',
+    'Unified algorithm API': 'API algorithmique unifiee',
+  },
+  ja: {
+    'Algorithm Services': 'アルゴリズムサービス',
+    'Add algorithm service': 'アルゴリズムサービスを追加',
+    'Edit algorithm service': 'アルゴリズムサービスを編集',
+    'Import an OpenAPI operation and expose it through the unified algorithm endpoint.':
+      'OpenAPI 操作をインポートし、統一アルゴリズムエンドポイントで公開します。',
+    'OpenAPI URL': 'OpenAPI URL',
+    'Import OpenAPI': 'OpenAPI をインポート',
+    'OpenAPI operation': 'OpenAPI 操作',
+    'Select an operation': '操作を選択',
+    'Algorithm identifier': 'アルゴリズム識別子',
+    'Operation path': '操作パス',
+    'Price per call': '1回あたりの価格',
+    'Timeout (seconds)': 'タイムアウト（秒）',
+    'Disabled algorithms cannot be invoked or shown in Algorithm Square.':
+      '無効なアルゴリズムは呼び出せず、アルゴリズム広場にも表示されません。',
+    'Algorithm service saved': 'アルゴリズムサービスを保存しました',
+    'No algorithm services configured':
+      'アルゴリズムサービスが設定されていません',
+    'Delete this algorithm service?':
+      'このアルゴリズムサービスを削除しますか？',
+    'OpenAPI response': 'OpenAPI レスポンス',
+    'Unified algorithm API': '統一アルゴリズム API',
+  },
+  ru: {
+    'Algorithm Services': 'Алгоритмические сервисы',
+    'Add algorithm service': 'Добавить алгоритмический сервис',
+    'Edit algorithm service': 'Изменить алгоритмический сервис',
+    'Import an OpenAPI operation and expose it through the unified algorithm endpoint.':
+      'Импортируйте операцию OpenAPI и опубликуйте ее через единый endpoint алгоритмов.',
+    'OpenAPI URL': 'URL OpenAPI',
+    'Import OpenAPI': 'Импортировать OpenAPI',
+    'OpenAPI operation': 'Операция OpenAPI',
+    'Select an operation': 'Выберите операцию',
+    'Algorithm identifier': 'Идентификатор алгоритма',
+    'Operation path': 'Путь операции',
+    'Price per call': 'Цена за вызов',
+    'Timeout (seconds)': 'Тайм-аут (секунды)',
+    'Disabled algorithms cannot be invoked or shown in Algorithm Square.':
+      'Отключенные алгоритмы нельзя вызывать, и они не отображаются в каталоге.',
+    'Algorithm service saved': 'Алгоритмический сервис сохранен',
+    'No algorithm services configured': 'Алгоритмические сервисы не настроены',
+    'Delete this algorithm service?': 'Удалить этот алгоритмический сервис?',
+    'OpenAPI response': 'Ответ OpenAPI',
+    'Unified algorithm API': 'Единый API алгоритмов',
+  },
+  vi: {
+    'Algorithm Services': 'Dich vu thuat toan',
+    'Add algorithm service': 'Them dich vu thuat toan',
+    'Edit algorithm service': 'Sua dich vu thuat toan',
+    'Import an OpenAPI operation and expose it through the unified algorithm endpoint.':
+      'Nhap thao tac OpenAPI va cung cap qua diem cuoi thuat toan thong nhat.',
+    'OpenAPI URL': 'URL OpenAPI',
+    'Import OpenAPI': 'Nhap OpenAPI',
+    'OpenAPI operation': 'Thao tac OpenAPI',
+    'Select an operation': 'Chon mot thao tac',
+    'Algorithm identifier': 'Ma thuat toan',
+    'Operation path': 'Duong dan thao tac',
+    'Price per call': 'Gia moi lan goi',
+    'Timeout (seconds)': 'Thoi gian cho (giay)',
+    'Disabled algorithms cannot be invoked or shown in Algorithm Square.':
+      'Thuat toan bi tat khong the goi va khong hien thi trong danh muc.',
+    'Algorithm service saved': 'Da luu dich vu thuat toan',
+    'No algorithm services configured': 'Chua cau hinh dich vu thuat toan',
+    'Delete this algorithm service?': 'Xoa dich vu thuat toan nay?',
+    'OpenAPI response': 'Phan hoi OpenAPI',
+    'Unified algorithm API': 'API thuat toan thong nhat',
+  },
+}
+
 const newKeys = {
   en: {
     ...homepageKeys.en,
+    ...algorithmServiceKeys.en,
     ...marketplaceEnglish,
     'preset.xingluo': 'Xingluo',
     'Xingluo Data Field': 'Xingluo Data Field',
@@ -800,6 +960,7 @@ const newKeys = {
   },
   zh: {
     ...homepageKeys.zh,
+    ...algorithmServiceKeys.zh,
     ...marketplaceChinese,
     'preset.xingluo': '星罗',
     'Xingluo Data Field': '星罗·数场',
@@ -865,6 +1026,7 @@ const newKeys = {
   },
   'zh-TW': {
     ...homepageKeys['zh-TW'],
+    ...algorithmServiceKeys['zh-TW'],
     ...marketplaceChinese,
     'preset.xingluo': '星羅',
     'Xingluo Data Field': '星羅·數場',
@@ -907,6 +1069,7 @@ const newKeys = {
   fr: {
     ...homepageKeys.fr,
     ...marketplaceTranslations.fr,
+    ...algorithmServiceKeys.fr,
     'preset.xingluo': 'Xingluo',
     'Xingluo Data Field': 'Xingluo Data Field',
     'Zhiqing Model Service Platform':
@@ -975,6 +1138,7 @@ const newKeys = {
   ja: {
     ...homepageKeys.ja,
     ...marketplaceTranslations.ja,
+    ...algorithmServiceKeys.ja,
     'preset.xingluo': '星羅',
     'Xingluo Data Field': 'Xingluo Data Field',
     'Zhiqing Model Service Platform': 'Zhiqingモデルサービスプラットフォーム',
@@ -1040,6 +1204,7 @@ const newKeys = {
   ru: {
     ...homepageKeys.ru,
     ...marketplaceTranslations.ru,
+    ...algorithmServiceKeys.ru,
     'preset.xingluo': 'Синло',
     'Xingluo Data Field': 'Xingluo Data Field',
     'Zhiqing Model Service Platform': 'Платформа модельных сервисов Zhiqing',
@@ -1106,6 +1271,7 @@ const newKeys = {
   vi: {
     ...homepageKeys.vi,
     ...marketplaceTranslations.vi,
+    ...algorithmServiceKeys.vi,
     'preset.xingluo': 'Xingluo',
     'Xingluo Data Field': 'Xingluo Data Field',
     'Zhiqing Model Service Platform': 'Nền tảng dịch vụ mô hình Zhiqing',

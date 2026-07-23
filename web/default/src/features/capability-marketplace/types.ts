@@ -31,6 +31,8 @@ export type MarketplaceItem = {
   inputKey: string
   outputKey: string
   deliveryKey: string
+  endpoint?: string
+  price?: number
 }
 
 export type MarketplaceDefinition = {
@@ -39,4 +41,5 @@ export type MarketplaceDefinition = {
   subtitleKey: string
   searchPlaceholderKey: string
   items: MarketplaceItem[]
+  live?: boolean
 }

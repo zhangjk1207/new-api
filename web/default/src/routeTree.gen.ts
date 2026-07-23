@@ -55,6 +55,7 @@ import { Route as AuthenticatedKeysIndexRouteImport } from './routes/_authentica
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard/index'
 import { Route as AuthenticatedConversationAuditIndexRouteImport } from './routes/_authenticated/conversation-audit/index'
 import { Route as AuthenticatedChannelsIndexRouteImport } from './routes/_authenticated/channels/index'
+import { Route as AuthenticatedAlgorithmServicesIndexRouteImport } from './routes/_authenticated/algorithm-services/index'
 import { Route as AuthenticatedUsageLogsSectionRouteImport } from './routes/_authenticated/usage-logs/$section'
 import { Route as AuthenticatedModelsSectionRouteImport } from './routes/_authenticated/models/$section'
 import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenticated/errors/$error'
@@ -320,6 +321,12 @@ const AuthenticatedChannelsIndexRoute =
     path: '/channels/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAlgorithmServicesIndexRoute =
+  AuthenticatedAlgorithmServicesIndexRouteImport.update({
+    id: '/algorithm-services/',
+    path: '/algorithm-services/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedUsageLogsSectionRoute =
   AuthenticatedUsageLogsSectionRouteImport.update({
     id: '/usage-logs/$section',
@@ -472,6 +479,7 @@ export interface FileRoutesByFullPath {
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
   '/models/$section': typeof AuthenticatedModelsSectionRoute
   '/usage-logs/$section': typeof AuthenticatedUsageLogsSectionRoute
+  '/algorithm-services/': typeof AuthenticatedAlgorithmServicesIndexRoute
   '/channels/': typeof AuthenticatedChannelsIndexRoute
   '/conversation-audit/': typeof AuthenticatedConversationAuditIndexRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
@@ -537,6 +545,7 @@ export interface FileRoutesByTo {
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
   '/models/$section': typeof AuthenticatedModelsSectionRoute
   '/usage-logs/$section': typeof AuthenticatedUsageLogsSectionRoute
+  '/algorithm-services': typeof AuthenticatedAlgorithmServicesIndexRoute
   '/channels': typeof AuthenticatedChannelsIndexRoute
   '/conversation-audit': typeof AuthenticatedConversationAuditIndexRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
@@ -606,6 +615,7 @@ export interface FileRoutesById {
   '/_authenticated/errors/$error': typeof AuthenticatedErrorsErrorRoute
   '/_authenticated/models/$section': typeof AuthenticatedModelsSectionRoute
   '/_authenticated/usage-logs/$section': typeof AuthenticatedUsageLogsSectionRoute
+  '/_authenticated/algorithm-services/': typeof AuthenticatedAlgorithmServicesIndexRoute
   '/_authenticated/channels/': typeof AuthenticatedChannelsIndexRoute
   '/_authenticated/conversation-audit/': typeof AuthenticatedConversationAuditIndexRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
@@ -674,6 +684,7 @@ export interface FileRouteTypes {
     | '/errors/$error'
     | '/models/$section'
     | '/usage-logs/$section'
+    | '/algorithm-services/'
     | '/channels/'
     | '/conversation-audit/'
     | '/dashboard/'
@@ -739,6 +750,7 @@ export interface FileRouteTypes {
     | '/errors/$error'
     | '/models/$section'
     | '/usage-logs/$section'
+    | '/algorithm-services'
     | '/channels'
     | '/conversation-audit'
     | '/dashboard'
@@ -807,6 +819,7 @@ export interface FileRouteTypes {
     | '/_authenticated/errors/$error'
     | '/_authenticated/models/$section'
     | '/_authenticated/usage-logs/$section'
+    | '/_authenticated/algorithm-services/'
     | '/_authenticated/channels/'
     | '/_authenticated/conversation-audit/'
     | '/_authenticated/dashboard/'
@@ -1188,6 +1201,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedChannelsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/algorithm-services/': {
+      id: '/_authenticated/algorithm-services/'
+      path: '/algorithm-services'
+      fullPath: '/algorithm-services/'
+      preLoaderRoute: typeof AuthenticatedAlgorithmServicesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/usage-logs/$section': {
       id: '/_authenticated/usage-logs/$section'
       path: '/usage-logs/$section'
@@ -1422,6 +1442,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedErrorsErrorRoute: typeof AuthenticatedErrorsErrorRoute
   AuthenticatedModelsSectionRoute: typeof AuthenticatedModelsSectionRoute
   AuthenticatedUsageLogsSectionRoute: typeof AuthenticatedUsageLogsSectionRoute
+  AuthenticatedAlgorithmServicesIndexRoute: typeof AuthenticatedAlgorithmServicesIndexRoute
   AuthenticatedChannelsIndexRoute: typeof AuthenticatedChannelsIndexRoute
   AuthenticatedConversationAuditIndexRoute: typeof AuthenticatedConversationAuditIndexRoute
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
@@ -1449,6 +1470,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedErrorsErrorRoute: AuthenticatedErrorsErrorRoute,
   AuthenticatedModelsSectionRoute: AuthenticatedModelsSectionRoute,
   AuthenticatedUsageLogsSectionRoute: AuthenticatedUsageLogsSectionRoute,
+  AuthenticatedAlgorithmServicesIndexRoute:
+    AuthenticatedAlgorithmServicesIndexRoute,
   AuthenticatedChannelsIndexRoute: AuthenticatedChannelsIndexRoute,
   AuthenticatedConversationAuditIndexRoute:
     AuthenticatedConversationAuditIndexRoute,

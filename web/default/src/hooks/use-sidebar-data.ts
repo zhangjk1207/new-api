@@ -18,6 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import {
   Activity,
+  Blocks,
   ChartNoAxesCombined,
   ClipboardList,
   Cpu,
@@ -155,6 +156,11 @@ export function useSidebarData(): SidebarData {
             title: t('Models'),
             url: '/models/metadata',
             icon: Box,
+          },
+          {
+            title: t('Algorithm Services'),
+            url: '/algorithm-services',
+            icon: Blocks,
           },
           {
             title: t('Users'),
