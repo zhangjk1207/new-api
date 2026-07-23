@@ -28,7 +28,6 @@ import {
 import { useTranslation } from 'react-i18next'
 
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 import type { MarketplaceItem } from '../types'
@@ -53,7 +52,18 @@ export function MarketplaceCard(props: MarketplaceCardProps) {
   const isReady = props.item.status === 'ready'
 
   return (
-    <article className='group bg-background hover:border-primary/35 flex min-h-[240px] flex-col rounded-lg border p-5 transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_30px_-24px_rgba(15,23,42,0.45)]'>
+    <article
+      role='button'
+      tabIndex={0}
+      onClick={() => props.onSelect(props.item)}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          props.onSelect(props.item)
+        }
+      }}
+      className='group bg-background hover:border-primary/35 focus-visible:border-ring focus-visible:ring-ring/50 flex min-h-[240px] cursor-pointer flex-col rounded-lg border p-5 transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_30px_-24px_rgba(15,23,42,0.45)] focus-visible:ring-[3px] focus-visible:outline-none'
+    >
       <div className='flex items-start justify-between gap-3'>
         <div className='bg-muted/35 text-primary flex size-10 shrink-0 items-center justify-center rounded-lg border'>
           <Icon className='size-5' aria-hidden='true' />
@@ -99,16 +109,10 @@ export function MarketplaceCard(props: MarketplaceCardProps) {
             </span>
           ))}
         </div>
-        <Button
-          type='button'
-          variant='ghost'
-          size='sm'
-          className='h-8 shrink-0 gap-1 px-2 text-xs'
-          onClick={() => props.onSelect(props.item)}
-        >
+        <span className='text-primary flex h-8 shrink-0 items-center gap-1 px-2 text-xs font-medium'>
           {t('Details')}
           <MoveRight className='size-3.5' aria-hidden='true' />
-        </Button>
+        </span>
       </div>
     </article>
   )

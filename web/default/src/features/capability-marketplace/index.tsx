@@ -16,6 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
+import { useNavigate } from '@tanstack/react-router'
 import { LayoutGrid, Search, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -36,6 +37,7 @@ type CapabilityMarketplaceProps = {
 
 export function CapabilityMarketplace(props: CapabilityMarketplaceProps) {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('all')
   const [selectedItem, setSelectedItem] = useState<MarketplaceItem | null>(null)
@@ -62,6 +64,17 @@ export function CapabilityMarketplace(props: CapabilityMarketplaceProps) {
         .includes(normalizedSearch)
     })
   }, [category, props.definition.items, search, t])
+
+  const handleSelect = (item: MarketplaceItem) => {
+    if (props.definition.kind === 'algorithm') {
+      navigate({
+        to: '/algorithms/$algorithmId',
+        params: { algorithmId: item.id },
+      })
+      return
+    }
+    setSelectedItem(item)
+  }
 
   return (
     <PublicLayout showMainContainer={false}>
@@ -164,7 +177,7 @@ export function CapabilityMarketplace(props: CapabilityMarketplaceProps) {
                   <MarketplaceCard
                     key={item.id}
                     item={item}
-                    onSelect={setSelectedItem}
+                    onSelect={handleSelect}
                   />
                 ))}
               </div>
@@ -183,10 +196,12 @@ export function CapabilityMarketplace(props: CapabilityMarketplaceProps) {
         </div>
       </PageTransition>
 
-      <MarketplaceDetailsDialog
-        item={selectedItem}
-        onClose={() => setSelectedItem(null)}
-      />
+      {props.definition.kind === 'skill' ? (
+        <MarketplaceDetailsDialog
+          item={selectedItem}
+          onClose={() => setSelectedItem(null)}
+        />
+      ) : null}
     </PublicLayout>
   )
 }

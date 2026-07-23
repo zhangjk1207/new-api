@@ -769,6 +769,26 @@ const algorithmServiceKeys = {
     'Remove field': 'Remove field',
     'Add field': 'Add field',
     'Send request': 'Send request',
+    'Invocation guide': 'Invocation guide',
+    'Request content type': 'Request content type',
+    Timeout: 'Timeout',
+    '{{seconds}} seconds': '{{seconds}} seconds',
+    'Capability information': 'Capability information',
+    Method: 'Method',
+    Optional: 'Optional',
+    'Unified endpoint': 'Unified endpoint',
+    'The unified endpoint forwards the request to the configured algorithm service.':
+      'The unified endpoint forwards the request to the configured algorithm service.',
+    'Use an API key created in API Keys.':
+      'Use an API key created in API Keys.',
+    'The upstream response is returned with its original status code and content type.':
+      'The upstream response is returned with its original status code and content type.',
+    'Algorithm not found': 'Algorithm not found',
+    'The algorithm may have been disabled or removed.':
+      'The algorithm may have been disabled or removed.',
+    'Back to Algorithm Square': 'Back to Algorithm Square',
+    'No description': 'No description',
+    'Free of charge': 'Free of charge',
   },
   zh: {
     'Algorithm Services': '算法服务',
@@ -807,6 +827,25 @@ const algorithmServiceKeys = {
     'Remove field': '删除字段',
     'Add field': '添加字段',
     'Send request': '发送请求',
+    'Invocation guide': '调用方式',
+    'Request content type': '请求内容类型',
+    Timeout: '超时时间',
+    '{{seconds}} seconds': '{{seconds}} 秒',
+    'Capability information': '能力信息',
+    Method: '请求方法',
+    Optional: '可选',
+    'Unified endpoint': '统一调用地址',
+    'The unified endpoint forwards the request to the configured algorithm service.':
+      '平台通过统一入口完成鉴权、计费，并将请求转发到已配置的算法服务。',
+    'Use an API key created in API Keys.': '请使用在 API 密钥页面创建的密钥。',
+    'The upstream response is returned with its original status code and content type.':
+      '上游响应将保留原状态码和内容类型返回。',
+    'Algorithm not found': '未找到算法',
+    'The algorithm may have been disabled or removed.':
+      '该算法可能已被禁用或删除。',
+    'Back to Algorithm Square': '返回算法广场',
+    'No description': '暂无说明',
+    'Free of charge': '免费',
   },
   'zh-TW': {
     'Algorithm Services': '演算法服務',
@@ -845,6 +884,25 @@ const algorithmServiceKeys = {
     'Remove field': '刪除欄位',
     'Add field': '新增欄位',
     'Send request': '傳送請求',
+    'Invocation guide': '呼叫方式',
+    'Request content type': '請求內容類型',
+    Timeout: '逾時時間',
+    '{{seconds}} seconds': '{{seconds}} 秒',
+    'Capability information': '能力資訊',
+    Method: '請求方法',
+    Optional: '選填',
+    'Unified endpoint': '統一呼叫位址',
+    'The unified endpoint forwards the request to the configured algorithm service.':
+      '平台透過統一入口完成驗證、計費，並將請求轉送至已設定的演算法服務。',
+    'Use an API key created in API Keys.': '請使用在 API 金鑰頁面建立的金鑰。',
+    'The upstream response is returned with its original status code and content type.':
+      '上游回應將保留原始狀態碼與內容類型。',
+    'Algorithm not found': '找不到演算法',
+    'The algorithm may have been disabled or removed.':
+      '此演算法可能已停用或移除。',
+    'Back to Algorithm Square': '返回演算法廣場',
+    'No description': '暫無說明',
+    'Free of charge': '免費',
   },
   fr: {
     'Algorithm Services': 'Services algorithmiques',
@@ -884,6 +942,26 @@ const algorithmServiceKeys = {
     'Remove field': 'Supprimer le champ',
     'Add field': 'Ajouter un champ',
     'Send request': 'Envoyer la requete',
+    'Invocation guide': "Guide d'appel",
+    'Request content type': 'Type de contenu de la requete',
+    Timeout: "Delai d'attente",
+    '{{seconds}} seconds': '{{seconds}} secondes',
+    'Capability information': 'Informations de capacite',
+    Method: 'Methode',
+    Optional: 'Facultatif',
+    'Unified endpoint': "Point d'acces unifie",
+    'The unified endpoint forwards the request to the configured algorithm service.':
+      "Le point d'acces unifie transfere la requete au service algorithmique configure.",
+    'Use an API key created in API Keys.':
+      'Utilisez une cle API creee dans Cles API.',
+    'The upstream response is returned with its original status code and content type.':
+      "La reponse amont conserve son code d'etat et son type de contenu.",
+    'Algorithm not found': 'Algorithme introuvable',
+    'The algorithm may have been disabled or removed.':
+      "L'algorithme a peut-etre ete desactive ou supprime.",
+    'Back to Algorithm Square': 'Retour au catalogue des algorithmes',
+    'No description': 'Aucune description',
+    'Free of charge': 'Gratuit',
   },
   ja: {
     'Algorithm Services': 'アルゴリズムサービス',
@@ -925,6 +1003,26 @@ const algorithmServiceKeys = {
     'Remove field': 'フィールドを削除',
     'Add field': 'フィールドを追加',
     'Send request': 'リクエストを送信',
+    'Invocation guide': '呼び出し方法',
+    'Request content type': 'リクエストコンテンツタイプ',
+    Timeout: 'タイムアウト',
+    '{{seconds}} seconds': '{{seconds}} 秒',
+    'Capability information': '機能情報',
+    Method: 'メソッド',
+    Optional: '任意',
+    'Unified endpoint': '統一エンドポイント',
+    'The unified endpoint forwards the request to the configured algorithm service.':
+      '統一エンドポイントは、設定済みのアルゴリズムサービスにリクエストを転送します。',
+    'Use an API key created in API Keys.':
+      'API キーページで作成したキーを使用してください。',
+    'The upstream response is returned with its original status code and content type.':
+      '上流のレスポンスは元のステータスコードとコンテンツタイプで返されます。',
+    'Algorithm not found': 'アルゴリズムが見つかりません',
+    'The algorithm may have been disabled or removed.':
+      'アルゴリズムが無効化または削除された可能性があります。',
+    'Back to Algorithm Square': 'アルゴリズム広場に戻る',
+    'No description': '説明はありません',
+    'Free of charge': '無料',
   },
   ru: {
     'Algorithm Services': 'Алгоритмические сервисы',
@@ -964,6 +1062,26 @@ const algorithmServiceKeys = {
     'Remove field': 'Удалить поле',
     'Add field': 'Добавить поле',
     'Send request': 'Отправить запрос',
+    'Invocation guide': 'Способ вызова',
+    'Request content type': 'Тип содержимого запроса',
+    Timeout: 'Тайм-аут',
+    '{{seconds}} seconds': '{{seconds}} сек.',
+    'Capability information': 'Сведения о возможности',
+    Method: 'Метод',
+    Optional: 'Необязательно',
+    'Unified endpoint': 'Единая точка доступа',
+    'The unified endpoint forwards the request to the configured algorithm service.':
+      'Единая точка доступа перенаправляет запрос настроенному алгоритмическому сервису.',
+    'Use an API key created in API Keys.':
+      'Используйте ключ, созданный на странице API-ключей.',
+    'The upstream response is returned with its original status code and content type.':
+      'Ответ сервиса возвращается с исходным кодом состояния и типом содержимого.',
+    'Algorithm not found': 'Алгоритм не найден',
+    'The algorithm may have been disabled or removed.':
+      'Алгоритм мог быть отключен или удален.',
+    'Back to Algorithm Square': 'Назад к алгоритмам',
+    'No description': 'Нет описания',
+    'Free of charge': 'Бесплатно',
   },
   vi: {
     'Algorithm Services': 'Dich vu thuat toan',
@@ -1002,6 +1120,26 @@ const algorithmServiceKeys = {
     'Remove field': 'Xoa truong',
     'Add field': 'Them truong',
     'Send request': 'Gui yeu cau',
+    'Invocation guide': 'Huong dan goi',
+    'Request content type': 'Loai noi dung yeu cau',
+    Timeout: 'Thoi gian cho',
+    '{{seconds}} seconds': '{{seconds}} giay',
+    'Capability information': 'Thong tin kha nang',
+    Method: 'Phuong thuc',
+    Optional: 'Tuy chon',
+    'Unified endpoint': 'Diem cuoi thong nhat',
+    'The unified endpoint forwards the request to the configured algorithm service.':
+      'Diem cuoi thong nhat chuyen yeu cau den dich vu thuat toan da cau hinh.',
+    'Use an API key created in API Keys.':
+      'Su dung khoa duoc tao trong trang Khoa API.',
+    'The upstream response is returned with its original status code and content type.':
+      'Phan hoi thuong nguon giu nguyen ma trang thai va loai noi dung.',
+    'Algorithm not found': 'Khong tim thay thuat toan',
+    'The algorithm may have been disabled or removed.':
+      'Thuat toan co the da bi tat hoac xoa.',
+    'Back to Algorithm Square': 'Quay lai danh muc thuat toan',
+    'No description': 'Khong co mo ta',
+    'Free of charge': 'Mien phi',
   },
 }
 
