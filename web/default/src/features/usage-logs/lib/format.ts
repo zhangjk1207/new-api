@@ -106,6 +106,26 @@ export function parseLogOther(other: string): LogOtherData | null {
   }
 }
 
+/** Calculate stream decoding throughput after the first token arrives. */
+export function getDecodeTokensPerSecond(
+  log: UsageLog,
+  other: LogOtherData | null
+): number | null {
+  if (!log.is_stream || log.completion_tokens <= 0) return null
+
+  const firstTokenMs = other?.frt
+  if (firstTokenMs == null || firstTokenMs <= 0) return null
+
+  const totalTimeMs =
+    other?.total_time_ms != null && other.total_time_ms > 0
+      ? other.total_time_ms
+      : log.use_time * 1000
+  const generationTimeMs = totalTimeMs - firstTokenMs
+  if (generationTimeMs <= 0) return null
+
+  return (log.completion_tokens * 1000) / generationTimeMs
+}
+
 /**
  * Get time color based on duration (in seconds)
  */
