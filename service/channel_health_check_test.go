@@ -112,3 +112,48 @@ func TestRunChannelHealthCheckRequiresThreeConsecutiveFailuresToMarkDown(t *test
 	require.NoError(t, model.DB.Order("id desc").First(&recovered).Error)
 	assert.Equal(t, 1, recovered.Status)
 }
+
+func TestCheckChannelHealthUsesVLLMMetricsWhenHealthEndpointFails(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/health":
+			http.Error(w, "temporarily unavailable", http.StatusServiceUnavailable)
+		case "/metrics":
+			_, _ = w.Write([]byte(`
+vllm:generation_tokens_total 75
+vllm:cache_config_info{kv_cache_max_concurrency="3.6"} 1
+`))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer server.Close()
+
+	check := checkChannelHealth(context.Background(), server.Client(), model.Channel{
+		Id: 1, Name: "vllm", Status: common.ChannelStatusEnabled, BaseURL: &server.URL,
+	})
+
+	assert.Equal(t, 1, check.Status)
+	require.NotNil(t, check.MaxConcurrency)
+	assert.Equal(t, 4, *check.MaxConcurrency)
+}
+
+func TestCheckChannelHealthRejectsUnrecognizedMetricsFallback(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/health":
+			http.Error(w, "temporarily unavailable", http.StatusServiceUnavailable)
+		case "/metrics":
+			_, _ = w.Write([]byte("http_requests_total 10\n"))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer server.Close()
+
+	check := checkChannelHealth(context.Background(), server.Client(), model.Channel{
+		Id: 1, Name: "generic", Status: common.ChannelStatusEnabled, BaseURL: &server.URL,
+	})
+
+	assert.Equal(t, 0, check.Status)
+}

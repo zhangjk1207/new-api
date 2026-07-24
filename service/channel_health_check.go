@@ -35,6 +35,7 @@ type channelHealthMetrics struct {
 	TokenCount      float64
 	TokensPerSecond *float64
 	MaxConcurrency  *int
+	IsVLLM          bool
 }
 
 type channelHealthTokenSample struct {
@@ -125,11 +126,19 @@ func checkChannelHealth(ctx context.Context, client *http.Client, channel model.
 	}
 	resp, err := client.Do(req)
 	check.ResponseTime = int(time.Since(startedAt).Milliseconds())
-	if err != nil {
-		return check
+	if err == nil {
+		resp.Body.Close()
 	}
-	resp.Body.Close()
-	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+	if err != nil || resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		metricsStartedAt := time.Now()
+		metrics, metricsErr := fetchChannelHealthMetrics(ctx, client, baseURL)
+		if metricsErr != nil || !metrics.IsVLLM {
+			return check
+		}
+		check.Status = 1
+		check.ResponseTime = int(time.Since(metricsStartedAt).Milliseconds())
+		check.TokensPerSecond = metrics.TokensPerSecond
+		check.MaxConcurrency = metrics.MaxConcurrency
 		return check
 	}
 	check.Status = 1
@@ -192,10 +201,12 @@ func parseChannelHealthMetrics(reader io.Reader) (channelHealthMetrics, error) {
 
 		switch family.GetName() {
 		case "vllm:prompt_tokens_total", "vllm:generation_tokens_total":
+			metrics.IsVLLM = true
 			for _, metric := range family.Metric {
 				metrics.TokenCount += metric.GetCounter().GetValue()
 			}
 		case "vllm:cache_config_info":
+			metrics.IsVLLM = true
 			for _, metric := range family.Metric {
 				for _, label := range metric.Label {
 					if label.GetName() != "kv_cache_max_concurrency" {
