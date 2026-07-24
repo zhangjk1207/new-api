@@ -5230,6 +5230,9 @@
     "Zero retention": "Zero retention",
     "Zhipu": "Zhipu",
     "Zhipu V4": "Zhipu V4",
-    "Zoom": "Zoom"
+    "Zoom": "Zoom",
+    "Output tokens/s": "Output tokens/s",
+    "Running requests": "Running requests",
+    "Waiting requests": "Waiting requests"
   }
 }

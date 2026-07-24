@@ -5230,6 +5230,9 @@
     "Zero retention": "Không lưu dữ liệu",
     "Zhipu": "Zhipu",
     "Zhipu V4": "Zhipu V4",
-    "Zoom": "Zoom"
+    "Zoom": "Zoom",
+    "Output tokens/s": "Token đầu ra/giây",
+    "Running requests": "Yêu cầu đang chạy",
+    "Waiting requests": "Yêu cầu đang chờ"
   }
 }

@@ -5230,6 +5230,9 @@
     "Zero retention": "データ保持なし",
     "Zhipu": "Zhipu",
     "Zhipu V4": "Zhipu V 4",
-    "Zoom": "ズーム"
+    "Zoom": "ズーム",
+    "Output tokens/s": "出力トークン/秒",
+    "Running requests": "実行中のリクエスト",
+    "Waiting requests": "待機中のリクエスト"
   }
 }

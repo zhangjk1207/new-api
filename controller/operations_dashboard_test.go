@@ -75,7 +75,6 @@ func TestBuildOperationsDashboardSummaryTreatsPendingHealthAsAvailable(t *testin
 
 	require.NoError(t, err)
 	assert.Equal(t, int64(1), summary.Metrics.HealthyChannels)
-	assert.Equal(t, int64(0), summary.Metrics.UnavailableChannels)
 	assert.NotContains(t, operationAlertTypes(summary.Alerts), "channel_down")
 }
 

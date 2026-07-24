@@ -5230,6 +5230,9 @@
     "Zero retention": "零數據保留",
     "Zhipu": "智譜",
     "Zhipu V4": "智譜 V4",
-    "Zoom": "縮放"
+    "Zoom": "縮放",
+    "Output tokens/s": "輸出 Token/s",
+    "Running requests": "執行中請求",
+    "Waiting requests": "排隊請求"
   }
 }

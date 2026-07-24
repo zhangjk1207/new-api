@@ -349,6 +349,7 @@ func InitResources() error {
 	}
 
 	perfmetrics.Init()
+	service.InitVLLMMetrics()
 
 	// 启动系统监控
 	common.StartSystemMonitor()
