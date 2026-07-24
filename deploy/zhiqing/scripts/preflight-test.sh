@@ -8,7 +8,9 @@ load_runtime_environment
 
 mkdir -p "$ZHIQING_PREFLIGHT_DATA_DIR" "$ZHIQING_PREFLIGHT_LOG_DIR"
 rm -f "$ZHIQING_PREFLIGHT_DATA_DIR/one-api.db"
-sqlite3 "$ZHIQING_DATA_DIR/one-api.db" ".backup '$ZHIQING_PREFLIGHT_DATA_DIR/one-api.db'"
+sqlite3 "$ZHIQING_DATA_DIR/one-api.db" \
+  ".timeout 30000" \
+  ".backup '$ZHIQING_PREFLIGHT_DATA_DIR/one-api.db'"
 
 cleanup() {
   "${COMPOSE[@]}" --profile preflight rm -f -s app-preflight >/dev/null 2>&1 || true
