@@ -20,10 +20,11 @@ import (
 )
 
 const (
-	channelHealthCheckTimeout          = 10 * time.Second
-	channelHealthHistoryPeriod         = 7 * 24 * time.Hour
-	channelHealthFailureLookbackPeriod = 10 * time.Minute
-	channelHealthDownThreshold         = 3
+	channelHealthCheckTimeout           = 10 * time.Second
+	channelHealthHistoryPeriod          = 7 * 24 * time.Hour
+	channelHealthFailureLookbackPeriod  = 10 * time.Minute
+	channelHealthVLLMMetricsFreshPeriod = 30 * time.Second
+	channelHealthDownThreshold          = 3
 )
 
 type ChannelHealthCheckSummary struct {
@@ -88,9 +89,22 @@ func RunChannelHealthCheck(ctx context.Context) (ChannelHealthCheckSummary, erro
 	if err := g.Wait(); err != nil {
 		return ChannelHealthCheckSummary{}, err
 	}
+	latestVLLMSamples, err := model.ListLatestVLLMMetricSamples(channelIDs)
+	if err != nil {
+		return ChannelHealthCheckSummary{}, err
+	}
 
 	summary := ChannelHealthCheckSummary{Total: len(checks)}
+	checkedBefore := time.Now().Unix()
 	for i := range checks {
+		if checks[i].Status == 0 {
+			latestSample, ok := latestVLLMSamples[checks[i].ChannelID]
+			freshAfter := checks[i].CheckedAt - int64(channelHealthVLLMMetricsFreshPeriod.Seconds())
+			if ok && latestSample.CollectedAt >= freshAfter && latestSample.CollectedAt <= checkedBefore {
+				checks[i].Status = 1
+				checks[i].ResponseTime = 0
+			}
+		}
 		if checks[i].Status == 0 && consecutiveFailures[checks[i].ChannelID]+1 < channelHealthDownThreshold {
 			checks[i].Status = 2
 		}

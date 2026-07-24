@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/model"
@@ -16,9 +17,10 @@ import (
 
 func TestRunChannelHealthCheckStoresHealthAndMetricsForEnabledChannels(t *testing.T) {
 	truncate(t)
-	require.NoError(t, model.DB.AutoMigrate(&model.ChannelHealthCheck{}))
+	require.NoError(t, model.DB.AutoMigrate(&model.ChannelHealthCheck{}, &model.VLLMMetricSample{}))
 	t.Cleanup(func() {
 		require.NoError(t, model.DB.Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&model.ChannelHealthCheck{}).Error)
+		require.NoError(t, model.DB.Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&model.VLLMMetricSample{}).Error)
 	})
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -66,9 +68,10 @@ vllm:cache_config_info{kv_cache_max_concurrency="3.6"} 1
 
 func TestRunChannelHealthCheckRequiresThreeConsecutiveFailuresToMarkDown(t *testing.T) {
 	truncate(t)
-	require.NoError(t, model.DB.AutoMigrate(&model.ChannelHealthCheck{}))
+	require.NoError(t, model.DB.AutoMigrate(&model.ChannelHealthCheck{}, &model.VLLMMetricSample{}))
 	t.Cleanup(func() {
 		require.NoError(t, model.DB.Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&model.ChannelHealthCheck{}).Error)
+		require.NoError(t, model.DB.Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&model.VLLMMetricSample{}).Error)
 	})
 
 	var healthy atomic.Bool
@@ -111,6 +114,36 @@ func TestRunChannelHealthCheckRequiresThreeConsecutiveFailuresToMarkDown(t *test
 	var recovered model.ChannelHealthCheck
 	require.NoError(t, model.DB.Order("id desc").First(&recovered).Error)
 	assert.Equal(t, 1, recovered.Status)
+}
+
+func TestRunChannelHealthCheckUsesRecentVLLMSampleWhenProbeFails(t *testing.T) {
+	truncate(t)
+	require.NoError(t, model.DB.AutoMigrate(&model.ChannelHealthCheck{}, &model.VLLMMetricSample{}))
+	t.Cleanup(func() {
+		require.NoError(t, model.DB.Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&model.ChannelHealthCheck{}).Error)
+		require.NoError(t, model.DB.Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&model.VLLMMetricSample{}).Error)
+	})
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		http.Error(w, "temporarily unavailable", http.StatusServiceUnavailable)
+	}))
+	defer server.Close()
+
+	require.NoError(t, model.DB.Create(&model.Channel{
+		Id: 1, Name: "vllm", Status: common.ChannelStatusEnabled, BaseURL: &server.URL,
+	}).Error)
+	require.NoError(t, model.DB.Create(&model.VLLMMetricSample{
+		ChannelID: 1, Endpoint: server.URL, CollectedAt: time.Now().Unix(),
+	}).Error)
+
+	summary, err := RunChannelHealthCheck(context.Background())
+
+	require.NoError(t, err)
+	assert.Equal(t, 1, summary.Up)
+	var check model.ChannelHealthCheck
+	require.NoError(t, model.DB.Order("id desc").First(&check).Error)
+	assert.Equal(t, 1, check.Status)
+	assert.Equal(t, 0, check.ResponseTime)
 }
 
 func TestCheckChannelHealthUsesVLLMMetricsWhenHealthEndpointFails(t *testing.T) {
