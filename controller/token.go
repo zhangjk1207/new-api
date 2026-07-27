@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/QuantumNous/new-api/common"
+	"github.com/QuantumNous/new-api/constant"
 	"github.com/QuantumNous/new-api/i18n"
 	"github.com/QuantumNous/new-api/model"
 	"github.com/QuantumNous/new-api/setting/operation_setting"
@@ -167,16 +168,44 @@ func GetTokenUsage(c *gin.Context) {
 
 var tokenUsageLocation = time.FixedZone("Asia/Shanghai", 8*60*60)
 
+type tokenUsageRequestError struct {
+	code    string
+	message string
+}
+
+func (err *tokenUsageRequestError) Error() string {
+	return err.message
+}
+
 func GetTokenDailyUsage(c *gin.Context) {
 	startDate, endDate, err := parseTokenUsageDateRange(c.Query("start_date"), c.Query("end_date"), time.Now())
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": err.Error()})
+		requestError, ok := err.(*tokenUsageRequestError)
+		if !ok {
+			common.SysError("failed to parse daily token usage date range: " + err.Error())
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"success": false,
+				"code":    constant.APIResponseCodeInternalError,
+				"message": "failed to parse daily token usage date range",
+			})
+			return
+		}
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"code":    requestError.code,
+			"message": requestError.message,
+		})
 		return
 	}
 
 	daily, err := model.GetTokenDailyUsage(c.GetInt("token_id"), startDate, endDate)
 	if err != nil {
-		common.ApiError(c, err)
+		common.SysError("failed to query daily token usage: " + err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"code":    constant.APIResponseCodeInternalError,
+			"message": "failed to query daily token usage",
+		})
 		return
 	}
 
@@ -189,7 +218,8 @@ func GetTokenDailyUsage(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
-		"message": "",
+		"code":    constant.APIResponseCodeSuccess,
+		"message": "ok",
 		"data": gin.H{
 			"timezone":   "Asia/Shanghai",
 			"start_date": startDate.Format(time.DateOnly),
@@ -210,22 +240,37 @@ func parseTokenUsageDateRange(startValue string, endValue string, now time.Time)
 		return date, date, nil
 	}
 	if startValue == "" || endValue == "" {
-		return time.Time{}, time.Time{}, fmt.Errorf("start_date and end_date must be provided together")
+		return time.Time{}, time.Time{}, &tokenUsageRequestError{
+			code:    constant.APIResponseCodeDateRangeRequired,
+			message: "start_date and end_date must be provided together",
+		}
 	}
 
 	startDate, err := time.ParseInLocation(time.DateOnly, startValue, tokenUsageLocation)
 	if err != nil {
-		return time.Time{}, time.Time{}, fmt.Errorf("start_date must use YYYY-MM-DD")
+		return time.Time{}, time.Time{}, &tokenUsageRequestError{
+			code:    constant.APIResponseCodeInvalidStartDate,
+			message: "start_date must use YYYY-MM-DD",
+		}
 	}
 	endDate, err := time.ParseInLocation(time.DateOnly, endValue, tokenUsageLocation)
 	if err != nil {
-		return time.Time{}, time.Time{}, fmt.Errorf("end_date must use YYYY-MM-DD")
+		return time.Time{}, time.Time{}, &tokenUsageRequestError{
+			code:    constant.APIResponseCodeInvalidEndDate,
+			message: "end_date must use YYYY-MM-DD",
+		}
 	}
 	if endDate.Before(startDate) {
-		return time.Time{}, time.Time{}, fmt.Errorf("end_date must not be earlier than start_date")
+		return time.Time{}, time.Time{}, &tokenUsageRequestError{
+			code:    constant.APIResponseCodeInvalidDateOrder,
+			message: "end_date must not be earlier than start_date",
+		}
 	}
 	if int(endDate.Sub(startDate).Hours()/24)+1 > 366 {
-		return time.Time{}, time.Time{}, fmt.Errorf("date range must not exceed 366 days")
+		return time.Time{}, time.Time{}, &tokenUsageRequestError{
+			code:    constant.APIResponseCodeDateRangeTooLarge,
+			message: "date range must not exceed 366 days",
+		}
 	}
 	return startDate, endDate, nil
 }
