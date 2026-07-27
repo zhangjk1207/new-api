@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/i18n"
@@ -162,6 +163,71 @@ func GetTokenUsage(c *gin.Context) {
 			"expires_at":           expiredAt,
 		},
 	})
+}
+
+var tokenUsageLocation = time.FixedZone("Asia/Shanghai", 8*60*60)
+
+func GetTokenDailyUsage(c *gin.Context) {
+	startDate, endDate, err := parseTokenUsageDateRange(c.Query("start_date"), c.Query("end_date"), time.Now())
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": err.Error()})
+		return
+	}
+
+	daily, err := model.GetTokenDailyUsage(c.GetInt("token_id"), startDate, endDate)
+	if err != nil {
+		common.ApiError(c, err)
+		return
+	}
+
+	totals := model.TokenDailyUsage{}
+	for _, item := range daily {
+		totals.InputTokens += item.InputTokens
+		totals.OutputTokens += item.OutputTokens
+		totals.TotalTokens += item.TotalTokens
+		totals.SuccessfulRequests += item.SuccessfulRequests
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "",
+		"data": gin.H{
+			"timezone":   "Asia/Shanghai",
+			"start_date": startDate.Format(time.DateOnly),
+			"end_date":   endDate.Format(time.DateOnly),
+			"updated_at": time.Now().In(tokenUsageLocation).Format(time.RFC3339),
+			"totals":     totals,
+			"daily":      daily,
+		},
+	})
+}
+
+func parseTokenUsageDateRange(startValue string, endValue string, now time.Time) (time.Time, time.Time, error) {
+	startValue = strings.TrimSpace(startValue)
+	endValue = strings.TrimSpace(endValue)
+	if startValue == "" && endValue == "" {
+		today := now.In(tokenUsageLocation)
+		date := time.Date(today.Year(), today.Month(), today.Day(), 0, 0, 0, 0, tokenUsageLocation)
+		return date, date, nil
+	}
+	if startValue == "" || endValue == "" {
+		return time.Time{}, time.Time{}, fmt.Errorf("start_date and end_date must be provided together")
+	}
+
+	startDate, err := time.ParseInLocation(time.DateOnly, startValue, tokenUsageLocation)
+	if err != nil {
+		return time.Time{}, time.Time{}, fmt.Errorf("start_date must use YYYY-MM-DD")
+	}
+	endDate, err := time.ParseInLocation(time.DateOnly, endValue, tokenUsageLocation)
+	if err != nil {
+		return time.Time{}, time.Time{}, fmt.Errorf("end_date must use YYYY-MM-DD")
+	}
+	if endDate.Before(startDate) {
+		return time.Time{}, time.Time{}, fmt.Errorf("end_date must not be earlier than start_date")
+	}
+	if int(endDate.Sub(startDate).Hours()/24)+1 > 366 {
+		return time.Time{}, time.Time{}, fmt.Errorf("date range must not exceed 366 days")
+	}
+	return startDate, endDate, nil
 }
 
 func AddToken(c *gin.Context) {
