@@ -244,6 +244,7 @@ func TokenAuthReadOnly() func(c *gin.Context) {
 		if key == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"success": false,
+				"code":    constant.APIResponseCodeInvalidAPIKey,
 				"message": common.TranslateMessage(c, i18n.MsgTokenNotProvided),
 			})
 			c.Abort()
@@ -261,12 +262,14 @@ func TokenAuthReadOnly() func(c *gin.Context) {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				c.JSON(http.StatusUnauthorized, gin.H{
 					"success": false,
+					"code":    constant.APIResponseCodeInvalidAPIKey,
 					"message": common.TranslateMessage(c, i18n.MsgTokenInvalid),
 				})
 			} else {
 				common.SysLog("TokenAuthReadOnly GetTokenByKey database error: " + err.Error())
 				c.JSON(http.StatusInternalServerError, gin.H{
 					"success": false,
+					"code":    constant.APIResponseCodeInternalError,
 					"message": common.TranslateMessage(c, i18n.MsgDatabaseError),
 				})
 			}
@@ -279,6 +282,7 @@ func TokenAuthReadOnly() func(c *gin.Context) {
 		if token.Status == common.TokenStatusDisabled {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"success": false,
+				"code":    constant.APIResponseCodeTokenDisabled,
 				"message": common.TranslateMessage(c, i18n.MsgTokenStatusUnavailable),
 			})
 			c.Abort()
@@ -290,6 +294,7 @@ func TokenAuthReadOnly() func(c *gin.Context) {
 			common.SysLog(fmt.Sprintf("TokenAuthReadOnly GetUserCache error for user %d: %v", token.UserId, err))
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"success": false,
+				"code":    constant.APIResponseCodeInternalError,
 				"message": common.TranslateMessage(c, i18n.MsgDatabaseError),
 			})
 			c.Abort()
@@ -298,6 +303,7 @@ func TokenAuthReadOnly() func(c *gin.Context) {
 		if userCache.Status != common.UserStatusEnabled {
 			c.JSON(http.StatusForbidden, gin.H{
 				"success": false,
+				"code":    constant.APIResponseCodeUserDisabled,
 				"message": common.TranslateMessage(c, i18n.MsgAuthUserBanned),
 			})
 			c.Abort()
