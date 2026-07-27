@@ -37,7 +37,7 @@ type responseWriter struct {
 }
 
 // Start prepares an in-memory capture for a conversational relay. It is a
-// no-op unless the dedicated ClickHouse store has initialized successfully.
+// no-op unless the dedicated audit store has initialized successfully.
 func Start(c *gin.Context, info *relaycommon.RelayInfo) *Capture {
 	if !enabled() || !isConversationRelay(info.RelayMode) {
 		return nil
