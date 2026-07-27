@@ -1,0 +1,67 @@
+name: zhiqing-prod
+
+services:
+  app:
+    image: zhiqing-new-api:${ZHIQING_IMAGE_TAG:?ZHIQING_IMAGE_TAG is required}
+    restart: unless-stopped
+    user: "${ZHIQING_UID:?ZHIQING_UID is required}:${ZHIQING_GID:?ZHIQING_GID is required}"
+    command: ["--port", "3000", "--log-dir", "/app/logs"]
+    expose:
+      - "3000"
+    volumes:
+      - ${ZHIQING_PROD_DATA_DIR:?ZHIQING_PROD_DATA_DIR is required}:/data
+      - ${ZHIQING_PROD_LOG_DIR:?ZHIQING_PROD_LOG_DIR is required}:/app/logs
+    environment:
+      TZ: Asia/Shanghai
+      NODE_NAME: zhiqing-prod-docker
+      SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET is required}
+      SQL_DSN: ${SQL_DSN:?SQL_DSN is required}
+      LOG_SQL_DSN: ${LOG_SQL_DSN:?LOG_SQL_DSN is required}
+      CONVERSATION_AUDIT_DSN: ${CONVERSATION_AUDIT_DSN:?CONVERSATION_AUDIT_DSN is required}
+      HTTP_PROXY: ""
+      HTTPS_PROXY: ""
+      ALL_PROXY: ""
+      http_proxy: ""
+      https_proxy: ""
+      all_proxy: ""
+      NO_PROXY: "127.0.0.1,localhost,host.docker.internal,172.16.0.0/12"
+      no_proxy: "127.0.0.1,localhost,host.docker.internal,172.16.0.0/12"
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O - http://127.0.0.1:3000/api/status | grep -q '\"success\":true'",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 15s
+    networks:
+      - zhiqing-prod
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - "7990:80"
+    volumes:
+      - ./nginx/prod.conf:/etc/nginx/conf.d/default.conf:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1/api/status >/dev/null"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+    networks:
+      - zhiqing-prod
+
+networks:
+  zhiqing-prod:
+    name: zhiqing-prod
+    ipam:
+      config:
+        - subnet: 10.92.0.0/24
