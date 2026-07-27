@@ -19,7 +19,7 @@ services:
       TZ: Asia/Shanghai
       NODE_NAME: zhiqing-test-docker
       SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET is required}
-      CONVERSATION_AUDIT_CLICKHOUSE_DSN: ${CONVERSATION_AUDIT_CLICKHOUSE_DSN:?CONVERSATION_AUDIT_CLICKHOUSE_DSN is required}
+      CONVERSATION_AUDIT_DSN: ${CONVERSATION_AUDIT_DSN:?CONVERSATION_AUDIT_DSN is required}
       HTTP_PROXY: ""
       HTTPS_PROXY: ""
       ALL_PROXY: ""
@@ -42,7 +42,6 @@ services:
       start_period: 15s
     networks:
       - zhiqing-test
-      - clickhouse
 
   nginx:
     image: nginx:1.27-alpine
@@ -78,7 +77,6 @@ services:
     healthcheck: *app-healthcheck
     networks:
       - zhiqing-test
-      - clickhouse
 
 networks:
   zhiqing-test:
@@ -86,6 +84,3 @@ networks:
     ipam:
       config:
         - subnet: 10.91.0.0/24
-  clickhouse:
-    external: true
-    name: clickhouse_default

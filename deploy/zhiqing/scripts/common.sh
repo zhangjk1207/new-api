@@ -33,9 +33,7 @@ load_runtime_environment() {
   # shellcheck disable=SC1090
   source "$ZHIQING_APP_DIR/audit.env"
   set +a
-  CONVERSATION_AUDIT_CLICKHOUSE_DSN="${CONVERSATION_AUDIT_CLICKHOUSE_DSN//@127.0.0.1:/@aisales-clickhouse:}"
-  CONVERSATION_AUDIT_CLICKHOUSE_DSN="${CONVERSATION_AUDIT_CLICKHOUSE_DSN//@localhost:/@aisales-clickhouse:}"
-  export CONVERSATION_AUDIT_CLICKHOUSE_DSN
+  export CONVERSATION_AUDIT_DSN
 }
 
 wait_for_healthy() {

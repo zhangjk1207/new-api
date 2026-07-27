@@ -2,21 +2,19 @@ package conversationaudit
 
 import (
 	"fmt"
-	"net/url"
 	"os"
-	"regexp"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/QuantumNous/new-api/common"
-	"gorm.io/driver/clickhouse"
+	"github.com/glebarez/sqlite"
+	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-const clickHouseDSNEnv = "CONVERSATION_AUDIT_CLICKHOUSE_DSN"
-
-var databaseNamePattern = regexp.MustCompile(`^[A-Za-z0-9_]+$`)
+const auditDSNEnv = "CONVERSATION_AUDIT_DSN"
 
 var auditStore struct {
 	sync.RWMutex
@@ -24,22 +22,22 @@ var auditStore struct {
 }
 
 type turnRow struct {
-	EventTime        time.Time `gorm:"column:event_time"`
-	RequestID        string    `gorm:"column:request_id"`
-	ConversationID   string    `gorm:"column:conversation_id"`
+	EventTime        time.Time `gorm:"column:event_time;index:idx_conversation_turns_event_time;index:idx_conversation_turns_conversation_time,priority:2"`
+	RequestID        string    `gorm:"column:request_id;size:128;index:idx_conversation_turns_request_id"`
+	ConversationID   string    `gorm:"column:conversation_id;size:255;index:idx_conversation_turns_conversation_time,priority:1"`
 	UserID           int       `gorm:"column:user_id"`
-	Username         string    `gorm:"column:username"`
+	Username         string    `gorm:"column:username;size:255"`
 	TokenID          int       `gorm:"column:token_id"`
-	TokenName        string    `gorm:"column:token_name"`
-	ModelName        string    `gorm:"column:model_name"`
+	TokenName        string    `gorm:"column:token_name;size:255"`
+	ModelName        string    `gorm:"column:model_name;size:255"`
 	ChannelID        int       `gorm:"column:channel_id"`
-	ChannelName      string    `gorm:"column:channel_name"`
-	ClientIP         string    `gorm:"column:client_ip"`
-	RequestPath      string    `gorm:"column:request_path"`
+	ChannelName      string    `gorm:"column:channel_name;size:255"`
+	ClientIP         string    `gorm:"column:client_ip;size:64"`
+	RequestPath      string    `gorm:"column:request_path;size:255"`
 	IsStream         uint8     `gorm:"column:is_stream"`
 	Completed        uint8     `gorm:"column:completed"`
-	EndReason        string    `gorm:"column:end_reason"`
-	EndError         string    `gorm:"column:end_error"`
+	EndReason        string    `gorm:"column:end_reason;size:64"`
+	EndError         string    `gorm:"column:end_error;type:text"`
 	StatusCode       uint16    `gorm:"column:status_code"`
 	PromptTokens     int       `gorm:"column:prompt_tokens"`
 	CompletionTokens int       `gorm:"column:completion_tokens"`
@@ -52,11 +50,11 @@ func (turnRow) TableName() string {
 }
 
 type payloadRow struct {
-	RequestID         string `gorm:"column:request_id"`
-	RequestParamsJSON string `gorm:"column:request_params_json"`
-	MessagesJSON      string `gorm:"column:messages_json"`
-	ResponseContent   string `gorm:"column:response_content"`
-	ReasoningContent  string `gorm:"column:reasoning_content"`
+	RequestID         string `gorm:"column:request_id;size:128;index:idx_conversation_payloads_request_id"`
+	RequestParamsJSON string `gorm:"column:request_params_json;type:text"`
+	MessagesJSON      string `gorm:"column:messages_json;type:text"`
+	ResponseContent   string `gorm:"column:response_content;type:text"`
+	ReasoningContent  string `gorm:"column:reasoning_content;type:text"`
 }
 
 func (payloadRow) TableName() string {
@@ -74,9 +72,9 @@ type store struct {
 }
 
 // Init enables the optional, dedicated conversation audit store. It deliberately
-// degrades to disabled when ClickHouse is unavailable so relaying remains intact.
+// degrades to disabled when its SQL database is unavailable so relaying remains intact.
 func Init() {
-	dsn := strings.TrimSpace(os.Getenv(clickHouseDSNEnv))
+	dsn := strings.TrimSpace(os.Getenv(auditDSNEnv))
 	if dsn == "" {
 		return
 	}
@@ -158,94 +156,36 @@ func (s *store) persist(records []record) {
 }
 
 func openAuditDatabase(dsn string) (*gorm.DB, error) {
-	databaseName, err := auditDatabaseNameFromDSN(dsn)
-	if err != nil {
-		return nil, err
-	}
-	parsed, err := url.Parse(dsn)
-	if err != nil {
-		return nil, fmt.Errorf("parse conversation audit ClickHouse DSN: %w", err)
-	}
-	parsed.Path = "/default"
-	parsed.RawPath = ""
-	bootstrap, err := gorm.Open(clickhouse.Open(parsed.String()), &gorm.Config{PrepareStmt: false})
-	if err != nil {
-		return nil, fmt.Errorf("connect conversation audit ClickHouse: %w", err)
-	}
-	if err := bootstrap.Exec("CREATE DATABASE IF NOT EXISTS `" + databaseName + "`").Error; err != nil {
-		return nil, fmt.Errorf("create conversation audit database: %w", err)
+	config := &gorm.Config{PrepareStmt: true}
+	var dialector gorm.Dialector
+	switch {
+	case strings.HasPrefix(dsn, "postgres://"), strings.HasPrefix(dsn, "postgresql://"):
+		dialector = postgres.New(postgres.Config{DSN: dsn, PreferSimpleProtocol: true})
+	case strings.HasPrefix(dsn, "sqlite://"):
+		dialector = sqlite.Open(strings.TrimPrefix(dsn, "sqlite://"))
+	case strings.HasPrefix(dsn, "clickhouse://"), strings.HasPrefix(dsn, "tcp://"):
+		return nil, fmt.Errorf("conversation audit ClickHouse DSNs are no longer supported")
+	default:
+		if !strings.Contains(dsn, "parseTime") {
+			separator := "?"
+			if strings.Contains(dsn, "?") {
+				separator = "&"
+			}
+			dsn += separator + "parseTime=true"
+		}
+		dialector = mysql.Open(dsn)
 	}
 
-	db, err := gorm.Open(clickhouse.Open(dsn), &gorm.Config{PrepareStmt: false})
+	db, err := gorm.Open(dialector, config)
 	if err != nil {
 		return nil, fmt.Errorf("connect conversation audit database: %w", err)
 	}
 	return db, nil
 }
 
-func auditDatabaseNameFromDSN(dsn string) (string, error) {
-	parsed, err := url.Parse(dsn)
-	if err != nil {
-		return "", fmt.Errorf("parse conversation audit ClickHouse DSN: %w", err)
-	}
-	if parsed.Scheme != "clickhouse" && parsed.Scheme != "tcp" && parsed.Scheme != "http" && parsed.Scheme != "https" {
-		return "", fmt.Errorf("conversation audit DSN must use a ClickHouse URL")
-	}
-	databaseName := strings.Trim(parsed.EscapedPath(), "/")
-	if !databaseNamePattern.MatchString(databaseName) {
-		return "", fmt.Errorf("conversation audit database name is invalid")
-	}
-	return databaseName, nil
-}
-
 func migrateAuditDatabase(db *gorm.DB) error {
-	if err := db.Exec(`
-CREATE TABLE IF NOT EXISTS conversation_turns (
-	event_time DateTime64(3, 'Asia/Shanghai'),
-	request_id String,
-	conversation_id String,
-	user_id Int32,
-	username LowCardinality(String),
-	token_id Int32,
-	token_name String,
-	model_name LowCardinality(String),
-	channel_id Int32,
-	channel_name String,
-	client_ip String,
-	request_path LowCardinality(String),
-	is_stream UInt8,
-	completed UInt8,
-	end_reason LowCardinality(String),
-	end_error String,
-	status_code UInt16,
-	prompt_tokens Int32,
-	completion_tokens Int32,
-	first_response_ms Int64,
-	duration_ms Int64
-) ENGINE = MergeTree
-PARTITION BY toYYYYMM(event_time)
-ORDER BY (conversation_id, event_time, request_id)`).Error; err != nil {
-		return fmt.Errorf("create conversation audit turns table: %w", err)
-	}
-	if err := db.Exec(`
-CREATE TABLE IF NOT EXISTS conversation_payloads (
-	request_id String,
-	request_params_json String CODEC(ZSTD(3)),
-	messages_json String CODEC(ZSTD(3)),
-	response_content String CODEC(ZSTD(3)),
-	reasoning_content String CODEC(ZSTD(3))
-) ENGINE = MergeTree
-ORDER BY request_id`).Error; err != nil {
-		return fmt.Errorf("create conversation audit payloads table: %w", err)
-	}
-	if err := db.Exec("ALTER TABLE conversation_payloads ADD COLUMN IF NOT EXISTS reasoning_content String CODEC(ZSTD(3))").Error; err != nil {
-		return fmt.Errorf("add conversation audit reasoning column: %w", err)
-	}
-	if err := db.Exec("ALTER TABLE conversation_payloads DROP COLUMN IF EXISTS response_raw").Error; err != nil {
-		return fmt.Errorf("drop conversation audit raw response column: %w", err)
-	}
-	if err := db.Exec("ALTER TABLE conversation_turns ADD COLUMN IF NOT EXISTS client_ip String").Error; err != nil {
-		return fmt.Errorf("add conversation audit client IP column: %w", err)
+	if err := db.AutoMigrate(&turnRow{}, &payloadRow{}); err != nil {
+		return fmt.Errorf("migrate conversation audit database: %w", err)
 	}
 	return nil
 }
