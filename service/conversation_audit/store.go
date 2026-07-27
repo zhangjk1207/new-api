@@ -23,6 +23,7 @@ var auditStore struct {
 
 type turnRow struct {
 	EventTime        time.Time `gorm:"column:event_time;index:idx_conversation_turns_event_time;index:idx_conversation_turns_conversation_time,priority:2"`
+	WrittenAt        time.Time `gorm:"column:written_at;autoCreateTime;index:idx_conversation_turns_written_at"`
 	RequestID        string    `gorm:"column:request_id;size:128;index:idx_conversation_turns_request_id"`
 	ConversationID   string    `gorm:"column:conversation_id;size:255;index:idx_conversation_turns_conversation_time,priority:1"`
 	UserID           int       `gorm:"column:user_id"`
@@ -186,6 +187,11 @@ func openAuditDatabase(dsn string) (*gorm.DB, error) {
 func migrateAuditDatabase(db *gorm.DB) error {
 	if err := db.AutoMigrate(&turnRow{}, &payloadRow{}); err != nil {
 		return fmt.Errorf("migrate conversation audit database: %w", err)
+	}
+	if err := db.Model(&turnRow{}).
+		Where("written_at IS NULL").
+		UpdateColumn("written_at", gorm.Expr("event_time")).Error; err != nil {
+		return fmt.Errorf("backfill conversation audit write time: %w", err)
 	}
 	return nil
 }

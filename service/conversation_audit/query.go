@@ -25,6 +25,7 @@ type ListFilter struct {
 
 type Turn struct {
 	EventTime        time.Time `json:"event_time"`
+	WrittenAt        time.Time `json:"written_at"`
 	RequestID        string    `json:"request_id"`
 	ConversationID   string    `json:"conversation_id"`
 	UserID           int       `json:"user_id"`
@@ -133,6 +134,7 @@ func Get(requestID string) (Turn, Payload, error) {
 func turnFromRow(row turnRow) Turn {
 	return Turn{
 		EventTime:        row.EventTime,
+		WrittenAt:        row.WrittenAt,
 		RequestID:        row.RequestID,
 		ConversationID:   row.ConversationID,
 		UserID:           row.UserID,

@@ -26,6 +26,17 @@ func TestAuditSQLiteStoreMigratesAndPersists(t *testing.T) {
 	require.NoError(t, db.Where("request_id = ?", want.RequestID).First(&got).Error)
 	assert.Equal(t, want.ConversationID, got.ConversationID)
 	assert.Equal(t, want.Completed, got.Completed)
+	assert.False(t, got.WrittenAt.IsZero())
+
+	legacy := turnRow{
+		EventTime:      time.Date(2026, 7, 26, 12, 0, 0, 0, time.UTC),
+		RequestID:      "request-legacy",
+		ConversationID: "conversation-legacy",
+	}
+	require.NoError(t, db.Omit("WrittenAt").Create(&legacy).Error)
+	require.NoError(t, migrateAuditDatabase(db))
+	require.NoError(t, db.Where("request_id = ?", legacy.RequestID).First(&got).Error)
+	assert.Equal(t, legacy.EventTime, got.WrittenAt)
 }
 
 func TestOpenAuditDatabaseRejectsClickHouse(t *testing.T) {
