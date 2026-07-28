@@ -7,6 +7,8 @@ source "$SCRIPT_DIR/common.sh"
 load_runtime_environment
 
 "$SCRIPT_DIR/preflight-test.sh"
+backup_file="$($SCRIPT_DIR/backup-test.sh)"
+echo "test database backup created: $backup_file"
 
 if [[ -f "$ZHIQING_APP_DIR/new-api.pid" ]]; then
   native_pid="$(<"$ZHIQING_APP_DIR/new-api.pid")"

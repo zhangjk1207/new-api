@@ -13,6 +13,7 @@ export ZHIQING_PREFLIGHT_LOG_DIR="${ZHIQING_PREFLIGHT_LOG_DIR:-$ZHIQING_APP_DIR/
 export ZHIQING_IMAGE_TAG="${ZHIQING_IMAGE_TAG:-$(git -C "$REPO_DIR" rev-parse --short HEAD)}"
 export ZHIQING_UID="${ZHIQING_UID:-$(id -u)}"
 export ZHIQING_GID="${ZHIQING_GID:-$(id -g)}"
+export ZHIQING_POSTGRES_CONTAINER="${ZHIQING_POSTGRES_CONTAINER:-workflow-postgres}"
 
 COMPOSE=(docker compose -f "$DEPLOY_DIR/compose.test.yml")
 
@@ -33,7 +34,25 @@ load_runtime_environment() {
   # shellcheck disable=SC1090
   source "$ZHIQING_APP_DIR/audit.env"
   set +a
-  export CONVERSATION_AUDIT_DSN
+
+  local variable
+  for variable in SQL_DSN LOG_SQL_DSN CONVERSATION_AUDIT_DSN; do
+    if [[ -z "${!variable:-}" ]]; then
+      echo "missing test database variable: $variable" >&2
+      return 1
+    fi
+  done
+  export SQL_DSN LOG_SQL_DSN CONVERSATION_AUDIT_DSN
+}
+
+test_database_name() {
+  local dsn_without_query="${SQL_DSN%%\?*}"
+  local database_name="${dsn_without_query##*/}"
+  if [[ -z "$database_name" || "$database_name" == "$dsn_without_query" ]]; then
+    echo "unable to determine test database name from SQL_DSN" >&2
+    return 1
+  fi
+  printf '%s\n' "$database_name"
 }
 
 wait_for_healthy() {

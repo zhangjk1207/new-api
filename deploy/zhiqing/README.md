@@ -4,7 +4,7 @@ This directory contains the Docker Compose deployments for the internal
 Zhiqing test service on port 7992 and production service on port 7990. Build an
 image once, verify it on 7992, and promote that exact image ID to 7990.
 
-Runtime secrets and databases remain outside Git. Test runtime data is under
+Runtime secrets and database backups remain outside Git. Test runtime files are under
 `/data2/zhangjikang/work_dir/newapi_test_7992`; production runtime configuration
 is under `/data2/zhangjikang/work_dir/newapi_remote_10808`.
 
@@ -14,6 +14,10 @@ is under `/data2/zhangjikang/work_dir/newapi_remote_10808`.
 deploy/zhiqing/scripts/build-test.sh
 deploy/zhiqing/scripts/preflight-test.sh
 ```
+
+The test preflight validates the PostgreSQL schema and starts an isolated
+application container on `127.0.0.1:17992`. Test deployment creates a
+custom-format PostgreSQL backup before replacing the running container.
 
 ## Deploy test
 
@@ -60,8 +64,8 @@ deploy/zhiqing/scripts/status-test.sh
 deploy/zhiqing/scripts/status-prod.sh
 ```
 
-Application containers run without proxy environment variables. Test keeps its
-SQLite application database and uses its configured PostgreSQL audit database.
+Application containers run without proxy environment variables. Test uses an
+independent PostgreSQL application/log database and a separate PostgreSQL audit database.
 Production uses the configured PostgreSQL DSNs for application data, logs, and
 conversation audits.
 

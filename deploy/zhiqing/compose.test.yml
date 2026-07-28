@@ -19,6 +19,8 @@ services:
       TZ: Asia/Shanghai
       NODE_NAME: zhiqing-test-docker
       SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET is required}
+      SQL_DSN: ${SQL_DSN:?SQL_DSN is required}
+      LOG_SQL_DSN: ${LOG_SQL_DSN:?LOG_SQL_DSN is required}
       CONVERSATION_AUDIT_DSN: ${CONVERSATION_AUDIT_DSN:?CONVERSATION_AUDIT_DSN is required}
       HTTP_PROXY: ""
       HTTPS_PROXY: ""
