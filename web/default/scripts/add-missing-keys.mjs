@@ -1143,9 +1143,322 @@ const algorithmServiceKeys = {
   },
 }
 
+const channelAlertKeys = {
+  en: {
+    'Allowed range: 2 to 10 checks.': 'Allowed range: 2 to 10 checks.',
+    'Channel Alerts': 'Channel Alerts',
+    'Channel alert settings saved': 'Channel alert settings saved',
+    'Check interval': 'Check interval',
+    'Clear configured Webhook': 'Clear configured Webhook',
+    'Consecutive failures': 'Consecutive failures',
+    'Detection policy': 'Detection policy',
+    'Enable channel alerts': 'Enable channel alerts',
+    'Enter an enterprise WeChat Webhook first':
+      'Enter an enterprise WeChat Webhook first',
+    'Enterprise WeChat Webhook': 'Enterprise WeChat Webhook',
+    'Enterprise WeChat notifications': 'Enterprise WeChat notifications',
+    'Environment name': 'Environment name',
+    'Every 10 minutes': 'Every 10 minutes',
+    'Every 2 minutes': 'Every 2 minutes',
+    'Every 5 minutes': 'Every 5 minutes',
+    'Every minute': 'Every minute',
+    'Failed to load channel alert settings':
+      'Failed to load channel alert settings',
+    'Hide Webhook': 'Hide Webhook',
+    'Keep configured Webhook': 'Keep configured Webhook',
+    'Last delivery failed at {{time}}: {{error}}':
+      'Last delivery failed at {{time}}: {{error}}',
+    'Last delivery succeeded at {{time}}':
+      'Last delivery succeeded at {{time}}',
+    'Leave blank to keep the configured Webhook':
+      'Leave blank to keep the configured Webhook',
+    'Loading channel alert settings...': 'Loading channel alert settings...',
+    'New Webhook': 'New Webhook',
+    'Notify again when an unavailable channel recovers.':
+      'Notify again when an unavailable channel recovers.',
+    'Notify when an enabled channel becomes unavailable.':
+      'Notify when an enabled channel becomes unavailable.',
+    'Only enabled channels are checked. A notification is sent after the failure threshold is reached.':
+      'Only enabled channels are checked. A notification is sent after the failure threshold is reached.',
+    'Pending removal': 'Pending removal',
+    'Send Test': 'Send Test',
+    'Send recovery notifications': 'Send recovery notifications',
+    'Show Webhook': 'Show Webhook',
+    'Shown in every alert message.': 'Shown in every alert message.',
+    'Test message sent': 'Test message sent',
+    'The complete address is stored only on the server.':
+      'The complete address is stored only on the server.',
+  },
+  zh: {
+    'Allowed range: 2 to 10 checks.': '允许设置为 2 到 10 次。',
+    'Channel Alerts': '渠道告警',
+    'Channel alert settings saved': '渠道告警设置已保存',
+    'Check interval': '检测间隔',
+    'Clear configured Webhook': '清除已配置的 Webhook',
+    'Consecutive failures': '连续失败次数',
+    'Detection policy': '检测策略',
+    'Enable channel alerts': '启用渠道告警',
+    'Enter an enterprise WeChat Webhook first': '请先输入企业微信 Webhook',
+    'Enterprise WeChat Webhook': '企业微信 Webhook',
+    'Enterprise WeChat notifications': '企业微信通知',
+    'Environment name': '环境名称',
+    'Every 10 minutes': '每 10 分钟',
+    'Every 2 minutes': '每 2 分钟',
+    'Every 5 minutes': '每 5 分钟',
+    'Every minute': '每分钟',
+    'Failed to load channel alert settings': '加载渠道告警设置失败',
+    'Hide Webhook': '隐藏 Webhook',
+    'Keep configured Webhook': '保留已配置的 Webhook',
+    'Last delivery failed at {{time}}: {{error}}':
+      '上次发送失败于 {{time}}：{{error}}',
+    'Last delivery succeeded at {{time}}': '上次发送成功于 {{time}}',
+    'Leave blank to keep the configured Webhook':
+      '留空以保留当前已配置的 Webhook',
+    'Loading channel alert settings...': '正在加载渠道告警设置...',
+    'New Webhook': '新 Webhook',
+    'Notify again when an unavailable channel recovers.':
+      '不可用渠道恢复后再次发送通知。',
+    'Notify when an enabled channel becomes unavailable.':
+      '已启用渠道变为不可用时发送通知。',
+    'Only enabled channels are checked. A notification is sent after the failure threshold is reached.':
+      '仅检测已启用渠道，连续失败达到阈值后发送通知。',
+    'Pending removal': '待清除',
+    'Send Test': '发送测试',
+    'Send recovery notifications': '发送恢复通知',
+    'Show Webhook': '显示 Webhook',
+    'Shown in every alert message.': '显示在每条告警消息中。',
+    'Test message sent': '测试消息已发送',
+    'The complete address is stored only on the server.':
+      '完整地址仅保存在服务端。',
+  },
+  'zh-TW': {
+    'Allowed range: 2 to 10 checks.': '允許設定為 2 到 10 次。',
+    'Channel Alerts': '渠道告警',
+    'Channel alert settings saved': '渠道告警設定已儲存',
+    'Check interval': '檢測間隔',
+    'Clear configured Webhook': '清除已設定的 Webhook',
+    'Consecutive failures': '連續失敗次數',
+    'Detection policy': '檢測策略',
+    'Enable channel alerts': '啟用渠道告警',
+    'Enter an enterprise WeChat Webhook first': '請先輸入企業微信 Webhook',
+    'Enterprise WeChat Webhook': '企業微信 Webhook',
+    'Enterprise WeChat notifications': '企業微信通知',
+    'Environment name': '環境名稱',
+    'Every 10 minutes': '每 10 分鐘',
+    'Every 2 minutes': '每 2 分鐘',
+    'Every 5 minutes': '每 5 分鐘',
+    'Every minute': '每分鐘',
+    'Failed to load channel alert settings': '載入渠道告警設定失敗',
+    'Hide Webhook': '隱藏 Webhook',
+    'Keep configured Webhook': '保留已設定的 Webhook',
+    'Last delivery failed at {{time}}: {{error}}':
+      '上次傳送失敗於 {{time}}：{{error}}',
+    'Last delivery succeeded at {{time}}': '上次傳送成功於 {{time}}',
+    'Leave blank to keep the configured Webhook':
+      '留空以保留目前已設定的 Webhook',
+    'Loading channel alert settings...': '正在載入渠道告警設定...',
+    'New Webhook': '新 Webhook',
+    'Notify again when an unavailable channel recovers.':
+      '不可用渠道恢復後再次傳送通知。',
+    'Notify when an enabled channel becomes unavailable.':
+      '已啟用渠道變為不可用時傳送通知。',
+    'Only enabled channels are checked. A notification is sent after the failure threshold is reached.':
+      '僅檢測已啟用渠道，連續失敗達到門檻後傳送通知。',
+    'Pending removal': '待清除',
+    'Send Test': '傳送測試',
+    'Send recovery notifications': '傳送恢復通知',
+    'Show Webhook': '顯示 Webhook',
+    'Shown in every alert message.': '顯示於每則告警訊息中。',
+    'Test message sent': '測試訊息已傳送',
+    'The complete address is stored only on the server.':
+      '完整地址僅儲存於伺服器端。',
+  },
+  fr: {
+    'Allowed range: 2 to 10 checks.': 'Plage autorisée : 2 à 10 contrôles.',
+    'Channel Alerts': 'Alertes des canaux',
+    'Channel alert settings saved': 'Paramètres des alertes enregistrés',
+    'Check interval': 'Intervalle de contrôle',
+    'Clear configured Webhook': 'Effacer le Webhook configuré',
+    'Consecutive failures': 'Échecs consécutifs',
+    'Detection policy': 'Politique de détection',
+    'Enable channel alerts': 'Activer les alertes des canaux',
+    'Enter an enterprise WeChat Webhook first':
+      "Saisissez d'abord un Webhook WeChat d'entreprise",
+    'Enterprise WeChat Webhook': "Webhook WeChat d'entreprise",
+    'Enterprise WeChat notifications': "Notifications WeChat d'entreprise",
+    'Environment name': "Nom de l'environnement",
+    'Every 10 minutes': 'Toutes les 10 minutes',
+    'Every 2 minutes': 'Toutes les 2 minutes',
+    'Every 5 minutes': 'Toutes les 5 minutes',
+    'Every minute': 'Chaque minute',
+    'Failed to load channel alert settings':
+      'Impossible de charger les alertes des canaux',
+    'Hide Webhook': 'Masquer le Webhook',
+    'Keep configured Webhook': 'Conserver le Webhook configuré',
+    'Last delivery failed at {{time}}: {{error}}':
+      'Dernier envoi échoué à {{time}} : {{error}}',
+    'Last delivery succeeded at {{time}}': 'Dernier envoi réussi à {{time}}',
+    'Leave blank to keep the configured Webhook':
+      'Laissez vide pour conserver le Webhook configuré',
+    'Loading channel alert settings...': 'Chargement des alertes des canaux...',
+    'New Webhook': 'Nouveau Webhook',
+    'Notify again when an unavailable channel recovers.':
+      "Notifier à nouveau lorsqu'un canal indisponible est rétabli.",
+    'Notify when an enabled channel becomes unavailable.':
+      "Notifier lorsqu'un canal activé devient indisponible.",
+    'Only enabled channels are checked. A notification is sent after the failure threshold is reached.':
+      "Seuls les canaux activés sont contrôlés. Une notification est envoyée lorsque le seuil d'échec est atteint.",
+    'Pending removal': 'Suppression en attente',
+    'Send Test': 'Envoyer un test',
+    'Send recovery notifications': 'Envoyer les notifications de reprise',
+    'Show Webhook': 'Afficher le Webhook',
+    'Shown in every alert message.': "Affiché dans chaque message d'alerte.",
+    'Test message sent': 'Message de test envoyé',
+    'The complete address is stored only on the server.':
+      "L'adresse complète est stockée uniquement sur le serveur.",
+  },
+  ja: {
+    'Allowed range: 2 to 10 checks.': '2～10回の範囲で設定できます。',
+    'Channel Alerts': 'チャネルアラート',
+    'Channel alert settings saved': 'チャネルアラート設定を保存しました',
+    'Check interval': '確認間隔',
+    'Clear configured Webhook': '設定済み Webhook を削除',
+    'Consecutive failures': '連続失敗回数',
+    'Detection policy': '検出ポリシー',
+    'Enable channel alerts': 'チャネルアラートを有効化',
+    'Enter an enterprise WeChat Webhook first':
+      '企業 WeChat Webhook を入力してください',
+    'Enterprise WeChat Webhook': '企業 WeChat Webhook',
+    'Enterprise WeChat notifications': '企業 WeChat 通知',
+    'Environment name': '環境名',
+    'Every 10 minutes': '10分ごと',
+    'Every 2 minutes': '2分ごと',
+    'Every 5 minutes': '5分ごと',
+    'Every minute': '毎分',
+    'Failed to load channel alert settings':
+      'チャネルアラート設定を読み込めませんでした',
+    'Hide Webhook': 'Webhook を非表示',
+    'Keep configured Webhook': '設定済み Webhook を保持',
+    'Last delivery failed at {{time}}: {{error}}':
+      '前回の送信失敗 {{time}}：{{error}}',
+    'Last delivery succeeded at {{time}}': '前回の送信成功 {{time}}',
+    'Leave blank to keep the configured Webhook':
+      '空欄の場合は設定済み Webhook を保持します',
+    'Loading channel alert settings...': 'チャネルアラート設定を読込中...',
+    'New Webhook': '新しい Webhook',
+    'Notify again when an unavailable channel recovers.':
+      '利用不可のチャネルが復旧したときに再通知します。',
+    'Notify when an enabled channel becomes unavailable.':
+      '有効なチャネルが利用不可になったときに通知します。',
+    'Only enabled channels are checked. A notification is sent after the failure threshold is reached.':
+      '有効なチャネルのみを確認し、失敗回数がしきい値に達すると通知します。',
+    'Pending removal': '削除予定',
+    'Send Test': 'テスト送信',
+    'Send recovery notifications': '復旧通知を送信',
+    'Show Webhook': 'Webhook を表示',
+    'Shown in every alert message.': 'すべてのアラートに表示されます。',
+    'Test message sent': 'テストメッセージを送信しました',
+    'The complete address is stored only on the server.':
+      '完全なアドレスはサーバーにのみ保存されます。',
+  },
+  ru: {
+    'Allowed range: 2 to 10 checks.':
+      'Допустимый диапазон: от 2 до 10 проверок.',
+    'Channel Alerts': 'Оповещения каналов',
+    'Channel alert settings saved': 'Настройки оповещений сохранены',
+    'Check interval': 'Интервал проверки',
+    'Clear configured Webhook': 'Удалить настроенный Webhook',
+    'Consecutive failures': 'Последовательные сбои',
+    'Detection policy': 'Политика обнаружения',
+    'Enable channel alerts': 'Включить оповещения каналов',
+    'Enter an enterprise WeChat Webhook first':
+      'Сначала введите Webhook корпоративного WeChat',
+    'Enterprise WeChat Webhook': 'Webhook корпоративного WeChat',
+    'Enterprise WeChat notifications': 'Уведомления корпоративного WeChat',
+    'Environment name': 'Название среды',
+    'Every 10 minutes': 'Каждые 10 минут',
+    'Every 2 minutes': 'Каждые 2 минуты',
+    'Every 5 minutes': 'Каждые 5 минут',
+    'Every minute': 'Каждую минуту',
+    'Failed to load channel alert settings':
+      'Не удалось загрузить настройки оповещений',
+    'Hide Webhook': 'Скрыть Webhook',
+    'Keep configured Webhook': 'Сохранить настроенный Webhook',
+    'Last delivery failed at {{time}}: {{error}}':
+      'Последняя отправка не удалась в {{time}}: {{error}}',
+    'Last delivery succeeded at {{time}}':
+      'Последняя отправка выполнена в {{time}}',
+    'Leave blank to keep the configured Webhook':
+      'Оставьте пустым, чтобы сохранить настроенный Webhook',
+    'Loading channel alert settings...': 'Загрузка настроек оповещений...',
+    'New Webhook': 'Новый Webhook',
+    'Notify again when an unavailable channel recovers.':
+      'Повторно уведомлять при восстановлении недоступного канала.',
+    'Notify when an enabled channel becomes unavailable.':
+      'Уведомлять, когда включенный канал становится недоступным.',
+    'Only enabled channels are checked. A notification is sent after the failure threshold is reached.':
+      'Проверяются только включенные каналы. Уведомление отправляется после достижения порога сбоев.',
+    'Pending removal': 'Ожидает удаления',
+    'Send Test': 'Отправить тест',
+    'Send recovery notifications': 'Отправлять уведомления о восстановлении',
+    'Show Webhook': 'Показать Webhook',
+    'Shown in every alert message.': 'Отображается в каждом оповещении.',
+    'Test message sent': 'Тестовое сообщение отправлено',
+    'The complete address is stored only on the server.':
+      'Полный адрес хранится только на сервере.',
+  },
+  vi: {
+    'Allowed range: 2 to 10 checks.':
+      'Pham vi cho phep: 2 den 10 lan kiem tra.',
+    'Channel Alerts': 'Canh bao kenh',
+    'Channel alert settings saved': 'Da luu cai dat canh bao kenh',
+    'Check interval': 'Khoang thoi gian kiem tra',
+    'Clear configured Webhook': 'Xoa Webhook da cau hinh',
+    'Consecutive failures': 'So lan loi lien tiep',
+    'Detection policy': 'Chinh sach phat hien',
+    'Enable channel alerts': 'Bat canh bao kenh',
+    'Enter an enterprise WeChat Webhook first':
+      'Hay nhap Webhook WeChat doanh nghiep truoc',
+    'Enterprise WeChat Webhook': 'Webhook WeChat doanh nghiep',
+    'Enterprise WeChat notifications': 'Thong bao WeChat doanh nghiep',
+    'Environment name': 'Ten moi truong',
+    'Every 10 minutes': 'Moi 10 phut',
+    'Every 2 minutes': 'Moi 2 phut',
+    'Every 5 minutes': 'Moi 5 phut',
+    'Every minute': 'Moi phut',
+    'Failed to load channel alert settings':
+      'Khong the tai cai dat canh bao kenh',
+    'Hide Webhook': 'An Webhook',
+    'Keep configured Webhook': 'Giu Webhook da cau hinh',
+    'Last delivery failed at {{time}}: {{error}}':
+      'Lan gui cuoi that bai luc {{time}}: {{error}}',
+    'Last delivery succeeded at {{time}}':
+      'Lan gui cuoi thanh cong luc {{time}}',
+    'Leave blank to keep the configured Webhook':
+      'De trong de giu Webhook da cau hinh',
+    'Loading channel alert settings...': 'Dang tai cai dat canh bao kenh...',
+    'New Webhook': 'Webhook moi',
+    'Notify again when an unavailable channel recovers.':
+      'Thong bao lai khi kenh khong kha dung phuc hoi.',
+    'Notify when an enabled channel becomes unavailable.':
+      'Thong bao khi kenh dang bat tro nen khong kha dung.',
+    'Only enabled channels are checked. A notification is sent after the failure threshold is reached.':
+      'Chi kiem tra cac kenh dang bat. Thong bao duoc gui khi dat nguong loi.',
+    'Pending removal': 'Cho xoa',
+    'Send Test': 'Gui thu',
+    'Send recovery notifications': 'Gui thong bao phuc hoi',
+    'Show Webhook': 'Hien Webhook',
+    'Shown in every alert message.': 'Hien thi trong moi thong bao canh bao.',
+    'Test message sent': 'Da gui tin nhan thu',
+    'The complete address is stored only on the server.':
+      'Dia chi day du chi duoc luu tren may chu.',
+  },
+}
+
 const newKeys = {
   en: {
     ...homepageKeys.en,
+    ...channelAlertKeys.en,
     ...algorithmServiceKeys.en,
     ...marketplaceEnglish,
     'preset.xingluo': 'Xingluo',
@@ -1213,6 +1526,7 @@ const newKeys = {
   },
   zh: {
     ...homepageKeys.zh,
+    ...channelAlertKeys.zh,
     ...algorithmServiceKeys.zh,
     ...marketplaceChinese,
     'preset.xingluo': '星罗',
@@ -1279,6 +1593,7 @@ const newKeys = {
   },
   'zh-TW': {
     ...homepageKeys['zh-TW'],
+    ...channelAlertKeys['zh-TW'],
     ...algorithmServiceKeys['zh-TW'],
     ...marketplaceChinese,
     'preset.xingluo': '星羅',
@@ -1321,6 +1636,7 @@ const newKeys = {
   },
   fr: {
     ...homepageKeys.fr,
+    ...channelAlertKeys.fr,
     ...marketplaceTranslations.fr,
     ...algorithmServiceKeys.fr,
     'preset.xingluo': 'Xingluo',
@@ -1390,6 +1706,7 @@ const newKeys = {
   },
   ja: {
     ...homepageKeys.ja,
+    ...channelAlertKeys.ja,
     ...marketplaceTranslations.ja,
     ...algorithmServiceKeys.ja,
     'preset.xingluo': '星羅',
@@ -1456,6 +1773,7 @@ const newKeys = {
   },
   ru: {
     ...homepageKeys.ru,
+    ...channelAlertKeys.ru,
     ...marketplaceTranslations.ru,
     ...algorithmServiceKeys.ru,
     'preset.xingluo': 'Синло',
@@ -1523,6 +1841,7 @@ const newKeys = {
   },
   vi: {
     ...homepageKeys.vi,
+    ...channelAlertKeys.vi,
     ...marketplaceTranslations.vi,
     ...algorithmServiceKeys.vi,
     'preset.xingluo': 'Xingluo',

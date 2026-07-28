@@ -14,6 +14,7 @@ import (
 
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/model"
+	"github.com/QuantumNous/new-api/setting/operation_setting"
 
 	clientmodel "github.com/prometheus/client_model/go"
 	"github.com/prometheus/common/expfmt"
@@ -23,9 +24,7 @@ import (
 const (
 	channelHealthCheckTimeout           = 10 * time.Second
 	channelHealthHistoryPeriod          = 7 * 24 * time.Hour
-	channelHealthFailureLookbackPeriod  = 10 * time.Minute
 	channelHealthVLLMMetricsFreshPeriod = 30 * time.Second
-	channelHealthDownThreshold          = 3
 )
 
 type ChannelHealthCheckSummary struct {
@@ -53,6 +52,12 @@ var channelHealthTokenSamples = struct {
 }
 
 func RunChannelHealthCheck(ctx context.Context) (ChannelHealthCheckSummary, error) {
+	alertSetting := operation_setting.GetChannelHealthAlertSetting()
+	checkInterval := time.Duration(alertSetting.CheckIntervalMinutes) * time.Minute
+	failureLookback := time.Duration(alertSetting.FailureThreshold+1) * checkInterval
+	if failureLookback < 10*time.Minute {
+		failureLookback = 10 * time.Minute
+	}
 	var channels []model.Channel
 	if err := model.DB.Where("status = ?", common.ChannelStatusEnabled).Find(&channels).Error; err != nil {
 		return ChannelHealthCheckSummary{}, err
@@ -63,7 +68,7 @@ func RunChannelHealthCheck(ctx context.Context) (ChannelHealthCheckSummary, erro
 	}
 	previousChecks, err := model.ListChannelHealthChecksSince(
 		channelIDs,
-		time.Now().Add(-channelHealthFailureLookbackPeriod).Unix(),
+		time.Now().Add(-failureLookback).Unix(),
 	)
 	if err != nil {
 		return ChannelHealthCheckSummary{}, err
@@ -108,7 +113,7 @@ func RunChannelHealthCheck(ctx context.Context) (ChannelHealthCheckSummary, erro
 				checks[i].ResponseTime = 0
 			}
 		}
-		if checks[i].Status == 0 && consecutiveFailures[checks[i].ChannelID]+1 < channelHealthDownThreshold {
+		if checks[i].Status == 0 && consecutiveFailures[checks[i].ChannelID]+1 < alertSetting.FailureThreshold {
 			checks[i].Status = 2
 		}
 		if checks[i].Status != 0 {

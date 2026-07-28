@@ -226,6 +226,9 @@ func SetApiRouter(router *gin.Engine) {
 			optionRoute.POST("/waffo-pancake/save", controller.SaveWaffoPancake)
 			optionRoute.POST("/waffo-pancake/subscription-product", controller.CreateWaffoPancakeSubscriptionProduct)
 			optionRoute.GET("/waffo-pancake/subscription-product-options", controller.ListWaffoPancakeSubscriptionProductOptions)
+			optionRoute.GET("/channel-health-alert", controller.GetChannelHealthAlertConfig)
+			optionRoute.PUT("/channel-health-alert", controller.UpdateChannelHealthAlertConfig)
+			optionRoute.POST("/channel-health-alert/test", controller.TestChannelHealthAlert)
 		}
 
 		// Custom OAuth provider management (root only)

@@ -76,7 +76,10 @@ func (channelHealthCheckHandler) Type() string { return model.SystemTaskTypeChan
 
 func (channelHealthCheckHandler) Enabled() bool { return true }
 
-func (channelHealthCheckHandler) Interval() time.Duration { return time.Minute }
+func (channelHealthCheckHandler) Interval() time.Duration {
+	minutes := operation_setting.GetChannelHealthAlertSetting().CheckIntervalMinutes
+	return time.Duration(minutes) * time.Minute
+}
 
 func (channelHealthCheckHandler) NewPayload() any { return nil }
 

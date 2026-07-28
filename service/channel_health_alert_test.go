@@ -6,12 +6,17 @@ import (
 	"time"
 
 	"github.com/QuantumNous/new-api/model"
+	"github.com/QuantumNous/new-api/setting/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestNotifyChannelHealthTransitionsSkipsWhenWebhookIsNotConfigured(t *testing.T) {
-	t.Setenv(channelHealthWeComWebhookEnv, "")
+	setChannelHealthAlertSettingForTest(t, map[string]string{
+		"enabled":           "true",
+		"wecom_webhook_url": "",
+	})
+	t.Setenv("CHANNEL_HEALTH_WECOM_WEBHOOK_URL", "")
 	err := notifyChannelHealthTransitions(
 		context.Background(),
 		[]model.Channel{{Id: 1, Name: "channel"}},
@@ -22,7 +27,10 @@ func TestNotifyChannelHealthTransitionsSkipsWhenWebhookIsNotConfigured(t *testin
 }
 
 func TestNotifyChannelHealthTransitionsSkipsUnchangedStatuses(t *testing.T) {
-	t.Setenv(channelHealthWeComWebhookEnv, "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=test")
+	setChannelHealthAlertSettingForTest(t, map[string]string{
+		"enabled":           "true",
+		"wecom_webhook_url": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=test",
+	})
 	err := notifyChannelHealthTransitions(
 		context.Background(),
 		[]model.Channel{{Id: 1, Name: "channel"}},
@@ -41,6 +49,8 @@ func TestBuildChannelHealthAlertContentIncludesDownAndRecoveryTransitions(t *tes
 		},
 		map[int]int{1: 2, 2: 0},
 		"test",
+		3,
+		true,
 		time.Date(2026, 7, 28, 7, 30, 0, 0, time.UTC),
 	)
 
@@ -57,6 +67,23 @@ func TestBuildChannelHealthAlertContentIgnoresInitialAndUnchangedChecks(t *testi
 		[]model.ChannelHealthCheck{{ChannelID: 1, Status: 0}, {ChannelID: 2, Status: 1}},
 		map[int]int{2: 1},
 		"test",
+		3,
+		true,
+		time.Now(),
+	)
+
+	assert.False(t, ok)
+	assert.Empty(t, content)
+}
+
+func TestBuildChannelHealthAlertContentCanSuppressRecovery(t *testing.T) {
+	content, ok := buildChannelHealthAlertContent(
+		[]model.Channel{{Id: 1, Name: "recovered-model"}},
+		[]model.ChannelHealthCheck{{ChannelID: 1, Status: 1, ResponseTime: 36}},
+		map[int]int{1: 0},
+		"test",
+		5,
+		false,
 		time.Now(),
 	)
 
@@ -68,4 +95,16 @@ func TestSendWeComMarkdownRejectsNonEnterpriseWeChatURL(t *testing.T) {
 	err := sendWeComMarkdown(context.Background(), "https://example.com/hook?key=test", "alert")
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "invalid enterprise WeChat webhook URL")
+}
+
+func setChannelHealthAlertSettingForTest(t *testing.T, values map[string]string) {
+	t.Helper()
+	setting := config.GlobalConfig.Get("channel_health_alert_setting")
+	require.NotNil(t, setting)
+	original, err := config.ConfigToMap(setting)
+	require.NoError(t, err)
+	require.NoError(t, config.UpdateConfigFromMap(setting, values))
+	t.Cleanup(func() {
+		require.NoError(t, config.UpdateConfigFromMap(setting, original))
+	})
 }

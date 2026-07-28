@@ -362,6 +362,34 @@ export type OperationsSettings = {
   'perf_metrics_setting.retention_days': number
 }
 
+export type ChannelHealthAlertDelivery = {
+  last_attempt_at: number
+  last_success: boolean
+  last_error: string
+  last_event_type: string
+}
+
+export type ChannelHealthAlertConfig = {
+  enabled: boolean
+  check_interval_minutes: 1 | 2 | 5 | 10
+  failure_threshold: number
+  recovery_enabled: boolean
+  webhook_configured: boolean
+  webhook_masked: string
+  environment: string
+  last_delivery: ChannelHealthAlertDelivery
+}
+
+export type ChannelHealthAlertUpdate = {
+  enabled: boolean
+  check_interval_minutes: 1 | 2 | 5 | 10
+  failure_threshold: number
+  recovery_enabled: boolean
+  wecom_webhook_url: string
+  clear_webhook: boolean
+  environment: string
+}
+
 export type SecuritySettings = {
   ModelRequestRateLimitEnabled: boolean
   ModelRequestRateLimitCount: number

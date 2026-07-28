@@ -20,6 +20,8 @@ import { api } from '@/lib/api'
 
 import type {
   ConfirmPaymentComplianceResponse,
+  ChannelHealthAlertConfig,
+  ChannelHealthAlertUpdate,
   FetchUpstreamRatiosRequest,
   LogCleanupTask,
   SystemOptionsResponse,
@@ -31,6 +33,12 @@ import type {
   UpstreamRatiosResponse,
 } from './types'
 
+type APIResponse<T> = {
+  success: boolean
+  message: string
+  data: T
+}
+
 export async function getSystemOptions() {
   const res = await api.get<SystemOptionsResponse>('/api/option/')
   return res.data
@@ -39,6 +47,45 @@ export async function getSystemOptions() {
 export async function updateSystemOption(request: UpdateOptionRequest) {
   const res = await api.put<UpdateOptionResponse>('/api/option/', request)
   return res.data
+}
+
+export async function getChannelHealthAlertConfig() {
+  const res = await api.get<APIResponse<ChannelHealthAlertConfig>>(
+    '/api/option/channel-health-alert',
+    { skipBusinessError: true }
+  )
+  if (!res.data.success) {
+    throw new Error(res.data.message || 'Failed to load channel alerts')
+  }
+  return res.data.data
+}
+
+export async function updateChannelHealthAlertConfig(
+  request: ChannelHealthAlertUpdate
+) {
+  const res = await api.put<APIResponse<ChannelHealthAlertConfig>>(
+    '/api/option/channel-health-alert',
+    request,
+    { skipBusinessError: true }
+  )
+  if (!res.data.success) {
+    throw new Error(res.data.message || 'Failed to update channel alerts')
+  }
+  return res.data.data
+}
+
+export async function testChannelHealthAlert(request: {
+  wecom_webhook_url: string
+  environment: string
+}) {
+  const res = await api.post<APIResponse<null>>(
+    '/api/option/channel-health-alert/test',
+    request,
+    { skipBusinessError: true }
+  )
+  if (!res.data.success) {
+    throw new Error(res.data.message || 'Failed to send test message')
+  }
 }
 
 export async function confirmPaymentCompliance() {
