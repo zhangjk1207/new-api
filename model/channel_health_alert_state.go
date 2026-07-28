@@ -1,11 +1,6 @@
 package model
 
-import (
-	"errors"
-
-	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
-)
+import "gorm.io/gorm/clause"
 
 const channelHealthAlertStateID = 1
 
@@ -19,11 +14,14 @@ type ChannelHealthAlertState struct {
 
 func GetChannelHealthAlertState() (ChannelHealthAlertState, error) {
 	var state ChannelHealthAlertState
-	err := DB.First(&state, channelHealthAlertStateID).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
+	result := DB.Where("id = ?", channelHealthAlertStateID).Limit(1).Find(&state)
+	if result.Error != nil {
+		return ChannelHealthAlertState{}, result.Error
+	}
+	if result.RowsAffected == 0 {
 		return ChannelHealthAlertState{ID: channelHealthAlertStateID}, nil
 	}
-	return state, err
+	return state, nil
 }
 
 func SaveChannelHealthAlertState(state ChannelHealthAlertState) error {
