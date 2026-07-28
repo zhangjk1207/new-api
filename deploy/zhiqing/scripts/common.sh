@@ -43,6 +43,7 @@ load_runtime_environment() {
     fi
   done
   export SQL_DSN LOG_SQL_DSN CONVERSATION_AUDIT_DSN
+  export CHANNEL_HEALTH_WECOM_WEBHOOK_URL CHANNEL_HEALTH_ALERT_ENVIRONMENT
 }
 
 test_database_name() {

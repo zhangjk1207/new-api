@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"math"
 	"net/http"
@@ -68,7 +69,9 @@ func RunChannelHealthCheck(ctx context.Context) (ChannelHealthCheckSummary, erro
 		return ChannelHealthCheckSummary{}, err
 	}
 	consecutiveFailures := make(map[int]int, len(channels))
+	previousStatuses := make(map[int]int, len(channels))
 	for _, check := range previousChecks {
+		previousStatuses[check.ChannelID] = check.Status
 		if check.Status == 1 {
 			consecutiveFailures[check.ChannelID] = 0
 		} else {
@@ -117,6 +120,9 @@ func RunChannelHealthCheck(ctx context.Context) (ChannelHealthCheckSummary, erro
 	}
 	if err := model.DeleteChannelHealthChecksBefore(time.Now().Add(-channelHealthHistoryPeriod).Unix()); err != nil {
 		return ChannelHealthCheckSummary{}, err
+	}
+	if err := notifyChannelHealthTransitions(ctx, channels, checks, previousStatuses); err != nil {
+		common.SysError(fmt.Sprintf("send channel health alert failed: %v", err))
 	}
 	return summary, nil
 }
