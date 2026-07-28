@@ -33,6 +33,7 @@ import {
   MessageSquare,
   Radio,
   ServerCog,
+  Server,
   Settings,
   Ticket,
   User,
@@ -96,6 +97,18 @@ export function useSidebarData(): SidebarData {
             url: '/resource-monitoring',
             icon: Cpu,
             requiredRole: ROLE.ADMIN,
+          },
+          {
+            title: t('Server Management'),
+            url: '/server-management',
+            icon: Server,
+            requiredRole: ROLE.SUPER_ADMIN,
+          },
+          {
+            title: t('Model Evaluation'),
+            url: '/model-evaluations',
+            icon: FlaskConical,
+            requiredRole: ROLE.SUPER_ADMIN,
           },
           {
             title: t('Conversation Audit'),

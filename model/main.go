@@ -299,6 +299,10 @@ func migrateDB() error {
 		&Algorithm{},
 		&HostMonitor{},
 		&HostMetricSample{},
+		&ModelEvaluationQuestionSet{},
+		&ModelEvaluationQuestion{},
+		&ModelEvaluationRun{},
+		&ModelEvaluationResult{},
 		&VLLMMetricSample{},
 		&VLLMMetricAggregate{},
 		&SystemInstance{},
@@ -308,6 +312,9 @@ func migrateDB() error {
 		&AuthzRole{},
 	)
 	if err != nil {
+		return err
+	}
+	if err := SeedDefaultModelEvaluationQuestionSet(); err != nil {
 		return err
 	}
 	if common.UsingMainDatabase(common.DatabaseTypeSQLite) {
@@ -360,6 +367,10 @@ func migrateDBFast() error {
 		{&Algorithm{}, "Algorithm"},
 		{&HostMonitor{}, "HostMonitor"},
 		{&HostMetricSample{}, "HostMetricSample"},
+		{&ModelEvaluationQuestionSet{}, "ModelEvaluationQuestionSet"},
+		{&ModelEvaluationQuestion{}, "ModelEvaluationQuestion"},
+		{&ModelEvaluationRun{}, "ModelEvaluationRun"},
+		{&ModelEvaluationResult{}, "ModelEvaluationResult"},
 		{&VLLMMetricSample{}, "VLLMMetricSample"},
 		{&VLLMMetricAggregate{}, "VLLMMetricAggregate"},
 		{&SystemInstance{}, "SystemInstance"},
@@ -388,6 +399,9 @@ func migrateDBFast() error {
 		if err != nil {
 			return err
 		}
+	}
+	if err := SeedDefaultModelEvaluationQuestionSet(); err != nil {
+		return err
 	}
 	if common.UsingMainDatabase(common.DatabaseTypeSQLite) {
 		if err := ensureSubscriptionPlanTableSQLite(); err != nil {

@@ -40,6 +40,21 @@ func SetApiRouter(router *gin.Engine) {
 			hostMonitoringRoute.POST("/:id/test", controller.TestHostMonitor)
 		}
 		apiRouter.GET("/host-monitoring/summary", middleware.AdminAuth(), controller.GetHostMonitoringSummary)
+		modelEvaluationRoute := apiRouter.Group("/model-evaluations")
+		modelEvaluationRoute.Use(middleware.RootAuth())
+		{
+			modelEvaluationRoute.GET("/question-sets", controller.ListModelEvaluationQuestionSets)
+			modelEvaluationRoute.POST("/question-sets", controller.CreateModelEvaluationQuestionSet)
+			modelEvaluationRoute.POST("/question-sets/import", controller.ImportModelEvaluationQuestionSet)
+			modelEvaluationRoute.PUT("/question-sets/:id", controller.UpdateModelEvaluationQuestionSet)
+			modelEvaluationRoute.DELETE("/question-sets/:id", controller.DeleteModelEvaluationQuestionSet)
+			modelEvaluationRoute.GET("/options", controller.GetModelEvaluationOptions)
+			modelEvaluationRoute.GET("/runs", controller.ListModelEvaluationRuns)
+			modelEvaluationRoute.POST("/runs", controller.StartModelEvaluationRun)
+			modelEvaluationRoute.GET("/runs/:id", controller.GetModelEvaluationRun)
+			modelEvaluationRoute.PUT("/runs/:id/results/:result_id/score", controller.ScoreModelEvaluationResult)
+			modelEvaluationRoute.GET("/runs/:id/export.xlsx", controller.ExportModelEvaluationRunExcel)
+		}
 		apiRouter.GET("/models", middleware.UserAuth(), controller.DashboardListModels)
 		apiRouter.GET("/status/test", middleware.AdminAuth(), controller.TestStatus)
 		apiRouter.GET("/notice", controller.GetNotice)

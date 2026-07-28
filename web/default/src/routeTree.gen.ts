@@ -46,12 +46,14 @@ import { Route as AuthenticatedSystemSettingsIndexRouteImport } from './routes/_
 import { Route as AuthenticatedSystemInfoIndexRouteImport } from './routes/_authenticated/system-info/index'
 import { Route as AuthenticatedSubscriptionsIndexRouteImport } from './routes/_authenticated/subscriptions/index'
 import { Route as AuthenticatedServiceMonitoringIndexRouteImport } from './routes/_authenticated/service-monitoring/index'
+import { Route as AuthenticatedServerManagementIndexRouteImport } from './routes/_authenticated/server-management/index'
 import { Route as AuthenticatedResourceMonitoringIndexRouteImport } from './routes/_authenticated/resource-monitoring/index'
 import { Route as AuthenticatedRedemptionCodesIndexRouteImport } from './routes/_authenticated/redemption-codes/index'
 import { Route as AuthenticatedProfileIndexRouteImport } from './routes/_authenticated/profile/index'
 import { Route as AuthenticatedPlaygroundIndexRouteImport } from './routes/_authenticated/playground/index'
 import { Route as AuthenticatedOperationsIndexRouteImport } from './routes/_authenticated/operations/index'
 import { Route as AuthenticatedModelsIndexRouteImport } from './routes/_authenticated/models/index'
+import { Route as AuthenticatedModelEvaluationsIndexRouteImport } from './routes/_authenticated/model-evaluations/index'
 import { Route as AuthenticatedKeysIndexRouteImport } from './routes/_authenticated/keys/index'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard/index'
 import { Route as AuthenticatedConversationAuditIndexRouteImport } from './routes/_authenticated/conversation-audit/index'
@@ -77,6 +79,7 @@ import { Route as AuthenticatedSystemSettingsModelsSectionRouteImport } from './
 import { Route as AuthenticatedSystemSettingsContentSectionRouteImport } from './routes/_authenticated/system-settings/content/$section'
 import { Route as AuthenticatedSystemSettingsBillingSectionRouteImport } from './routes/_authenticated/system-settings/billing/$section'
 import { Route as AuthenticatedSystemSettingsAuthSectionRouteImport } from './routes/_authenticated/system-settings/auth/$section'
+import { Route as AuthenticatedModelEvaluationsRunIdReportRouteImport } from './routes/_authenticated/model-evaluations/$runId/report'
 
 const UserAgreementRoute = UserAgreementRouteImport.update({
   id: '/user-agreement',
@@ -269,6 +272,12 @@ const AuthenticatedServiceMonitoringIndexRoute =
     path: '/service-monitoring/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedServerManagementIndexRoute =
+  AuthenticatedServerManagementIndexRouteImport.update({
+    id: '/server-management/',
+    path: '/server-management/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedResourceMonitoringIndexRoute =
   AuthenticatedResourceMonitoringIndexRouteImport.update({
     id: '/resource-monitoring/',
@@ -303,6 +312,12 @@ const AuthenticatedModelsIndexRoute =
   AuthenticatedModelsIndexRouteImport.update({
     id: '/models/',
     path: '/models/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedModelEvaluationsIndexRoute =
+  AuthenticatedModelEvaluationsIndexRouteImport.update({
+    id: '/model-evaluations/',
+    path: '/model-evaluations/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedKeysIndexRoute = AuthenticatedKeysIndexRouteImport.update({
@@ -452,6 +467,12 @@ const AuthenticatedSystemSettingsAuthSectionRoute =
     path: '/auth/$section',
     getParentRoute: () => AuthenticatedSystemSettingsRouteRoute,
   } as any)
+const AuthenticatedModelEvaluationsRunIdReportRoute =
+  AuthenticatedModelEvaluationsRunIdReportRouteImport.update({
+    id: '/model-evaluations/$runId/report',
+    path: '/model-evaluations/$runId/report',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -491,12 +512,14 @@ export interface FileRoutesByFullPath {
   '/conversation-audit/': typeof AuthenticatedConversationAuditIndexRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/keys/': typeof AuthenticatedKeysIndexRoute
+  '/model-evaluations/': typeof AuthenticatedModelEvaluationsIndexRoute
   '/models/': typeof AuthenticatedModelsIndexRoute
   '/operations/': typeof AuthenticatedOperationsIndexRoute
   '/playground/': typeof AuthenticatedPlaygroundIndexRoute
   '/profile/': typeof AuthenticatedProfileIndexRoute
   '/redemption-codes/': typeof AuthenticatedRedemptionCodesIndexRoute
   '/resource-monitoring/': typeof AuthenticatedResourceMonitoringIndexRoute
+  '/server-management/': typeof AuthenticatedServerManagementIndexRoute
   '/service-monitoring/': typeof AuthenticatedServiceMonitoringIndexRoute
   '/subscriptions/': typeof AuthenticatedSubscriptionsIndexRoute
   '/system-info/': typeof AuthenticatedSystemInfoIndexRoute
@@ -506,6 +529,7 @@ export interface FileRoutesByFullPath {
   '/wallet/': typeof AuthenticatedWalletIndexRoute
   '/algorithms/$algorithmId/': typeof AlgorithmsAlgorithmIdIndexRoute
   '/pricing/$modelId/': typeof PricingModelIdIndexRoute
+  '/model-evaluations/$runId/report': typeof AuthenticatedModelEvaluationsRunIdReportRoute
   '/system-settings/auth/$section': typeof AuthenticatedSystemSettingsAuthSectionRoute
   '/system-settings/billing/$section': typeof AuthenticatedSystemSettingsBillingSectionRoute
   '/system-settings/content/$section': typeof AuthenticatedSystemSettingsContentSectionRoute
@@ -558,12 +582,14 @@ export interface FileRoutesByTo {
   '/conversation-audit': typeof AuthenticatedConversationAuditIndexRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
   '/keys': typeof AuthenticatedKeysIndexRoute
+  '/model-evaluations': typeof AuthenticatedModelEvaluationsIndexRoute
   '/models': typeof AuthenticatedModelsIndexRoute
   '/operations': typeof AuthenticatedOperationsIndexRoute
   '/playground': typeof AuthenticatedPlaygroundIndexRoute
   '/profile': typeof AuthenticatedProfileIndexRoute
   '/redemption-codes': typeof AuthenticatedRedemptionCodesIndexRoute
   '/resource-monitoring': typeof AuthenticatedResourceMonitoringIndexRoute
+  '/server-management': typeof AuthenticatedServerManagementIndexRoute
   '/service-monitoring': typeof AuthenticatedServiceMonitoringIndexRoute
   '/subscriptions': typeof AuthenticatedSubscriptionsIndexRoute
   '/system-info': typeof AuthenticatedSystemInfoIndexRoute
@@ -573,6 +599,7 @@ export interface FileRoutesByTo {
   '/wallet': typeof AuthenticatedWalletIndexRoute
   '/algorithms/$algorithmId': typeof AlgorithmsAlgorithmIdIndexRoute
   '/pricing/$modelId': typeof PricingModelIdIndexRoute
+  '/model-evaluations/$runId/report': typeof AuthenticatedModelEvaluationsRunIdReportRoute
   '/system-settings/auth/$section': typeof AuthenticatedSystemSettingsAuthSectionRoute
   '/system-settings/billing/$section': typeof AuthenticatedSystemSettingsBillingSectionRoute
   '/system-settings/content/$section': typeof AuthenticatedSystemSettingsContentSectionRoute
@@ -629,12 +656,14 @@ export interface FileRoutesById {
   '/_authenticated/conversation-audit/': typeof AuthenticatedConversationAuditIndexRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/_authenticated/keys/': typeof AuthenticatedKeysIndexRoute
+  '/_authenticated/model-evaluations/': typeof AuthenticatedModelEvaluationsIndexRoute
   '/_authenticated/models/': typeof AuthenticatedModelsIndexRoute
   '/_authenticated/operations/': typeof AuthenticatedOperationsIndexRoute
   '/_authenticated/playground/': typeof AuthenticatedPlaygroundIndexRoute
   '/_authenticated/profile/': typeof AuthenticatedProfileIndexRoute
   '/_authenticated/redemption-codes/': typeof AuthenticatedRedemptionCodesIndexRoute
   '/_authenticated/resource-monitoring/': typeof AuthenticatedResourceMonitoringIndexRoute
+  '/_authenticated/server-management/': typeof AuthenticatedServerManagementIndexRoute
   '/_authenticated/service-monitoring/': typeof AuthenticatedServiceMonitoringIndexRoute
   '/_authenticated/subscriptions/': typeof AuthenticatedSubscriptionsIndexRoute
   '/_authenticated/system-info/': typeof AuthenticatedSystemInfoIndexRoute
@@ -644,6 +673,7 @@ export interface FileRoutesById {
   '/_authenticated/wallet/': typeof AuthenticatedWalletIndexRoute
   '/algorithms/$algorithmId/': typeof AlgorithmsAlgorithmIdIndexRoute
   '/pricing/$modelId/': typeof PricingModelIdIndexRoute
+  '/_authenticated/model-evaluations/$runId/report': typeof AuthenticatedModelEvaluationsRunIdReportRoute
   '/_authenticated/system-settings/auth/$section': typeof AuthenticatedSystemSettingsAuthSectionRoute
   '/_authenticated/system-settings/billing/$section': typeof AuthenticatedSystemSettingsBillingSectionRoute
   '/_authenticated/system-settings/content/$section': typeof AuthenticatedSystemSettingsContentSectionRoute
@@ -699,12 +729,14 @@ export interface FileRouteTypes {
     | '/conversation-audit/'
     | '/dashboard/'
     | '/keys/'
+    | '/model-evaluations/'
     | '/models/'
     | '/operations/'
     | '/playground/'
     | '/profile/'
     | '/redemption-codes/'
     | '/resource-monitoring/'
+    | '/server-management/'
     | '/service-monitoring/'
     | '/subscriptions/'
     | '/system-info/'
@@ -714,6 +746,7 @@ export interface FileRouteTypes {
     | '/wallet/'
     | '/algorithms/$algorithmId/'
     | '/pricing/$modelId/'
+    | '/model-evaluations/$runId/report'
     | '/system-settings/auth/$section'
     | '/system-settings/billing/$section'
     | '/system-settings/content/$section'
@@ -766,12 +799,14 @@ export interface FileRouteTypes {
     | '/conversation-audit'
     | '/dashboard'
     | '/keys'
+    | '/model-evaluations'
     | '/models'
     | '/operations'
     | '/playground'
     | '/profile'
     | '/redemption-codes'
     | '/resource-monitoring'
+    | '/server-management'
     | '/service-monitoring'
     | '/subscriptions'
     | '/system-info'
@@ -781,6 +816,7 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/algorithms/$algorithmId'
     | '/pricing/$modelId'
+    | '/model-evaluations/$runId/report'
     | '/system-settings/auth/$section'
     | '/system-settings/billing/$section'
     | '/system-settings/content/$section'
@@ -836,12 +872,14 @@ export interface FileRouteTypes {
     | '/_authenticated/conversation-audit/'
     | '/_authenticated/dashboard/'
     | '/_authenticated/keys/'
+    | '/_authenticated/model-evaluations/'
     | '/_authenticated/models/'
     | '/_authenticated/operations/'
     | '/_authenticated/playground/'
     | '/_authenticated/profile/'
     | '/_authenticated/redemption-codes/'
     | '/_authenticated/resource-monitoring/'
+    | '/_authenticated/server-management/'
     | '/_authenticated/service-monitoring/'
     | '/_authenticated/subscriptions/'
     | '/_authenticated/system-info/'
@@ -851,6 +889,7 @@ export interface FileRouteTypes {
     | '/_authenticated/wallet/'
     | '/algorithms/$algorithmId/'
     | '/pricing/$modelId/'
+    | '/_authenticated/model-evaluations/$runId/report'
     | '/_authenticated/system-settings/auth/$section'
     | '/_authenticated/system-settings/billing/$section'
     | '/_authenticated/system-settings/content/$section'
@@ -1152,6 +1191,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedServiceMonitoringIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/server-management/': {
+      id: '/_authenticated/server-management/'
+      path: '/server-management'
+      fullPath: '/server-management/'
+      preLoaderRoute: typeof AuthenticatedServerManagementIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/resource-monitoring/': {
       id: '/_authenticated/resource-monitoring/'
       path: '/resource-monitoring'
@@ -1192,6 +1238,13 @@ declare module '@tanstack/react-router' {
       path: '/models'
       fullPath: '/models/'
       preLoaderRoute: typeof AuthenticatedModelsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/model-evaluations/': {
+      id: '/_authenticated/model-evaluations/'
+      path: '/model-evaluations'
+      fullPath: '/model-evaluations/'
+      preLoaderRoute: typeof AuthenticatedModelEvaluationsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/keys/': {
@@ -1369,6 +1422,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSystemSettingsAuthSectionRouteImport
       parentRoute: typeof AuthenticatedSystemSettingsRouteRoute
     }
+    '/_authenticated/model-evaluations/$runId/report': {
+      id: '/_authenticated/model-evaluations/$runId/report'
+      path: '/model-evaluations/$runId/report'
+      fullPath: '/model-evaluations/$runId/report'
+      preLoaderRoute: typeof AuthenticatedModelEvaluationsRunIdReportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -1468,18 +1528,21 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedConversationAuditIndexRoute: typeof AuthenticatedConversationAuditIndexRoute
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
   AuthenticatedKeysIndexRoute: typeof AuthenticatedKeysIndexRoute
+  AuthenticatedModelEvaluationsIndexRoute: typeof AuthenticatedModelEvaluationsIndexRoute
   AuthenticatedModelsIndexRoute: typeof AuthenticatedModelsIndexRoute
   AuthenticatedOperationsIndexRoute: typeof AuthenticatedOperationsIndexRoute
   AuthenticatedPlaygroundIndexRoute: typeof AuthenticatedPlaygroundIndexRoute
   AuthenticatedProfileIndexRoute: typeof AuthenticatedProfileIndexRoute
   AuthenticatedRedemptionCodesIndexRoute: typeof AuthenticatedRedemptionCodesIndexRoute
   AuthenticatedResourceMonitoringIndexRoute: typeof AuthenticatedResourceMonitoringIndexRoute
+  AuthenticatedServerManagementIndexRoute: typeof AuthenticatedServerManagementIndexRoute
   AuthenticatedServiceMonitoringIndexRoute: typeof AuthenticatedServiceMonitoringIndexRoute
   AuthenticatedSubscriptionsIndexRoute: typeof AuthenticatedSubscriptionsIndexRoute
   AuthenticatedSystemInfoIndexRoute: typeof AuthenticatedSystemInfoIndexRoute
   AuthenticatedUsageLogsIndexRoute: typeof AuthenticatedUsageLogsIndexRoute
   AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
   AuthenticatedWalletIndexRoute: typeof AuthenticatedWalletIndexRoute
+  AuthenticatedModelEvaluationsRunIdReportRoute: typeof AuthenticatedModelEvaluationsRunIdReportRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -1498,6 +1561,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedConversationAuditIndexRoute,
   AuthenticatedDashboardIndexRoute: AuthenticatedDashboardIndexRoute,
   AuthenticatedKeysIndexRoute: AuthenticatedKeysIndexRoute,
+  AuthenticatedModelEvaluationsIndexRoute:
+    AuthenticatedModelEvaluationsIndexRoute,
   AuthenticatedModelsIndexRoute: AuthenticatedModelsIndexRoute,
   AuthenticatedOperationsIndexRoute: AuthenticatedOperationsIndexRoute,
   AuthenticatedPlaygroundIndexRoute: AuthenticatedPlaygroundIndexRoute,
@@ -1506,6 +1571,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedRedemptionCodesIndexRoute,
   AuthenticatedResourceMonitoringIndexRoute:
     AuthenticatedResourceMonitoringIndexRoute,
+  AuthenticatedServerManagementIndexRoute:
+    AuthenticatedServerManagementIndexRoute,
   AuthenticatedServiceMonitoringIndexRoute:
     AuthenticatedServiceMonitoringIndexRoute,
   AuthenticatedSubscriptionsIndexRoute: AuthenticatedSubscriptionsIndexRoute,
@@ -1513,6 +1580,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedUsageLogsIndexRoute: AuthenticatedUsageLogsIndexRoute,
   AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,
   AuthenticatedWalletIndexRoute: AuthenticatedWalletIndexRoute,
+  AuthenticatedModelEvaluationsRunIdReportRoute:
+    AuthenticatedModelEvaluationsRunIdReportRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

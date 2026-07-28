@@ -36,9 +36,41 @@ import (
 )
 
 type testResult struct {
-	context     *gin.Context
-	localErr    error
-	newAPIError *types.NewAPIError
+	context      *gin.Context
+	localErr     error
+	newAPIError  *types.NewAPIError
+	responseBody []byte
+	usage        *dto.Usage
+	durationMs   int64
+	firstTokenMs int64
+}
+
+type channelTestOptions struct {
+	request             dto.Request
+	maxResponseLogBytes int64
+	recordConsumeLog    bool
+	logResponse         bool
+	group               string
+}
+
+type firstWriteResponseWriter struct {
+	gin.ResponseWriter
+	startedAt    time.Time
+	firstWriteAt time.Time
+}
+
+func (w *firstWriteResponseWriter) Write(data []byte) (int, error) {
+	if w.firstWriteAt.IsZero() && len(data) > 0 {
+		w.firstWriteAt = time.Now()
+	}
+	return w.ResponseWriter.Write(data)
+}
+
+func (w *firstWriteResponseWriter) WriteString(data string) (int, error) {
+	if w.firstWriteAt.IsZero() && data != "" {
+		w.firstWriteAt = time.Now()
+	}
+	return w.ResponseWriter.WriteString(data)
 }
 
 func normalizeChannelTestEndpoint(channel *model.Channel, modelName, endpointType string) string {
@@ -73,6 +105,14 @@ func resolveChannelTestUserID(c *gin.Context) (int, error) {
 }
 
 func testChannel(ctx context.Context, channel *model.Channel, testUserID int, testModel string, endpointType string, isStream bool) testResult {
+	return testChannelWithOptions(ctx, channel, testUserID, testModel, endpointType, isStream, channelTestOptions{
+		maxResponseLogBytes: 8 << 10,
+		recordConsumeLog:    true,
+		logResponse:         true,
+	})
+}
+
+func testChannelWithOptions(ctx context.Context, channel *model.Channel, testUserID int, testModel string, endpointType string, isStream bool, options channelTestOptions) testResult {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -94,6 +134,8 @@ func testChannel(ctx context.Context, channel *model.Channel, testUserID int, te
 	}
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
+	timedWriter := &firstWriteResponseWriter{ResponseWriter: c.Writer, startedAt: tik}
+	c.Writer = timedWriter
 
 	testModel = strings.TrimSpace(testModel)
 	if testModel == "" {
@@ -171,6 +213,9 @@ func testChannel(ctx context.Context, channel *model.Channel, testUserID int, te
 	c.Set("channel", channel.Type)
 	c.Set("base_url", channel.GetBaseURL())
 	group, _ := model.GetUserGroup(testUserID, false)
+	if strings.TrimSpace(options.group) != "" {
+		group = strings.TrimSpace(options.group)
+	}
 	c.Set("group", group)
 
 	newAPIError := middleware.SetupContextForSelectedChannel(c, channel, testModel)
@@ -232,7 +277,10 @@ func testChannel(ctx context.Context, channel *model.Channel, testUserID int, te
 		}
 	}
 
-	request := buildTestRequest(testModel, endpointType, channel, isStream)
+	request := options.request
+	if request == nil {
+		request = buildTestRequest(testModel, endpointType, channel, isStream)
+	}
 
 	info, err := relaycommon.GenRelayInfo(c, relayFormat, request, nil)
 
@@ -475,7 +523,7 @@ func testChannel(ctx context.Context, channel *model.Channel, testUserID int, te
 		}
 	}
 	result := w.Result()
-	respBody, err := readTestResponseBody(result.Body, isStream)
+	respBody, err := readTestResponseBody(result.Body, options.maxResponseLogBytes)
 	if err != nil {
 		return testResult{
 			context:     c,
@@ -497,24 +545,36 @@ func testChannel(ctx context.Context, channel *model.Channel, testUserID int, te
 	milliseconds := tok.Sub(tik).Milliseconds()
 	consumedTime := float64(milliseconds) / 1000.0
 	other := buildTestLogOther(c, info, priceData, usage, tieredResult)
-	model.RecordConsumeLog(c, testUserID, model.RecordConsumeLogParams{
-		ChannelId:        channel.Id,
-		PromptTokens:     usage.PromptTokens,
-		CompletionTokens: usage.CompletionTokens,
-		ModelName:        info.OriginModelName,
-		TokenName:        "模型测试",
-		Quota:            quota,
-		Content:          "模型测试",
-		UseTimeSeconds:   int(consumedTime),
-		IsStream:         info.IsStream,
-		Group:            info.UsingGroup,
-		Other:            other,
-	})
-	common.SysLog(fmt.Sprintf("testing channel #%d, response: \n%s", channel.Id, string(respBody)))
+	if options.recordConsumeLog {
+		model.RecordConsumeLog(c, testUserID, model.RecordConsumeLogParams{
+			ChannelId:        channel.Id,
+			PromptTokens:     usage.PromptTokens,
+			CompletionTokens: usage.CompletionTokens,
+			ModelName:        info.OriginModelName,
+			TokenName:        "模型测试",
+			Quota:            quota,
+			Content:          "模型测试",
+			UseTimeSeconds:   int(consumedTime),
+			IsStream:         info.IsStream,
+			Group:            info.UsingGroup,
+			Other:            other,
+		})
+	}
+	if options.logResponse {
+		common.SysLog(fmt.Sprintf("testing channel #%d, response: \n%s", channel.Id, string(respBody)))
+	}
+	firstTokenMs := milliseconds
+	if !timedWriter.firstWriteAt.IsZero() {
+		firstTokenMs = timedWriter.firstWriteAt.Sub(timedWriter.startedAt).Milliseconds()
+	}
 	return testResult{
-		context:     c,
-		localErr:    nil,
-		newAPIError: nil,
+		context:      c,
+		localErr:     nil,
+		newAPIError:  nil,
+		responseBody: respBody,
+		usage:        usage,
+		durationMs:   milliseconds,
+		firstTokenMs: firstTokenMs,
 	}
 }
 
@@ -589,11 +649,10 @@ func coerceTestUsage(usageAny any, isStream bool, estimatePromptTokens int) (*dt
 	}
 }
 
-func readTestResponseBody(body io.ReadCloser, isStream bool) ([]byte, error) {
+func readTestResponseBody(body io.ReadCloser, maxBytes int64) ([]byte, error) {
 	defer func() { _ = body.Close() }()
-	const maxStreamLogBytes = 8 << 10
-	if isStream {
-		return io.ReadAll(io.LimitReader(body, maxStreamLogBytes))
+	if maxBytes > 0 {
+		return io.ReadAll(io.LimitReader(body, maxBytes))
 	}
 	return io.ReadAll(body)
 }
