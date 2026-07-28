@@ -75,7 +75,9 @@ services:
     volumes:
       - ${ZHIQING_PREFLIGHT_DATA_DIR:?ZHIQING_PREFLIGHT_DATA_DIR is required}:/data
       - ${ZHIQING_PREFLIGHT_LOG_DIR:?ZHIQING_PREFLIGHT_LOG_DIR is required}:/app/logs
-    environment: *app-environment
+    environment:
+      <<: *app-environment
+      CHANNEL_HEALTH_WECOM_WEBHOOK_URL: ""
     extra_hosts:
       - host.docker.internal:host-gateway
     healthcheck: *app-healthcheck
