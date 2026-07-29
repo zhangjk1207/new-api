@@ -74,6 +74,58 @@ export function createNewApiExtension(
     })
 
     pi.registerTool({
+      name: 'newapi_create_token',
+      label: '创建 API 密钥',
+      description:
+        '为当前登录用户创建 API 密钥。用户未指定名称时自动生成名称；默认使用 default 分组、无限额度、永不过期且不限制模型。不得返回完整密钥值。',
+      parameters: Type.Object({
+        name: Type.Optional(
+          Type.String({
+            maxLength: 50,
+            description: '密钥名称；留空时由运维 Agent 自动生成',
+          })
+        ),
+        group: Type.Optional(
+          Type.String({ description: '密钥分组，默认 default' })
+        ),
+        unlimited_quota: Type.Optional(
+          Type.Boolean({ description: '是否无限额度，默认 true' })
+        ),
+        expired_time: Type.Optional(
+          Type.Integer({ description: 'Unix 过期时间，-1 表示永不过期' })
+        ),
+        models: Type.Optional(
+          Type.Array(Type.String(), {
+            description: '允许调用的模型；留空表示不限制模型',
+          })
+        ),
+      }),
+      execute: async (_id, params) => {
+        assertMutationAllowed(
+          'POST',
+          '/api/token/',
+          requestContext.latestUserPrompt
+        )
+        const name =
+          params.name?.trim() ||
+          `运维Agent-${new Date().toISOString().replace(/\D/g, '').slice(0, 14)}`
+        const models = params.models || []
+        const result = await client.request('POST', '/api/token/', {
+          name,
+          expired_time: params.expired_time ?? -1,
+          remain_quota: 0,
+          unlimited_quota: params.unlimited_quota ?? true,
+          model_limits_enabled: models.length > 0,
+          model_limits: models.join(','),
+          allow_ips: '',
+          group: params.group || 'default',
+          cross_group_retry: false,
+        })
+        return toolResult({ name, result })
+      },
+    })
+
+    pi.registerTool({
       name: 'newapi_api_request',
       label: '调用平台管理接口',
       description:

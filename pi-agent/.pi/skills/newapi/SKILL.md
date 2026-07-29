@@ -14,6 +14,8 @@ is adapted from [QuantumNous/skills](https://github.com/QuantumNous/skills).
 - Use `newapi_list_groups` for groups and ratios.
 - Use `newapi_get_account` for account balance, profile, group, and request count.
 - Use `newapi_list_tokens` for token metadata.
+- Use `newapi_create_token` to create an API key for the current user. Do not
+  guess token-management endpoint paths with the generic request tool.
 - Use `newapi_api_request` for other `/api/` queries and management operations.
 
 ## Rules

@@ -34,6 +34,7 @@ const toolNames = [
   'newapi_list_groups',
   'newapi_get_account',
   'newapi_list_tokens',
+  'newapi_create_token',
   'newapi_api_request',
 ]
 
