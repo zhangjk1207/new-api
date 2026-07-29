@@ -23,8 +23,6 @@ export type MessageStatus = 'loading' | 'streaming' | 'complete' | 'error'
 
 export type PlaygroundMessageLayoutMode = 'alternating' | 'left'
 
-export type PlaygroundMode = 'chat' | 'agent'
-
 export interface MessageVersion {
   id: string
   content: string
@@ -51,6 +49,16 @@ export interface Message {
   isContentComplete?: boolean
   status?: MessageStatus
   errorCode?: string | null
+}
+
+export interface AgentConversation {
+  id: string
+  title: string
+  messages: Message[]
+  model: string
+  group: string
+  createdAt: number
+  updatedAt: number
 }
 
 // API payload types

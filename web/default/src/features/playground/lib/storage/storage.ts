@@ -17,7 +17,12 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { MESSAGE_STATUS, STORAGE_KEYS } from '../../constants'
-import type { PlaygroundConfig, ParameterEnabled, Message } from '../../types'
+import type {
+  AgentConversation,
+  PlaygroundConfig,
+  ParameterEnabled,
+  Message,
+} from '../../types'
 import {
   finalizeMessage,
   isAssistantMessagePending,
@@ -31,10 +36,14 @@ import {
   MAX_STORED_MESSAGES,
   MAX_STORED_MESSAGES_BYTES,
   STORAGE_VERSION,
+  agentConversationsSchema,
   messagesSchema,
   parameterEnabledSchema,
   playgroundConfigSchema,
 } from './storage-schema'
+
+const MAX_STORED_CONVERSATIONS = 30
+const MAX_STORED_CONVERSATIONS_BYTES = 3 * 1024 * 1024
 
 type StoredEnvelope<T> = {
   version: number
@@ -383,6 +392,69 @@ export function saveMessages(messages: Message[]): void {
   }
 }
 
+export function loadAgentConversations(): AgentConversation[] {
+  try {
+    const saved = readStoredValue(STORAGE_KEYS.CONVERSATIONS)
+    if (!saved) return []
+
+    const parsed = agentConversationsSchema.parse(
+      unwrapStoredValue(saved)
+    ) as AgentConversation[]
+    return parsed
+      .map((conversation) => ({
+        ...conversation,
+        messages: sanitizeMessagesOnLoad(
+          trimMessagesByContentSize(
+            trimMessages(
+              conversation.messages.map(normalizeStoredMessageForLoad)
+            )
+          )
+        ),
+      }))
+      .sort((left, right) => right.updatedAt - left.updatedAt)
+      .slice(0, MAX_STORED_CONVERSATIONS)
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Failed to load agent conversations:', error)
+    return []
+  }
+}
+
+export function saveAgentConversations(
+  conversations: AgentConversation[]
+): void {
+  try {
+    const candidates = conversations
+      .map((conversation) => ({
+        ...conversation,
+        messages: trimMessages(conversation.messages),
+      }))
+      .sort((left, right) => right.updatedAt - left.updatedAt)
+      .slice(0, MAX_STORED_CONVERSATIONS)
+    const retained: AgentConversation[] = []
+
+    for (const conversation of candidates) {
+      const next = [...retained, conversation]
+      if (JSON.stringify(next).length > MAX_STORED_CONVERSATIONS_BYTES) break
+      retained.push(conversation)
+    }
+
+    const parsed = agentConversationsSchema.parse(retained)
+    writeStoredValue(STORAGE_KEYS.CONVERSATIONS, parsed)
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Failed to save agent conversations:', error)
+  }
+}
+
+export function loadActiveConversationId(): string | null {
+  return localStorage.getItem(STORAGE_KEYS.ACTIVE_CONVERSATION)
+}
+
+export function saveActiveConversationId(id: string): void {
+  localStorage.setItem(STORAGE_KEYS.ACTIVE_CONVERSATION, id)
+}
+
 /**
  * Clear all playground data
  */
@@ -391,6 +463,8 @@ export function clearPlaygroundData(): void {
     localStorage.removeItem(STORAGE_KEYS.CONFIG)
     localStorage.removeItem(STORAGE_KEYS.PARAMETER_ENABLED)
     localStorage.removeItem(STORAGE_KEYS.MESSAGES)
+    localStorage.removeItem(STORAGE_KEYS.CONVERSATIONS)
+    localStorage.removeItem(STORAGE_KEYS.ACTIVE_CONVERSATION)
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Failed to clear playground data:', error)

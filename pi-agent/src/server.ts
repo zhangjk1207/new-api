@@ -26,27 +26,39 @@ const modelRuntime = await ModelRuntime.create({
 })
 modelRuntime.setRuntimeApiKey('openai', config.newApiApiKey)
 
-const model: Model<'openai-completions'> = {
-  id: config.model,
-  name: config.model,
-  api: 'openai-completions',
-  provider: 'openai',
-  baseUrl: `${config.newApiBaseUrl}/v1`,
-  reasoning: false,
-  input: ['text'],
-  cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-  contextWindow: 131_072,
-  maxTokens: 8_192,
-}
-
 const sessionStore = new SessionStore(config.sessionTtlMs, config.maxSessions)
 const encoder = new TextEncoder()
+const internalRelayToken = randomUUID()
 const toolNames = [
   'newapi_list_models',
   'newapi_list_groups',
   'newapi_get_account',
   'newapi_list_tokens',
+  'newapi_api_request',
 ]
+
+function createModel(
+  modelName: string,
+  group: string,
+  identity: RequestIdentity
+): Model<'openai-completions'> {
+  return {
+    id: modelName,
+    name: modelName,
+    api: 'openai-completions',
+    provider: 'openai',
+    baseUrl: `http://127.0.0.1:${config.port}/internal/openai/${internalRelayToken}/${encodeURIComponent(group)}/v1`,
+    reasoning: false,
+    input: ['text'],
+    cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+    contextWindow: 131_072,
+    maxTokens: 8_192,
+    headers: {
+      'X-Pi-Agent-User': identity.userId,
+      ...(identity.cookie ? { 'X-Pi-Agent-Cookie': identity.cookie } : {}),
+    },
+  }
+}
 
 function jsonResponse(value: unknown, status = 200): Response {
   return Response.json(value, {
@@ -79,7 +91,9 @@ function readIdentity(request: Request): RequestIdentity | undefined {
   }
 }
 
-function identityKey(identity: RequestIdentity): string {
+function identityKey(
+  identity: RequestIdentity
+): string {
   return createHash('sha256')
     .update(
       `${identity.userId}\0${identity.authorization || ''}\0${identity.cookie || ''}`
@@ -111,15 +125,41 @@ function parseChatRequest(value: unknown): AgentChatRequest | undefined {
   ) {
     return undefined
   }
+  if (
+    candidate.model !== undefined &&
+    (typeof candidate.model !== 'string' ||
+      candidate.model.length === 0 ||
+      candidate.model.length > 200 ||
+      /[\r\n]/.test(candidate.model))
+  ) {
+    return undefined
+  }
+  if (
+    candidate.group !== undefined &&
+    (typeof candidate.group !== 'string' ||
+      candidate.group.length === 0 ||
+      candidate.group.length > 64 ||
+      /[\r\n]/.test(candidate.group))
+  ) {
+    return undefined
+  }
 
   return {
+    group: candidate.group,
     messages: candidate.messages,
+    model: candidate.model,
     stream: candidate.stream !== false,
     session_id: candidate.session_id,
   }
 }
 
-async function createSession(client: NewApiClient): Promise<AgentSession> {
+async function createSession(
+  client: NewApiClient,
+  modelName: string,
+  group: string,
+  identity: RequestIdentity,
+  requestContext: { latestUserPrompt: string }
+): Promise<AgentSession> {
   const settingsManager = SettingsManager.inMemory({
     compaction: { enabled: true },
     retry: { enabled: true, maxRetries: 1 },
@@ -128,14 +168,14 @@ async function createSession(client: NewApiClient): Promise<AgentSession> {
     cwd: serviceRoot,
     agentDir,
     settingsManager,
-    extensionFactories: [createNewApiExtension(client)],
+    extensionFactories: [createNewApiExtension(client, requestContext)],
   })
   await resourceLoader.reload()
 
   const result = await createAgentSession({
     cwd: serviceRoot,
     agentDir,
-    model,
+    model: createModel(modelName, group, identity),
     modelRuntime,
     resourceLoader,
     sessionManager: SessionManager.inMemory(serviceRoot),
@@ -147,6 +187,54 @@ async function createSession(client: NewApiClient): Promise<AgentSession> {
   return result.session
 }
 
+async function handleInternalRelay(
+  request: Request,
+  token: string,
+  group: string,
+  endpoint: 'chat/completions' | 'responses'
+): Promise<Response> {
+  if (token !== internalRelayToken) {
+    return new Response(null, { status: 404 })
+  }
+
+  let body: Record<string, unknown>
+  try {
+    body = (await request.json()) as Record<string, unknown>
+  } catch {
+    return openAiError('Internal relay received invalid JSON')
+  }
+  body.group = group
+
+  const cookie = request.headers.get('X-Pi-Agent-Cookie')
+  const userId = request.headers.get('X-Pi-Agent-User')
+  const useUserSession = Boolean(cookie && userId)
+  const targetPath = useUserSession ? `/pg/${endpoint}` : `/v1/${endpoint}`
+  const headers = new Headers({ 'Content-Type': 'application/json' })
+  if (useUserSession) {
+    headers.set('Cookie', cookie!)
+    headers.set('New-Api-User', userId!)
+  } else {
+    headers.set('Authorization', `Bearer ${config.newApiApiKey}`)
+  }
+
+  const response = await fetch(`${config.newApiBaseUrl}${targetPath}`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(body),
+    signal: request.signal,
+  })
+  const responseHeaders = new Headers()
+  const contentType = response.headers.get('Content-Type')
+  if (contentType) responseHeaders.set('Content-Type', contentType)
+  responseHeaders.set('Cache-Control', 'no-cache, no-transform')
+  responseHeaders.set('X-Accel-Buffering', 'no')
+
+  return new Response(response.body, {
+    status: response.status,
+    headers: responseHeaders,
+  })
+}
+
 function latestUserPrompt(messages: ChatMessage[]): string | undefined {
   for (let index = messages.length - 1; index >= 0; index -= 1) {
     if (messages[index].role === 'user') return messages[index].content.trim()
@@ -154,12 +242,63 @@ function latestUserPrompt(messages: ChatMessage[]): string | undefined {
   return undefined
 }
 
-function sseChunk(id: string, content: string, finishReason: string | null) {
+function latestAssistantResult(session: AgentSession): {
+  content: string
+  error?: string
+} {
+  for (let index = session.messages.length - 1; index >= 0; index -= 1) {
+    const message = session.messages[index]
+    if (!message || typeof message !== 'object' || message.role !== 'assistant') {
+      continue
+    }
+
+    const assistant = message as {
+      content?: Array<{ type?: string; text?: string }>
+      errorMessage?: string
+    }
+    const content = (assistant.content || [])
+      .filter((item) => item.type === 'text' && typeof item.text === 'string')
+      .map((item) => item.text)
+      .join('')
+    return { content, error: assistant.errorMessage }
+  }
+
+  return { content: '' }
+}
+
+function promptWithRestoredHistory(messages: ChatMessage[], prompt: string): string {
+  let lastUserIndex = -1
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    const message = messages[index]
+    if (message.role === 'user' && message.content.trim() === prompt) {
+      lastUserIndex = index
+      break
+    }
+  }
+  if (lastUserIndex <= 0) return prompt
+
+  const history = messages
+    .slice(0, lastUserIndex)
+    .filter((message) => message.role !== 'system' && message.content.trim())
+    .map((message) => `${message.role === 'user' ? '用户' : '助手'}：${message.content}`)
+    .join('\n\n')
+  if (!history) return prompt
+
+  const trimmedHistory = history.slice(-60_000)
+  return `以下是这个会话此前的对话，仅作为上下文继续处理：\n\n${trimmedHistory}\n\n当前用户请求：${prompt}`
+}
+
+function sseChunk(
+  id: string,
+  modelName: string,
+  content: string,
+  finishReason: string | null
+) {
   return `data: ${JSON.stringify({
     id,
     object: 'chat.completion.chunk',
     created: Math.floor(Date.now() / 1000),
-    model: config.model,
+    model: modelName,
     choices: [
       {
         index: 0,
@@ -188,8 +327,16 @@ async function handleChat(request: Request): Promise<Response> {
   if (!prompt) return openAiError('A user message is required')
 
   const client = new NewApiClient(config.newApiBaseUrl, identity)
+  const modelName = chatRequest.model || config.model
+  const group = chatRequest.group || 'default'
   try {
     await client.get('/api/user/self')
+    const models = await client.get(
+      `/api/user/models?group=${encodeURIComponent(group)}`
+    )
+    if (!Array.isArray(models) || !models.includes(modelName)) {
+      return openAiError(`Model ${modelName} is not available in group ${group}`, 403)
+    }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Authentication failed'
     return openAiError(message, 401)
@@ -197,16 +344,37 @@ async function handleChat(request: Request): Promise<Response> {
 
   const sessionId = chatRequest.session_id || randomUUID()
   const ownerKey = identityKey(identity)
-  let session = sessionStore.get(sessionId, ownerKey)
-  if (!session) {
+  const modelKey = `${modelName}\0${group}`
+  let storedSession = sessionStore.get(sessionId, ownerKey, modelKey)
+  let sessionWasCreated = false
+  if (!storedSession) {
     try {
-      session = await createSession(client)
-      sessionStore.set(sessionId, ownerKey, session)
+      const requestContext = { latestUserPrompt: prompt }
+      const session = await createSession(
+        client,
+        modelName,
+        group,
+        identity,
+        requestContext
+      )
+      storedSession = sessionStore.set(
+        sessionId,
+        ownerKey,
+        session,
+        requestContext,
+        modelKey
+      )
+      sessionWasCreated = true
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Agent initialization failed'
       return openAiError(message, 500)
     }
   }
+  const { session, requestContext } = storedSession
+  requestContext.latestUserPrompt = prompt
+  const agentPrompt = sessionWasCreated
+    ? promptWithRestoredHistory(chatRequest.messages, prompt)
+    : prompt
 
   if (!chatRequest.stream) {
     let content = ''
@@ -220,12 +388,15 @@ async function handleChat(request: Request): Promise<Response> {
     })
 
     try {
-      await session.prompt(prompt)
+      await session.prompt(agentPrompt)
+      const result = latestAssistantResult(session)
+      if (result.error) throw new Error(result.error)
+      if (!content) content = result.content
       return jsonResponse({
         id: `pi-${sessionId}`,
         object: 'chat.completion',
         created: Math.floor(Date.now() / 1000),
-        model: config.model,
+        model: modelName,
         choices: [
           {
             index: 0,
@@ -246,10 +417,13 @@ async function handleChat(request: Request): Promise<Response> {
   const stream = new ReadableStream<Uint8Array>({
     start(controller) {
       let closed = false
+      let streamedContent = ''
       const close = () => {
         if (closed) return
         closed = true
-        controller.enqueue(encoder.encode(sseChunk(completionId, '', 'stop')))
+        controller.enqueue(
+          encoder.encode(sseChunk(completionId, modelName, '', 'stop'))
+        )
         controller.enqueue(encoder.encode('data: [DONE]\n\n'))
         controller.close()
       }
@@ -258,23 +432,45 @@ async function handleChat(request: Request): Promise<Response> {
           event.type === 'message_update' &&
           event.assistantMessageEvent.type === 'text_delta'
         ) {
+          streamedContent += event.assistantMessageEvent.delta
           controller.enqueue(
             encoder.encode(
-              sseChunk(completionId, event.assistantMessageEvent.delta, null)
+              sseChunk(
+                completionId,
+                modelName,
+                event.assistantMessageEvent.delta,
+                null
+              )
             )
           )
         }
       })
 
       void session
-        .prompt(prompt)
+        .prompt(agentPrompt)
+        .then(() => {
+          const result = latestAssistantResult(session)
+          if (result.error) throw new Error(result.error)
+          if (!streamedContent && result.content) {
+            controller.enqueue(
+              encoder.encode(
+                sseChunk(completionId, modelName, result.content, null)
+              )
+            )
+          }
+        })
         .catch((error: unknown) => {
           if (closed) return
-          const message = error instanceof Error ? error.message : 'Agent request failed'
+          const message =
+            error instanceof Error ? error.message : 'Agent request failed'
           controller.enqueue(
             encoder.encode(
               `data: ${JSON.stringify({
-                error: { message, type: 'server_error', code: 'pi_agent_error' },
+                error: {
+                  message,
+                  type: 'server_error',
+                  code: 'pi_agent_error',
+                },
               })}\n\n`
             )
           )
@@ -302,6 +498,23 @@ const server = Bun.serve({
   idleTimeout: 255,
   async fetch(request) {
     const url = new URL(request.url)
+
+    const internalRelayMatch = url.pathname.match(
+      /^\/internal\/openai\/([^/]+)\/([^/]+)(?:\/v1)?\/(chat\/completions|responses)$/
+    )
+    if (request.method === 'POST' && internalRelayMatch) {
+      return handleInternalRelay(
+        request,
+        internalRelayMatch[1],
+        decodeURIComponent(internalRelayMatch[2]),
+        internalRelayMatch[3] as 'chat/completions' | 'responses'
+      )
+    }
+    if (url.pathname.startsWith('/internal/openai/')) {
+      console.warn(
+        `Unmatched internal relay path: ${url.pathname.replace(internalRelayToken, '[token]')}`
+      )
+    }
 
     if (request.method === 'GET' && url.pathname === '/health') {
       return jsonResponse({

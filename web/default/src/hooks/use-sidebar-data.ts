@@ -18,6 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import {
   Activity,
+  Bot,
   Blocks,
   ChartNoAxesCombined,
   ClipboardList,
@@ -61,9 +62,9 @@ export function useSidebarData(): SidebarData {
         title: t('Chat'),
         items: [
           {
-            title: t('Playground'),
+            title: t('Operations Agent'),
             url: '/playground',
-            icon: FlaskConical,
+            icon: Bot,
           },
           {
             title: t('Chat'),

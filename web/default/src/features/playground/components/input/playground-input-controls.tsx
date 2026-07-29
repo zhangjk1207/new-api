@@ -16,7 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { BotIcon, SendIcon, SquareIcon } from 'lucide-react'
+import { SendIcon, SquareIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -39,7 +39,6 @@ type PlaygroundInputControlsProps = {
   onStop?: () => void
   text: string
   tools: ReactNode
-  agentMode?: boolean
 }
 
 export function PlaygroundInputControls({
@@ -55,10 +54,9 @@ export function PlaygroundInputControls({
   onStop,
   text,
   tools,
-  agentMode = false,
 }: PlaygroundInputControlsProps) {
   const { t } = useTranslation()
-  const { canSubmit: canSubmitChat, isSelectorDisabled, shouldShowStop } =
+  const { canSubmit, isSelectorDisabled, shouldShowStop } =
     getInputControlState({
       disabled,
       groups,
@@ -68,27 +66,16 @@ export function PlaygroundInputControls({
       models,
       text,
     })
-  const canSubmit = agentMode
-    ? Boolean(text.trim()) && !disabled && !isGenerating
-    : canSubmitChat
-
   const renderSelector = () => (
-    agentMode ? (
-      <div className='text-muted-foreground flex h-8 items-center gap-1.5 px-2 text-sm'>
-        <BotIcon className='size-4' aria-hidden='true' />
-        <span>{t('New API Skill')}</span>
-      </div>
-    ) : (
-      <ModelGroupSelector
-        selectedModel={modelValue}
-        models={models}
-        onModelChange={onModelChange}
-        selectedGroup={groupValue}
-        groups={groups}
-        onGroupChange={onGroupChange}
-        disabled={isSelectorDisabled}
-      />
-    )
+    <ModelGroupSelector
+      selectedModel={modelValue}
+      models={models}
+      onModelChange={onModelChange}
+      selectedGroup={groupValue}
+      groups={groups}
+      onGroupChange={onGroupChange}
+      disabled={isSelectorDisabled}
+    />
   )
 
   const renderSubmitButton = () =>

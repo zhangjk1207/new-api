@@ -36,18 +36,12 @@ import {
   isAssistantMessageFinal,
   isAssistantMessagePending,
 } from '../lib'
-import type {
-  Message,
-  PlaygroundConfig,
-  ParameterEnabled,
-  PlaygroundMode,
-} from '../types'
+import type { Message, PlaygroundConfig, ParameterEnabled } from '../types'
 import { useStreamRequest } from './use-stream-request'
 
 interface UseChatHandlerOptions {
   config: PlaygroundConfig
   parameterEnabled: ParameterEnabled
-  mode: PlaygroundMode
   agentSessionId: string
   onMessageUpdate: (updater: (prev: Message[]) => Message[]) => void
 }
@@ -77,7 +71,6 @@ function mergePendingStreamChunk(
 export function useChatHandler({
   config,
   parameterEnabled,
-  mode,
   agentSessionId,
   onMessageUpdate,
 }: UseChatHandlerOptions) {
@@ -221,11 +214,8 @@ export function useChatHandler({
         config,
         parameterEnabled
       )
-      const endpoint =
-        mode === 'agent'
-          ? withRuntimeBasePath(API_ENDPOINTS.AGENT_CHAT_COMPLETIONS)
-          : API_ENDPOINTS.CHAT_COMPLETIONS
-      if (mode === 'agent') payload.session_id = agentSessionId
+      const endpoint = withRuntimeBasePath(API_ENDPOINTS.AGENT_CHAT_COMPLETIONS)
+      payload.session_id = agentSessionId
       sendStreamRequest(
         endpoint,
         payload,
@@ -236,7 +226,6 @@ export function useChatHandler({
     },
     [
       config,
-      mode,
       agentSessionId,
       parameterEnabled,
       sendStreamRequest,
@@ -254,11 +243,8 @@ export function useChatHandler({
         config,
         parameterEnabled
       )
-      const endpoint =
-        mode === 'agent'
-          ? withRuntimeBasePath(API_ENDPOINTS.AGENT_CHAT_COMPLETIONS)
-          : API_ENDPOINTS.CHAT_COMPLETIONS
-      if (mode === 'agent') payload.session_id = agentSessionId
+      const endpoint = withRuntimeBasePath(API_ENDPOINTS.AGENT_CHAT_COMPLETIONS)
+      payload.session_id = agentSessionId
       const requestId = requestIdRef.current + 1
       const abortController = new AbortController()
 
@@ -304,7 +290,6 @@ export function useChatHandler({
     [
       config,
       parameterEnabled,
-      mode,
       agentSessionId,
       onMessageUpdate,
       handleStreamError,

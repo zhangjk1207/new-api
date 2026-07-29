@@ -1,8 +1,12 @@
 import type { AgentSession } from '@earendil-works/pi-coding-agent'
 
+import type { AgentRequestContext } from './types'
+
 export type StoredSession = {
   session: AgentSession
+  requestContext: AgentRequestContext
   identityKey: string
+  modelKey: string
   touchedAt: number
 }
 
@@ -14,22 +18,46 @@ export class SessionStore {
     private readonly maxSessions: number
   ) {}
 
-  get(id: string, identityKey: string): AgentSession | undefined {
+  get(
+    id: string,
+    identityKey: string,
+    modelKey: string
+  ): StoredSession | undefined {
     this.prune()
     const stored = this.sessions.get(id)
-    if (!stored || stored.identityKey !== identityKey) return undefined
+    if (
+      !stored ||
+      stored.identityKey !== identityKey ||
+      stored.modelKey !== modelKey
+    ) {
+      return undefined
+    }
 
     stored.touchedAt = Date.now()
-    return stored.session
+    return stored
   }
 
-  set(id: string, identityKey: string, session: AgentSession): void {
+  set(
+    id: string,
+    identityKey: string,
+    session: AgentSession,
+    requestContext: AgentRequestContext,
+    modelKey: string
+  ): StoredSession {
     this.prune()
     const existing = this.sessions.get(id)
     if (existing && existing.session !== session) existing.session.dispose()
 
-    this.sessions.set(id, { session, identityKey, touchedAt: Date.now() })
+    const stored = {
+      session,
+      requestContext,
+      identityKey,
+      modelKey,
+      touchedAt: Date.now(),
+    }
+    this.sessions.set(id, stored)
     this.pruneOverflow()
+    return stored
   }
 
   delete(id: string, identityKey: string): boolean {

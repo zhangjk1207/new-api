@@ -1,16 +1,25 @@
 import type { ExtensionFactory } from '@earendil-works/pi-coding-agent'
 import { Type } from 'typebox'
 
-import { NewApiClient } from './newapi-client'
+import {
+  assertMutationAllowed,
+  serializeToolResult,
+  validateApiPath,
+} from './api-policy'
+import { NewApiClient, type NewApiMethod } from './newapi-client'
+import type { AgentRequestContext } from './types'
 
 function toolResult(data: unknown) {
   return {
-    content: [{ type: 'text' as const, text: JSON.stringify(data) }],
+    content: [{ type: 'text' as const, text: serializeToolResult(data) }],
     details: {},
   }
 }
 
-export function createNewApiExtension(client: NewApiClient): ExtensionFactory {
+export function createNewApiExtension(
+  client: NewApiClient,
+  requestContext: AgentRequestContext
+): ExtensionFactory {
   return (pi) => {
     pi.registerTool({
       name: 'newapi_list_models',
@@ -62,6 +71,32 @@ export function createNewApiExtension(client: NewApiClient): ExtensionFactory {
             `/api/token/?p=${params.page ?? 0}&page_size=${params.page_size ?? 20}`
           )
         ),
+    })
+
+    pi.registerTool({
+      name: 'newapi_api_request',
+      label: '调用平台管理接口',
+      description:
+        '按当前登录用户权限调用 New API 的 /api/ 管理接口。root 可执行平台管理操作；普通用户仍受后端 RBAC 限制。优先使用专用查询工具，写操作必须来自用户的明确请求，危险操作必须先获得确认。',
+      parameters: Type.Object({
+        method: Type.Union([
+          Type.Literal('GET'),
+          Type.Literal('POST'),
+          Type.Literal('PUT'),
+          Type.Literal('PATCH'),
+          Type.Literal('DELETE'),
+        ]),
+        path: Type.String({
+          description: '以 /api/ 开头的相对路径，可以包含查询参数',
+        }),
+        body: Type.Optional(Type.Unknown()),
+      }),
+      execute: async (_id, params) => {
+        const method = params.method as NewApiMethod
+        const path = validateApiPath(params.path)
+        assertMutationAllowed(method, path, requestContext.latestUserPrompt)
+        return toolResult(await client.request(method, path, params.body))
+      },
     })
   }
 }

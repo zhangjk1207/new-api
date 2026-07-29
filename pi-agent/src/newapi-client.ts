@@ -6,13 +6,19 @@ type NewApiEnvelope = {
   data?: unknown
 }
 
+export type NewApiMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
+
 export class NewApiClient {
   constructor(
     private readonly baseUrl: string,
     private readonly identity: RequestIdentity
   ) {}
 
-  async get(path: string): Promise<unknown> {
+  async request(
+    method: NewApiMethod,
+    path: string,
+    body?: unknown
+  ): Promise<unknown> {
     const headers = new Headers({
       'New-Api-User': this.identity.userId,
     })
@@ -22,8 +28,12 @@ export class NewApiClient {
     }
     if (this.identity.cookie) headers.set('Cookie', this.identity.cookie)
 
+    if (body !== undefined) headers.set('Content-Type', 'application/json')
+
     const response = await fetch(`${this.baseUrl}${path}`, {
+      method,
       headers,
+      body: body === undefined ? undefined : JSON.stringify(body),
       signal: AbortSignal.timeout(15_000),
     })
     const text = await response.text()
@@ -44,5 +54,9 @@ export class NewApiClient {
     }
 
     return payload.data
+  }
+
+  async get(path: string): Promise<unknown> {
+    return this.request('GET', path)
   }
 }

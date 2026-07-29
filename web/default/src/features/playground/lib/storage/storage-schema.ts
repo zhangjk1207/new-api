@@ -71,7 +71,7 @@ const reasoningSchema = z.object({
   durationMs: z.number().optional(),
 })
 
-const messageSchema = z.object({
+export const messageSchema = z.object({
   key: z.string(),
   from: messageRoleSchema,
   versions: z.array(messageVersionSchema).min(1),
@@ -89,3 +89,15 @@ const messageSchema = z.object({
 })
 
 export const messagesSchema = z.array(messageSchema)
+
+export const agentConversationSchema = z.object({
+  id: z.string().min(8).max(128),
+  title: z.string().max(120),
+  messages: messagesSchema,
+  model: z.string(),
+  group: z.string(),
+  createdAt: z.number(),
+  updatedAt: z.number(),
+})
+
+export const agentConversationsSchema = z.array(agentConversationSchema)

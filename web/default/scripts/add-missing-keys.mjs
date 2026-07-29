@@ -2449,36 +2449,132 @@ Object.assign(newKeys.en, {
   'Model chat': 'Model chat',
   'New API Skill': 'New API Skill',
   'Platform assistant': 'Platform assistant',
+  'Operations Agent': 'Operations Agent',
+  'Conversation history': 'Conversation history',
+  'Conversations are saved in this browser':
+    'Conversations are saved in this browser',
+  'New conversation': 'New conversation',
+  'Delete conversation': 'Delete conversation',
+  'Operations Agent and chat functions': 'Operations Agent and chat functions',
+  'AI-assisted platform operations': 'AI-assisted platform operations',
+  'Operations Agent and live conversations.':
+    'Operations Agent and live conversations.',
+  'Manage the platform through an AI operations agent.':
+    'Manage the platform through an AI operations agent.',
+  'Verify routing with Operations Agent or your client':
+    'Verify routing with Operations Agent or your client',
 })
 Object.assign(newKeys.zh, {
   'Model chat': '模型对话',
   'New API Skill': 'New API 技能',
   'Platform assistant': '平台助手',
+  'Operations Agent': '运维 Agent',
+  'Conversation history': '对话历史',
+  'Conversations are saved in this browser': '对话保存在当前浏览器中',
+  'New conversation': '新建对话',
+  'Delete conversation': '删除对话',
+  'Operations Agent and chat functions': '运维 Agent 和对话功能',
+  'AI-assisted platform operations': 'AI 辅助平台运维',
+  'Operations Agent and live conversations.': '运维 Agent 和实时对话。',
+  'Manage the platform through an AI operations agent.':
+    '通过 AI 运维 Agent 管理平台。',
+  'Verify routing with Operations Agent or your client':
+    '使用运维 Agent 或客户端验证路由',
 })
 Object.assign(newKeys['zh-TW'], {
   'Model chat': '模型對話',
   'New API Skill': 'New API 技能',
   'Platform assistant': '平台助手',
+  'Operations Agent': '維運 Agent',
+  'Conversation history': '對話歷史',
+  'Conversations are saved in this browser': '對話儲存在目前瀏覽器中',
+  'New conversation': '新增對話',
+  'Delete conversation': '刪除對話',
+  'Operations Agent and chat functions': '維運 Agent 與對話功能',
+  'AI-assisted platform operations': 'AI 輔助平台維運',
+  'Operations Agent and live conversations.': '維運 Agent 與即時對話。',
+  'Manage the platform through an AI operations agent.':
+    '透過 AI 維運 Agent 管理平台。',
+  'Verify routing with Operations Agent or your client':
+    '使用維運 Agent 或用戶端驗證路由',
 })
 Object.assign(newKeys.fr, {
   'Model chat': 'Discussion avec le modèle',
   'New API Skill': 'Skill New API',
   'Platform assistant': 'Assistant de plateforme',
+  'Operations Agent': "Agent d'exploitation",
+  'Conversation history': 'Historique des conversations',
+  'Conversations are saved in this browser':
+    'Les conversations sont enregistrées dans ce navigateur',
+  'New conversation': 'Nouvelle conversation',
+  'Delete conversation': 'Supprimer la conversation',
+  'Operations Agent and chat functions':
+    "Agent d'exploitation et fonctions de discussion",
+  'AI-assisted platform operations':
+    "Exploitation de plateforme assistée par l'IA",
+  'Operations Agent and live conversations.':
+    "Agent d'exploitation et conversations en direct.",
+  'Manage the platform through an AI operations agent.':
+    "Gérez la plateforme avec un agent d'exploitation IA.",
+  'Verify routing with Operations Agent or your client':
+    "Vérifiez le routage avec l'agent d'exploitation ou votre client",
 })
 Object.assign(newKeys.ja, {
   'Model chat': 'モデルチャット',
   'New API Skill': 'New API スキル',
   'Platform assistant': 'プラットフォームアシスタント',
+  'Operations Agent': '運用 Agent',
+  'Conversation history': '会話履歴',
+  'Conversations are saved in this browser':
+    '会話はこのブラウザーに保存されます',
+  'New conversation': '新しい会話',
+  'Delete conversation': '会話を削除',
+  'Operations Agent and chat functions': '運用 Agent とチャット機能',
+  'AI-assisted platform operations': 'AI 支援プラットフォーム運用',
+  'Operations Agent and live conversations.': '運用 Agent とリアルタイム会話。',
+  'Manage the platform through an AI operations agent.':
+    'AI 運用 Agent でプラットフォームを管理します。',
+  'Verify routing with Operations Agent or your client':
+    '運用 Agent またはクライアントでルーティングを確認',
 })
 Object.assign(newKeys.ru, {
   'Model chat': 'Диалог с моделью',
   'New API Skill': 'Навык New API',
   'Platform assistant': 'Ассистент платформы',
+  'Operations Agent': 'Операционный агент',
+  'Conversation history': 'История разговоров',
+  'Conversations are saved in this browser':
+    'Разговоры сохраняются в этом браузере',
+  'New conversation': 'Новый разговор',
+  'Delete conversation': 'Удалить разговор',
+  'Operations Agent and chat functions': 'Операционный агент и функции чата',
+  'AI-assisted platform operations': 'Управление платформой с помощью ИИ',
+  'Operations Agent and live conversations.':
+    'Операционный агент и живые разговоры.',
+  'Manage the platform through an AI operations agent.':
+    'Управляйте платформой через операционного ИИ-агента.',
+  'Verify routing with Operations Agent or your client':
+    'Проверьте маршрутизацию через операционного агента или клиент',
 })
 Object.assign(newKeys.vi, {
   'Model chat': 'Trò chuyện với mô hình',
   'New API Skill': 'Kỹ năng New API',
   'Platform assistant': 'Trợ lý nền tảng',
+  'Operations Agent': 'Agent vận hành',
+  'Conversation history': 'Lịch sử hội thoại',
+  'Conversations are saved in this browser':
+    'Các cuộc hội thoại được lưu trong trình duyệt này',
+  'New conversation': 'Cuộc hội thoại mới',
+  'Delete conversation': 'Xóa cuộc hội thoại',
+  'Operations Agent and chat functions':
+    'Agent vận hành và chức năng trò chuyện',
+  'AI-assisted platform operations': 'Vận hành nền tảng có AI hỗ trợ',
+  'Operations Agent and live conversations.':
+    'Agent vận hành và hội thoại trực tiếp.',
+  'Manage the platform through an AI operations agent.':
+    'Quản lý nền tảng thông qua Agent vận hành AI.',
+  'Verify routing with Operations Agent or your client':
+    'Xác minh định tuyến bằng Agent vận hành hoặc ứng dụng của bạn',
 })
 
 async function main() {
