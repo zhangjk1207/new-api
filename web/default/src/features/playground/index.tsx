@@ -17,6 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { BotIcon, MessageSquareIcon } from 'lucide-react'
+import { nanoid } from 'nanoid'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -35,7 +36,7 @@ import {
 import type { PlaygroundMode } from './types'
 
 function createAgentSessionId(): string {
-  return crypto.randomUUID()
+  return nanoid()
 }
 
 function getInitialMode(): PlaygroundMode {
