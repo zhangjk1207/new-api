@@ -21,7 +21,7 @@ import { SSE } from 'sse.js'
 
 import { getCommonHeaders } from '@/lib/api'
 
-import { API_ENDPOINTS, ERROR_MESSAGES } from '../constants'
+import { ERROR_MESSAGES } from '../constants'
 import {
   getStreamReadyStateError,
   isStreamClosedReadyState,
@@ -51,6 +51,7 @@ export function useStreamRequest() {
 
   const sendStreamRequest = useCallback(
     (
+      endpoint: string,
       payload: ChatCompletionRequest,
       onUpdate: (type: 'reasoning' | 'content', chunk: string) => void,
       onComplete: () => void,
@@ -58,7 +59,7 @@ export function useStreamRequest() {
     ) => {
       sseSourceRef.current?.close()
 
-      const source = new SSE(API_ENDPOINTS.CHAT_COMPLETIONS, {
+      const source = new SSE(endpoint, {
         headers: getCommonHeaders(),
         method: 'POST',
         payload: JSON.stringify(payload),

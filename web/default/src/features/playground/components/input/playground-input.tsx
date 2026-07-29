@@ -60,6 +60,7 @@ interface PlaygroundInputProps {
     value: boolean
   ) => void
   parameterEnabled: ParameterEnabled
+  agentMode?: boolean
 }
 
 export function PlaygroundInput({
@@ -80,6 +81,7 @@ export function PlaygroundInput({
   onClearMessages,
   onParameterEnabledChange,
   parameterEnabled,
+  agentMode = false,
 }: PlaygroundInputProps) {
   const { t } = useTranslation()
   const [text, setText] = useState('')
@@ -113,6 +115,7 @@ export function PlaygroundInput({
 
         <PromptInputFooter className='border-border/60 bg-muted/20 dark:bg-muted/10 border-t px-3 py-2.5 backdrop-blur'>
           <PlaygroundInputControls
+            agentMode={agentMode}
             disabled={disabled}
             groups={groups}
             groupValue={groupValue}

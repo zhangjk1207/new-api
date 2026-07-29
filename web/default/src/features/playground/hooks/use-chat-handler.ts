@@ -21,7 +21,7 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 import { sendChatCompletion } from '../api'
-import { ERROR_MESSAGES } from '../constants'
+import { API_ENDPOINTS, ERROR_MESSAGES } from '../constants'
 import {
   applyStreamingChunk,
   buildChatCompletionPayload,
@@ -34,12 +34,19 @@ import {
   isAssistantMessageFinal,
   isAssistantMessagePending,
 } from '../lib'
-import type { Message, PlaygroundConfig, ParameterEnabled } from '../types'
+import type {
+  Message,
+  PlaygroundConfig,
+  ParameterEnabled,
+  PlaygroundMode,
+} from '../types'
 import { useStreamRequest } from './use-stream-request'
 
 interface UseChatHandlerOptions {
   config: PlaygroundConfig
   parameterEnabled: ParameterEnabled
+  mode: PlaygroundMode
+  agentSessionId: string
   onMessageUpdate: (updater: (prev: Message[]) => Message[]) => void
 }
 
@@ -68,6 +75,8 @@ function mergePendingStreamChunk(
 export function useChatHandler({
   config,
   parameterEnabled,
+  mode,
+  agentSessionId,
   onMessageUpdate,
 }: UseChatHandlerOptions) {
   const { t } = useTranslation()
@@ -210,7 +219,13 @@ export function useChatHandler({
         config,
         parameterEnabled
       )
+      const endpoint =
+        mode === 'agent'
+          ? API_ENDPOINTS.AGENT_CHAT_COMPLETIONS
+          : API_ENDPOINTS.CHAT_COMPLETIONS
+      if (mode === 'agent') payload.session_id = agentSessionId
       sendStreamRequest(
+        endpoint,
         payload,
         handleStreamUpdate,
         handleStreamComplete,
@@ -219,6 +234,8 @@ export function useChatHandler({
     },
     [
       config,
+      mode,
+      agentSessionId,
       parameterEnabled,
       sendStreamRequest,
       handleStreamUpdate,
@@ -235,6 +252,11 @@ export function useChatHandler({
         config,
         parameterEnabled
       )
+      const endpoint =
+        mode === 'agent'
+          ? API_ENDPOINTS.AGENT_CHAT_COMPLETIONS
+          : API_ENDPOINTS.CHAT_COMPLETIONS
+      if (mode === 'agent') payload.session_id = agentSessionId
       const requestId = requestIdRef.current + 1
       const abortController = new AbortController()
 
@@ -245,7 +267,8 @@ export function useChatHandler({
         setIsRequesting(true)
         const response = await sendChatCompletion(
           payload,
-          abortController.signal
+          abortController.signal,
+          endpoint
         )
         if (abortController.signal.aborted) return
 
@@ -276,7 +299,14 @@ export function useChatHandler({
         }
       }
     },
-    [config, parameterEnabled, onMessageUpdate, handleStreamError]
+    [
+      config,
+      parameterEnabled,
+      mode,
+      agentSessionId,
+      onMessageUpdate,
+      handleStreamError,
+    ]
   )
 
   // Send chat request (stream or non-stream based on config)

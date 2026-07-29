@@ -31,13 +31,21 @@ import type {
  */
 export async function sendChatCompletion(
   payload: ChatCompletionRequest,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  endpoint: string = API_ENDPOINTS.CHAT_COMPLETIONS
 ): Promise<ChatCompletionResponse> {
-  const res = await api.post(API_ENDPOINTS.CHAT_COMPLETIONS, payload, {
+  const res = await api.post(endpoint, payload, {
     signal,
     skipErrorHandler: true,
   } as Record<string, unknown>)
   return res.data
+}
+
+export async function deleteAgentSession(sessionId: string): Promise<void> {
+  await api.delete(
+    `${API_ENDPOINTS.AGENT_SESSIONS}/${encodeURIComponent(sessionId)}`,
+    { skipErrorHandler: true }
+  )
 }
 
 /**

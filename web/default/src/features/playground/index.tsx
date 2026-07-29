@@ -16,16 +16,36 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
+import { BotIcon, MessageSquareIcon } from 'lucide-react'
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+
+import { deleteAgentSession } from './api'
 import { PlaygroundChat } from './components/chat/playground-chat'
 import { PlaygroundInput } from './components/input/playground-input'
+import { STORAGE_KEYS } from './constants'
 import {
   useChatHandler,
   usePlaygroundConversation,
   usePlaygroundOptions,
   usePlaygroundState,
 } from './hooks'
+import type { PlaygroundMode } from './types'
+
+function createAgentSessionId(): string {
+  return crypto.randomUUID()
+}
+
+function getInitialMode(): PlaygroundMode {
+  return localStorage.getItem(STORAGE_KEYS.MODE) === 'agent' ? 'agent' : 'chat'
+}
 
 export function Playground() {
+  const { t } = useTranslation()
+  const [mode, setMode] = useState<PlaygroundMode>(getInitialMode)
+  const [agentSessionId, setAgentSessionId] = useState(createAgentSessionId)
   const {
     config,
     parameterEnabled,
@@ -44,6 +64,8 @@ export function Playground() {
   const { sendChat, stopGeneration, isGenerating } = useChatHandler({
     config,
     parameterEnabled,
+    mode,
+    agentSessionId,
     onMessageUpdate: updateMessages,
   })
 
@@ -64,6 +86,23 @@ export function Playground() {
   const handleClearMessages = () => {
     handleEditOpenChange(false)
     clearMessages()
+    if (mode === 'agent') {
+      void deleteAgentSession(agentSessionId)
+      setAgentSessionId(createAgentSessionId())
+    }
+  }
+
+  const handleModeChange = (value: string | number) => {
+    if (value !== 'chat' && value !== 'agent') return
+
+    stopGeneration()
+    handleEditOpenChange(false)
+    clearMessages()
+    if (mode === 'agent') void deleteAgentSession(agentSessionId)
+
+    localStorage.setItem(STORAGE_KEYS.MODE, value)
+    setMode(value)
+    setAgentSessionId(createAgentSessionId())
   }
 
   const { isLoadingModels } = usePlaygroundOptions({
@@ -94,8 +133,21 @@ export function Playground() {
       </div>
 
       {/* Input area: center content and constrain to the same container width */}
-      <div className='mx-auto w-full max-w-4xl'>
+      <div className='mx-auto grid w-full max-w-4xl gap-2'>
+        <Tabs value={mode} onValueChange={handleModeChange}>
+          <TabsList className='mx-1 h-9'>
+            <TabsTrigger value='chat' className='gap-1.5 px-3'>
+              <MessageSquareIcon aria-hidden='true' />
+              {t('Model chat')}
+            </TabsTrigger>
+            <TabsTrigger value='agent' className='gap-1.5 px-3'>
+              <BotIcon aria-hidden='true' />
+              {t('Platform assistant')}
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
         <PlaygroundInput
+          agentMode={mode === 'agent'}
           config={config}
           disabled={isGenerating}
           groups={groups}

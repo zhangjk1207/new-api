@@ -2445,6 +2445,42 @@ const newKeys = {
   },
 }
 
+Object.assign(newKeys.en, {
+  'Model chat': 'Model chat',
+  'New API Skill': 'New API Skill',
+  'Platform assistant': 'Platform assistant',
+})
+Object.assign(newKeys.zh, {
+  'Model chat': '模型对话',
+  'New API Skill': 'New API 技能',
+  'Platform assistant': '平台助手',
+})
+Object.assign(newKeys['zh-TW'], {
+  'Model chat': '模型對話',
+  'New API Skill': 'New API 技能',
+  'Platform assistant': '平台助手',
+})
+Object.assign(newKeys.fr, {
+  'Model chat': 'Discussion avec le modèle',
+  'New API Skill': 'Skill New API',
+  'Platform assistant': 'Assistant de plateforme',
+})
+Object.assign(newKeys.ja, {
+  'Model chat': 'モデルチャット',
+  'New API Skill': 'New API スキル',
+  'Platform assistant': 'プラットフォームアシスタント',
+})
+Object.assign(newKeys.ru, {
+  'Model chat': 'Диалог с моделью',
+  'New API Skill': 'Навык New API',
+  'Platform assistant': 'Ассистент платформы',
+})
+Object.assign(newKeys.vi, {
+  'Model chat': 'Trò chuyện với mô hình',
+  'New API Skill': 'Kỹ năng New API',
+  'Platform assistant': 'Trợ lý nền tảng',
+})
+
 async function main() {
   let totalAdded = 0
   for (const [locale, trans] of Object.entries(newKeys)) {

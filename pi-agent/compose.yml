@@ -1,0 +1,20 @@
+name: zhiqing-pi-agent
+
+services:
+  agent:
+    build:
+      context: .
+    image: zhiqing-pi-agent:0.1.0
+    restart: unless-stopped
+    env_file:
+      - .env
+    expose:
+      - "7994"
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:7994/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 20s
