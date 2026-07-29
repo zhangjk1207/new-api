@@ -28,6 +28,12 @@ if ! wait_for_healthy app 45; then
   exit 1
 fi
 
+if ! "${COMPOSE[@]}" up -d --no-build --force-recreate agent || ! wait_for_healthy agent 30; then
+  "${COMPOSE[@]}" down
+  "$ZHIQING_APP_DIR/start.sh"
+  exit 1
+fi
+
 if ! "${COMPOSE[@]}" up -d --no-build --force-recreate nginx || ! wait_for_healthy nginx 30; then
   "${COMPOSE[@]}" down
   "$ZHIQING_APP_DIR/start.sh"

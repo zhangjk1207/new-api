@@ -18,7 +18,6 @@ Required configuration:
 - `NEWAPI_BASE_URL`: New API origin, for example `http://127.0.0.1:7992`.
 - `NEWAPI_API_KEY`: API key used only for the Pi model request.
 - `NEWAPI_MODEL`: tool-capable model available through New API.
-- `NEWAPI_GROUP`: routing group for the model request.
 
 The browser user's New API session is forwarded separately for Skill queries;
 the model API key is never returned to the browser.

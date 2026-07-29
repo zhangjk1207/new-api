@@ -17,6 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { api } from '@/lib/api'
+import { withRuntimeBasePath } from '@/lib/runtime-base-path'
 
 import { API_ENDPOINTS } from './constants'
 import type {
@@ -43,7 +44,9 @@ export async function sendChatCompletion(
 
 export async function deleteAgentSession(sessionId: string): Promise<void> {
   await api.delete(
-    `${API_ENDPOINTS.AGENT_SESSIONS}/${encodeURIComponent(sessionId)}`,
+    withRuntimeBasePath(
+      `${API_ENDPOINTS.AGENT_SESSIONS}/${encodeURIComponent(sessionId)}`
+    ),
     { skipErrorHandler: true }
   )
 }

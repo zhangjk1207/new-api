@@ -20,6 +20,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
+import { withRuntimeBasePath } from '@/lib/runtime-base-path'
+
 import { sendChatCompletion } from '../api'
 import { API_ENDPOINTS, ERROR_MESSAGES } from '../constants'
 import {
@@ -221,7 +223,7 @@ export function useChatHandler({
       )
       const endpoint =
         mode === 'agent'
-          ? API_ENDPOINTS.AGENT_CHAT_COMPLETIONS
+          ? withRuntimeBasePath(API_ENDPOINTS.AGENT_CHAT_COMPLETIONS)
           : API_ENDPOINTS.CHAT_COMPLETIONS
       if (mode === 'agent') payload.session_id = agentSessionId
       sendStreamRequest(
@@ -254,7 +256,7 @@ export function useChatHandler({
       )
       const endpoint =
         mode === 'agent'
-          ? API_ENDPOINTS.AGENT_CHAT_COMPLETIONS
+          ? withRuntimeBasePath(API_ENDPOINTS.AGENT_CHAT_COMPLETIONS)
           : API_ENDPOINTS.CHAT_COMPLETIONS
       if (mode === 'agent') payload.session_id = agentSessionId
       const requestId = requestIdRef.current + 1

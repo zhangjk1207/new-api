@@ -3,7 +3,6 @@ export type AgentConfig = {
   newApiBaseUrl: string
   newApiApiKey: string
   model: string
-  group: string
   sessionTtlMs: number
   maxSessions: number
 }
@@ -27,7 +26,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AgentConfig {
     newApiBaseUrl,
     newApiApiKey,
     model,
-    group: env.NEWAPI_GROUP?.trim() || 'default',
     sessionTtlMs:
       positiveInteger(env.AGENT_SESSION_TTL_MINUTES, 60) * 60 * 1000,
     maxSessions: positiveInteger(env.AGENT_MAX_SESSIONS, 100),

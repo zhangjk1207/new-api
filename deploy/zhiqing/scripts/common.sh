@@ -11,6 +11,7 @@ export ZHIQING_LOG_DIR="${ZHIQING_LOG_DIR:-$ZHIQING_APP_DIR/logs}"
 export ZHIQING_PREFLIGHT_DATA_DIR="${ZHIQING_PREFLIGHT_DATA_DIR:-$ZHIQING_APP_DIR/docker/preflight-data}"
 export ZHIQING_PREFLIGHT_LOG_DIR="${ZHIQING_PREFLIGHT_LOG_DIR:-$ZHIQING_APP_DIR/docker/preflight-logs}"
 export ZHIQING_IMAGE_TAG="${ZHIQING_IMAGE_TAG:-$(git -C "$REPO_DIR" rev-parse --short HEAD)}"
+export ZHIQING_AGENT_IMAGE_TAG="${ZHIQING_AGENT_IMAGE_TAG:-$ZHIQING_IMAGE_TAG}"
 export ZHIQING_UID="${ZHIQING_UID:-$(id -u)}"
 export ZHIQING_GID="${ZHIQING_GID:-$(id -g)}"
 export ZHIQING_POSTGRES_CONTAINER="${ZHIQING_POSTGRES_CONTAINER:-workflow-postgres}"
@@ -26,6 +27,10 @@ load_runtime_environment() {
     echo "missing audit environment: $ZHIQING_APP_DIR/audit.env" >&2
     return 1
   fi
+  if [[ ! -s "$ZHIQING_APP_DIR/pi-agent.env" ]]; then
+    echo "missing Pi Agent environment: $ZHIQING_APP_DIR/pi-agent.env" >&2
+    return 1
+  fi
 
   SESSION_SECRET="$(<"$ZHIQING_APP_DIR/session_secret")"
   export SESSION_SECRET
@@ -33,6 +38,8 @@ load_runtime_environment() {
   set -a
   # shellcheck disable=SC1090
   source "$ZHIQING_APP_DIR/audit.env"
+  # shellcheck disable=SC1090
+  source "$ZHIQING_APP_DIR/pi-agent.env"
   set +a
 
   local variable
@@ -43,6 +50,11 @@ load_runtime_environment() {
     fi
   done
   export SQL_DSN LOG_SQL_DSN CONVERSATION_AUDIT_DSN
+  if [[ -z "${NEWAPI_API_KEY:-}" || -z "${NEWAPI_MODEL:-}" ]]; then
+    echo "missing Pi Agent variable: NEWAPI_API_KEY or NEWAPI_MODEL" >&2
+    return 1
+  fi
+  export NEWAPI_API_KEY NEWAPI_MODEL ZHIQING_AGENT_IMAGE_TAG
   export CHANNEL_HEALTH_WECOM_WEBHOOK_URL CHANNEL_HEALTH_ALERT_ENVIRONMENT
 }
 

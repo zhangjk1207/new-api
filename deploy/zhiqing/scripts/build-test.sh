@@ -7,5 +7,5 @@ source "$SCRIPT_DIR/common.sh"
 load_runtime_environment
 
 docker pull nginx:1.27-alpine
-"${COMPOSE[@]}" build app
-echo "built zhiqing-new-api:$ZHIQING_IMAGE_TAG"
+"${COMPOSE[@]}" build app agent
+echo "built zhiqing-new-api:$ZHIQING_IMAGE_TAG and zhiqing-pi-agent:$ZHIQING_AGENT_IMAGE_TAG"
