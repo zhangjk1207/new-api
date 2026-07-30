@@ -21,11 +21,29 @@ import type { AgentChatRequest, ChatMessage, RequestIdentity } from './types'
 const config = loadConfig()
 const serviceRoot = resolve(import.meta.dir, '..')
 const agentDir = resolve(serviceRoot, '.pi-agent')
+const agentProvider = 'zhiqing-new-api'
 const modelRuntime = await ModelRuntime.create({
   authPath: resolve(agentDir, 'auth.json'),
   modelsPath: resolve(agentDir, 'models.json'),
 })
-modelRuntime.setRuntimeApiKey('openai', config.newApiApiKey)
+modelRuntime.registerProvider(agentProvider, {
+  name: 'Zhiqing New API',
+  baseUrl: `http://127.0.0.1:${config.port}/v1`,
+  apiKey: config.newApiApiKey,
+  api: 'openai-completions',
+  models: [
+    {
+      id: config.model,
+      name: config.model,
+      reasoning: false,
+      input: ['text'],
+      cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+      contextWindow: 131_072,
+      maxTokens: 8_192,
+    },
+  ],
+})
+await modelRuntime.setRuntimeApiKey(agentProvider, config.newApiApiKey)
 
 const sessionStore = new SessionStore(config.sessionTtlMs, config.maxSessions)
 const encoder = new TextEncoder()
@@ -50,7 +68,7 @@ function createModel(
     id: modelName,
     name: modelName,
     api: 'openai-completions',
-    provider: 'openai',
+    provider: agentProvider,
     baseUrl: `http://127.0.0.1:${config.port}/internal/openai/${internalRelayToken}/${encodeURIComponent(group)}/v1`,
     reasoning: false,
     input: ['text'],
