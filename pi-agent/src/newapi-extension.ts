@@ -7,6 +7,12 @@ import {
   validateApiPath,
 } from './api-policy'
 import { NewApiClient, type NewApiMethod } from './newapi-client'
+import {
+  summarizeAccount,
+  summarizeOperationsDashboard,
+  summarizeTokenUsage,
+  tokenUsageTimeRange,
+} from './platform-data'
 import type { AgentRequestContext } from './types'
 
 function toolResult(data: unknown) {
@@ -52,7 +58,70 @@ export function createNewApiExtension(
       label: '查询账户信息',
       description: '查询当前用户的账户、额度、分组和调用统计。',
       parameters: Type.Object({}),
-      execute: async () => toolResult(await client.get('/api/user/self')),
+      execute: async () => {
+        const [account, status] = await Promise.all([
+          client.get('/api/user/self'),
+          client.get('/api/status'),
+        ])
+        return toolResult(summarizeAccount(account, status))
+      },
+    })
+
+    pi.registerTool({
+      name: 'newapi_get_operations_dashboard',
+      label: '查询运维大屏',
+      description:
+        '查询运维大屏最近 24 小时的用户、渠道、模型、请求、真实 Token、成功率、时延、吞吐和告警汇总。需要管理员权限。',
+      parameters: Type.Object({}),
+      execute: async () =>
+        toolResult(
+          summarizeOperationsDashboard(
+            await client.get('/api/operations-dashboard/summary')
+          )
+        ),
+    })
+
+    pi.registerTool({
+      name: 'newapi_get_token_usage',
+      label: '查询 Token 使用统计',
+      description:
+        '按北京时间、用户、API 密钥名称和模型查询实际输入 Token、输出 Token、总 Token 与请求次数。这里的 Token 是模型实际 Token，不是账户额度。需要管理员权限。',
+      parameters: Type.Object({
+        start_date: Type.Optional(
+          Type.String({ description: '开始日期 YYYY-MM-DD，留空默认最近 24 小时' })
+        ),
+        end_date: Type.Optional(
+          Type.String({ description: '结束日期 YYYY-MM-DD，留空默认最近 24 小时' })
+        ),
+        username: Type.Optional(Type.String({ description: '精确用户名' })),
+        token_name: Type.Optional(Type.String({ description: '精确 API 密钥名称' })),
+        model_name: Type.Optional(Type.String({ description: '精确模型名称' })),
+      }),
+      execute: async (_id, params) => {
+        const range = tokenUsageTimeRange(params.start_date, params.end_date)
+        const query = new URLSearchParams({
+          start_timestamp: String(range.startTimestamp),
+          end_timestamp: String(range.endTimestamp),
+        })
+        if (params.username?.trim()) query.set('username', params.username.trim())
+        if (params.token_name?.trim()) {
+          query.set('token_name', params.token_name.trim())
+        }
+        if (params.model_name?.trim()) {
+          query.set('model_name', params.model_name.trim())
+        }
+        return toolResult({
+          time_range: range.label,
+          filters: {
+            username: params.username?.trim() || null,
+            token_name: params.token_name?.trim() || null,
+            model_name: params.model_name?.trim() || null,
+          },
+          ...summarizeTokenUsage(
+            await client.get(`/api/data/user-model-tokens?${query.toString()}`)
+          ),
+        })
+      },
     })
 
     pi.registerTool({

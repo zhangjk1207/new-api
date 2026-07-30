@@ -14,6 +14,7 @@ import {
 import { loadConfig } from './config'
 import { NewApiClient } from './newapi-client'
 import { createNewApiExtension } from './newapi-extension'
+import { toolTrace } from './platform-data'
 import { SessionStore } from './session-store'
 import type { AgentChatRequest, ChatMessage, RequestIdentity } from './types'
 
@@ -35,6 +36,8 @@ const toolNames = [
   'newapi_get_account',
   'newapi_list_tokens',
   'newapi_create_token',
+  'newapi_get_operations_dashboard',
+  'newapi_get_token_usage',
   'newapi_api_request',
 ]
 
@@ -293,7 +296,8 @@ function sseChunk(
   id: string,
   modelName: string,
   content: string,
-  finishReason: string | null
+  finishReason: string | null,
+  reasoningContent = ''
 ) {
   return `data: ${JSON.stringify({
     id,
@@ -303,7 +307,10 @@ function sseChunk(
     choices: [
       {
         index: 0,
-        delta: content ? { content } : {},
+        delta: {
+          ...(content ? { content } : {}),
+          ...(reasoningContent ? { reasoning_content: reasoningContent } : {}),
+        },
         finish_reason: finishReason,
       },
     ],
@@ -419,29 +426,74 @@ async function handleChat(request: Request): Promise<Response> {
     start(controller) {
       let closed = false
       let streamedContent = ''
+      const enqueue = (chunk: string) => {
+        if (closed) return
+        try {
+          controller.enqueue(encoder.encode(chunk))
+        } catch {
+          closed = true
+        }
+      }
       const close = () => {
         if (closed) return
+        enqueue(sseChunk(completionId, modelName, '', 'stop'))
+        enqueue('data: [DONE]\n\n')
+        if (closed) return
         closed = true
-        controller.enqueue(
-          encoder.encode(sseChunk(completionId, modelName, '', 'stop'))
-        )
-        controller.enqueue(encoder.encode('data: [DONE]\n\n'))
-        controller.close()
+        try {
+          controller.close()
+        } catch {
+          // The browser may already have closed the stream.
+        }
       }
+      request.signal.addEventListener('abort', () => {
+        closed = true
+      })
+      enqueue(
+        sseChunk(
+          completionId,
+          modelName,
+          '',
+          null,
+          '正在分析请求并选择合适的 Skill...\n\n'
+        )
+      )
       const unsubscribe = session.subscribe((event) => {
         if (
           event.type === 'message_update' &&
           event.assistantMessageEvent.type === 'text_delta'
         ) {
           streamedContent += event.assistantMessageEvent.delta
-          controller.enqueue(
-            encoder.encode(
-              sseChunk(
-                completionId,
-                modelName,
-                event.assistantMessageEvent.delta,
-                null
-              )
+          enqueue(
+            sseChunk(
+              completionId,
+              modelName,
+              event.assistantMessageEvent.delta,
+              null
+            )
+          )
+          return
+        }
+        if (event.type === 'tool_execution_start') {
+          enqueue(
+            sseChunk(
+              completionId,
+              modelName,
+              '',
+              null,
+              toolTrace(event.toolName, 'start')
+            )
+          )
+          return
+        }
+        if (event.type === 'tool_execution_end') {
+          enqueue(
+            sseChunk(
+              completionId,
+              modelName,
+              '',
+              null,
+              toolTrace(event.toolName, event.isError ? 'error' : 'success')
             )
           )
         }
@@ -453,27 +505,21 @@ async function handleChat(request: Request): Promise<Response> {
           const result = latestAssistantResult(session)
           if (result.error) throw new Error(result.error)
           if (!streamedContent && result.content) {
-            controller.enqueue(
-              encoder.encode(
-                sseChunk(completionId, modelName, result.content, null)
-              )
-            )
+            enqueue(sseChunk(completionId, modelName, result.content, null))
           }
         })
         .catch((error: unknown) => {
           if (closed) return
           const message =
             error instanceof Error ? error.message : 'Agent request failed'
-          controller.enqueue(
-            encoder.encode(
-              `data: ${JSON.stringify({
-                error: {
-                  message,
-                  type: 'server_error',
-                  code: 'pi_agent_error',
-                },
-              })}\n\n`
-            )
+          enqueue(
+            `data: ${JSON.stringify({
+              error: {
+                message,
+                type: 'server_error',
+                code: 'pi_agent_error',
+              },
+            })}\n\n`
           )
         })
         .finally(() => {
